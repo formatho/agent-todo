@@ -21,6 +21,11 @@ export const agentService = {
     return response.data
   },
 
+  async updateAgent(id, agentData) {
+    const response = await api.patch(`/agents/${id}`, agentData)
+    return response.data
+  },
+
   async deleteAgent(id) {
     const response = await api.delete(`/agents/${id}`)
     return response.data

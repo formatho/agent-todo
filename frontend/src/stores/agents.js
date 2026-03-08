@@ -50,6 +50,24 @@ export const useAgentStore = defineStore('agents', {
       }
     },
 
+    async updateAgent(id, agentData) {
+      this.loading = true
+      this.error = null
+      try {
+        const updatedAgent = await agentService.updateAgent(id, agentData)
+        const index = this.agents.findIndex(a => a.id === id)
+        if (index !== -1) {
+          this.agents[index] = updatedAgent
+        }
+        return updatedAgent
+      } catch (error) {
+        this.error = error.message
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
     async deleteAgent(id) {
       this.loading = true
       this.error = null
