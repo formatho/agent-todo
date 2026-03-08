@@ -4,9 +4,10 @@
       "formatho-agent-todo": {
         "enabled": true,
         "config": {
-          "serverUrl": "http://localhost:8080",
+          "serverUrl": "https://your-todo-server.com",
           "apiKey": "",
-          "autoInstall": true
+          "autoInstall": true,
+          "verifyConnection": true
         }
       }
     }
@@ -17,7 +18,7 @@
         "enabled": true,
         "apiKey": "",
         "env": {
-          "AGENT_TODO_SERVER_URL": "http://localhost:8080"
+          "AGENT_TODO_SERVER_URL": "https://your-todo-server.com"
         }
       }
     }

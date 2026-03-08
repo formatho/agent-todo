@@ -2,7 +2,24 @@
 
 Quick guide to install and configure the Formatho Agent Todo OpenClaw plugin.
 
-## Quick Start
+## Prerequisites
+
+Before installing the plugin, ensure you have:
+
+- ✅ A running Formatho Agent Todo server
+- ✅ Your server URL (e.g., `https://todo.example.com` or `http://localhost:8080`)
+- ✅ Access to configure OpenClaw plugins
+
+**Verify your server is running:**
+```bash
+# Replace with your server URL
+curl https://your-todo-server.com/health
+
+# Or for local development
+curl http://localhost:8080/health
+```
+
+## Quick Start (Interactive)
 
 ### 1. Copy Plugin to OpenClaw
 
@@ -11,49 +28,56 @@ Quick guide to install and configure the Formatho Agent Todo OpenClaw plugin.
 cp -r formatho-agent-todo-plugin ~/.openclaw/plugins/formatho-agent-todo
 ```
 
-### 2. Configure Server URL
+### 2. Enable Plugin in OpenClaw
 
-Edit `~/.openclaw/openclaw.json` and add:
+The plugin will prompt you for configuration:
 
-```json
-{
-  "plugins": {
-    "entries": {
-      "formatho-agent-todo": {
-        "enabled": true,
-        "config": {
-          "serverUrl": "http://localhost:8080"
-        }
-      }
-    }
-  }
-}
-```
+1. **Server URL**: Enter your Formatho Agent Todo server URL
+   - Example: `https://todo.example.com`
+   - Example: `http://localhost:8080`
+   - The plugin will verify the connection
 
-**IMPORTANT**: Replace `http://localhost:8080` with your Formatho Agent Todo server URL.
+2. **API Key** (Optional):
+   - Press Enter to skip if you only need human access
+   - Enter your API key if setting up AI agents
 
-### 3. Start Formatho Agent Todo Server
-
-```bash
-# If not already running
-cd /path/to/agent-todo
-docker-compose up -d
-```
-
-### 4. Restart OpenClaw
+### 3. Restart OpenClaw
 
 Restart the OpenClaw gateway to load the plugin.
 
-### 5. Verify Installation
+### 4. Verify Installation
 
 In OpenClaw, test:
 ```
 Use agent-todo to list all projects
 ```
 
+## Manual Configuration
+
+If you prefer manual configuration, edit `~/.openclaw/openclaw.json`:
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "formatho-agent-todo": {
+        "enabled": true,
+        "config": {
+          "serverUrl": "https://your-todo-server.com",
+          "apiKey": "sk-agent-xxxxx",
+          "verifyConnection": true
+        }
+      }
+    }
+  }
+}
+```
+
+**Replace with your actual server URL.**
+
 ## Configuration Examples
 
-### Local Server (Default)
+### Local Development Server
 
 ```json
 {
@@ -70,7 +94,7 @@ Use agent-todo to list all projects
 }
 ```
 
-### Remote Server
+### Remote Production Server
 
 ```json
 {
@@ -96,7 +120,7 @@ Use agent-todo to list all projects
       "formatho-agent-todo": {
         "enabled": true,
         "config": {
-          "serverUrl": "http://localhost:8080",
+          "serverUrl": "https://todo.example.com",
           "apiKey": "sk-agent-pm-all-access-xxxxx"
         }
       }
@@ -111,7 +135,7 @@ If you need to create a Project Manager agent:
 
 ```bash
 # Create PM agent
-agent-todo agent create "Project Manager" \
+agent-todo --server https://your-todo-server.com agent create "Project Manager" \
   --description "Primary PM agent for managing all agents and tasks" \
   --role admin
 
@@ -125,21 +149,47 @@ agent-todo agent create "Project Manager" \
 
 1. Check plugin directory exists:
    ```bash
-   ls -la ~/.openclaw/plugins/agent-todo/
+   ls -la ~/.openclaw/plugins/formatho-agent-todo/
    ```
 
-2. Verify openclaw.plugin.json is valid
+2. Verify `openclaw.plugin.json` is valid
 
 3. Check OpenClaw logs: `~/.openclaw/logs/gateway.log`
 
 ### Connection Failed
 
-1. Verify server is running:
+1. **Verify your server is running:**
    ```bash
-   curl http://localhost:8080/health
+   curl https://your-todo-server.com/health
    ```
 
-2. Check serverUrl in config matches your server
+2. **Check serverUrl in config:**
+   ```json
+   {
+     "config": {
+       "serverUrl": "https://your-todo-server.com"
+     }
+   }
+   ```
+
+3. **Ensure network permissions allow your server domain**
+
+### Wrong Server URL
+
+If you entered the wrong URL, edit `~/.openclaw/openclaw.json`:
+```json
+{
+  "plugins": {
+    "entries": {
+      "formatho-agent-todo": {
+        "config": {
+          "serverUrl": "https://correct-url.com"
+        }
+      }
+    }
+  }
+}
+```
 
 ### CLI Not Found
 
@@ -151,12 +201,13 @@ go install github.com/formatho/agent-todo/cli@latest
 ## Full Documentation
 
 For complete documentation, see:
-- **Plugin README**: `openclaw-plugin/README.md`
-- **Skill Documentation**: `skills/agent-todo/SKILL.md`
+- **Plugin README**: `formatho-agent-todo-plugin/README.md`
+- **Skill Documentation**: `skills/formatho-agent-todo/SKILL.md`
 - **Project README**: `README.md`
-- **API Documentation**: http://localhost:8080/docs (when server is running)
+- **API Documentation**: Available at your server's `/docs` endpoint
 
 ## Support
 
 - **Issues**: https://github.com/formatho/agent-todo/issues
 - **Documentation**: https://github.com/formatho/agent-todo
+

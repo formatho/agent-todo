@@ -33,9 +33,21 @@ ln -s /path/to/agent-todo/formatho-agent-todo-plugin ~/.openclaw/plugins/formath
 
 ## Configuration
 
-### Required Configuration
+### Interactive Setup (Recommended)
 
-The plugin requires configuration before use. Add the following to your `~/.openclaw/openclaw.json`:
+When you enable the plugin for the first time, OpenClaw will prompt you for:
+
+1. **Server URL**: Enter your Formatho Agent Todo server URL
+   - Example: `https://todo.example.com` or `http://localhost:8080`
+   - The plugin will verify the connection before saving
+
+2. **API Key** (Optional): Enter your API key if you're setting up agents
+   - Press Enter to skip if you only need human access
+   - Required for AI agents to authenticate
+
+### Manual Configuration
+
+Alternatively, add the following to your `~/.openclaw/openclaw.json`:
 
 ```json
 {
@@ -44,8 +56,9 @@ The plugin requires configuration before use. Add the following to your `~/.open
       "formatho-agent-todo": {
         "enabled": true,
         "config": {
-          "serverUrl": "http://localhost:8080",
-          "apiKey": "your-api-key-here"
+          "serverUrl": "https://your-todo-server.com",
+          "apiKey": "your-api-key-here",
+          "verifyConnection": true
         }
       }
     }
@@ -58,16 +71,22 @@ The plugin requires configuration before use. Add the following to your `~/.open
 | Option | Type | Required | Default | Description |
 |--------|------|----------|---------|-------------|
 | `enabled` | boolean | Yes | `false` | Enable/disable the plugin |
-| `serverUrl` | string | **Yes** | `http://localhost:8080` | Formatho Formatho Agent Todo server URL |
+| `serverUrl` | string | **Yes** | `""` | Your Formatho Agent Todo server URL (provided during setup) |
 | `apiKey` | string | No | `""` | API key for agent authentication |
 | `autoInstall` | boolean | No | `true` | Auto-install CLI if missing |
+| `verifyConnection` | boolean | No | `true` | Verify server connection during setup |
 
-### Server URL Configuration
+### Prerequisites
 
-**IMPORTANT**: You must configure the `serverUrl` to point to your Formatho Formatho Agent Todo server instance.
+**Before configuring the plugin, ensure:**
 
-#### Local Development
+1. ✅ Your Formatho Agent Todo server is running and accessible
+2. ✅ You know your server URL (e.g., `https://todo.example.com`)
+3. ✅ If using agents, you have your API key ready
 
+### Server URL Examples
+
+#### Local Development Server
 ```json
 {
   "config": {
@@ -76,7 +95,7 @@ The plugin requires configuration before use. Add the following to your `~/.open
 }
 ```
 
-#### Remote Server
+#### Remote Production Server
 
 ```json
 {
@@ -140,18 +159,29 @@ export AGENT_TODO_SERVER_URL="http://localhost:8080"
 
 ## Agent Setup Workflow
 
-### 1. Start the Formatho Agent Todo Server
+### 1. Verify Your Server is Running
+
+Before configuring the plugin, ensure your Formatho Agent Todo server is accessible:
 
 ```bash
-# Using Docker Compose
-cd /path/to/agent-todo
-docker-compose up -d
+# Replace with your server URL
+curl https://your-todo-server.com/health
 
-# Or using the Makefile
-make start
+# Or for local development
+curl http://localhost:8080/health
 ```
 
+You should see a health check response confirming the server is running.
+
 ### 2. Configure OpenClaw Plugin
+
+**Option A: Interactive Setup (Recommended)**
+
+Enable the plugin in OpenClaw and follow the prompts:
+1. Enter your server URL when asked
+2. Enter your API key (optional, for agents)
+
+**Option B: Manual Configuration**
 
 Add to `~/.openclaw/openclaw.json`:
 
@@ -162,7 +192,7 @@ Add to `~/.openclaw/openclaw.json`:
       "formatho-agent-todo": {
         "enabled": true,
         "config": {
-          "serverUrl": "http://localhost:8080"
+          "serverUrl": "https://your-todo-server.com"
         }
       }
     }
@@ -240,33 +270,68 @@ Create a new regular agent called "Data Processor" for handling CSV files
 
 The plugin requires:
 
-- **Network Access**: To communicate with the Formatho Agent Todo server
+- **Network Access**: To communicate with your Formatho Agent Todo server
 - **Execute Permission**: To run the agent-todo CLI binary
 
-Network domains allowed:
-- `localhost` (port 8080)
-- `127.0.0.1` (port 8080)
-
-To access a remote server, update your OpenClaw security settings to allow the domain.
+The plugin supports connections to any server URL (configured during setup). OpenClaw will request network permissions for the domain you specify.
 
 ## Troubleshooting
 
 ### Plugin Not Loading
 
-1. Check the plugin is in the correct directory: `~/.openclaw/plugins/agent-todo/`
+1. Check the plugin is in the correct directory: `~/.openclaw/plugins/formatho-agent-todo/`
 2. Verify `openclaw.plugin.json` is valid JSON
 3. Check OpenClaw logs: `~/.openclaw/logs/gateway.log`
 
 ### Server Connection Failed
 
-1. Verify the Formatho Agent Todo server is running:
+1. **Verify your server is running:**
    ```bash
-   curl http://localhost:8080/health
+   # Replace with your server URL
+   curl https://your-todo-server.com/health
    ```
 
-2. Check the `serverUrl` in your config matches your server
+2. **Check the serverUrl in your config matches your server:**
+   ```json
+   {
+     "config": {
+       "serverUrl": "https://your-todo-server.com"
+     }
+   }
+   ```
 
-3. If using a remote server, ensure network permissions are configured
+3. **If connection verification fails:**
+   - Ensure your server is accessible from your network
+   - Check firewall settings
+   - Verify the URL includes the correct protocol (http:// or https://)
+   - For self-signed certificates, you may need to disable `verifyConnection`
+
+### Configuration Prompt Not Appearing
+
+1. Enable the plugin in OpenClaw
+2. Restart the OpenClaw gateway
+3. Try using the plugin - OpenClaw will prompt for configuration if needed
+
+### Wrong Server URL
+
+If you entered the wrong URL during setup:
+
+1. Edit `~/.openclaw/openclaw.json`
+2. Update the `serverUrl` value:
+   ```json
+   {
+     "plugins": {
+       "entries": {
+         "formatho-agent-todo": {
+           "config": {
+             "serverUrl": "https://correct-url.com"
+           }
+         }
+       }
+     }
+   }
+   ```
+3. Restart OpenClaw gateway
 
 ### CLI Not Found
 

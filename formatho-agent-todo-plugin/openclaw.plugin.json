@@ -15,28 +15,35 @@
     },
     "serverUrl": {
       "type": "string",
-      "description": "Formatho Agent Todo server URL (required)",
+      "description": "Your Formatho Agent Todo server URL (e.g., https://todo.example.com or http://localhost:8080)",
       "format": "uri",
       "required": true,
-      "default": "http://localhost:8080"
+      "prompt": "Enter your Formatho Agent Todo server URL",
+      "default": ""
     },
     "apiKey": {
       "type": "string",
-      "description": "API key for authentication (required for agent usage)",
+      "description": "API key for authentication (optional for humans, required for agents)",
       "required": false,
-      "default": ""
+      "default": "",
+      "prompt": "Enter your API key (optional, press Enter to skip)"
     },
     "autoInstall": {
       "type": "boolean",
       "description": "Automatically install agent-todo CLI if not found",
       "default": true
+    },
+    "verifyConnection": {
+      "type": "boolean",
+      "description": "Verify server connection during setup",
+      "default": true
     }
   },
   "permissions": {
     "network": {
-      "description": "Access Formatho Agent Todo server",
-      "domains": ["localhost", "127.0.0.1"],
-      "ports": [8080]
+      "description": "Access Formatho Agent Todo server at user-specified URL",
+      "domains": [],
+      "anyDomain": true
     },
     "exec": {
       "description": "Execute agent-todo CLI",
