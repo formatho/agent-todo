@@ -2,10 +2,19 @@
   <div class="task-grid-container">
     <!-- Grid Header -->
     <div class="grid-header">
-      <h2 class="grid-title">
-        Tasks
-        <span class="task-count">({{ filteredTasks.length }})</span>
-      </h2>
+      <div>
+        <h2 class="grid-title">
+          Tasks
+          <span class="task-count">({{ filteredTasks.length }})</span>
+        </h2>
+        <div v-if="filters.project_id" class="project-filter-indicator">
+          <span class="filter-icon">📁</span>
+          <span class="filter-text">
+            Filtering by: {{ getProjectName(filters.project_id) }}
+          </span>
+          <button @click="clearProjectFilter" class="btn-clear-filter">×</button>
+        </div>
+      </div>
 
       <ViewToggle v-model="viewMode" :options="viewOptions" @change="handleViewChange" />
 
@@ -178,6 +187,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useTaskStore } from '../stores/tasks'
 import { useAgentStore } from '../stores/agents'
 import { useProjectStore } from '../stores/projects'
@@ -187,6 +197,8 @@ import TaskModal from './TaskModal.vue'
 import ViewToggle from './ViewToggle.vue'
 import KanbanBoard from './KanbanBoard.vue'
 
+const route = useRoute()
+const router = useRouter()
 const taskStore = useTaskStore()
 const agentStore = useAgentStore()
 const projectStore = useProjectStore()
@@ -246,8 +258,27 @@ const emptyMessage = computed(() => {
 
 onMounted(async () => {
   await projectStore.fetchProjects({ status: 'active' })
-  await taskStore.fetchTasks()
   await agentStore.fetchAgents()
+
+  // Check for project_id in query parameters
+  const projectIdFromUrl = route.query.project_id
+  if (projectIdFromUrl) {
+    filters.value.project_id = projectIdFromUrl
+    await taskStore.fetchTasks({ project_id: projectIdFromUrl })
+  } else {
+    await taskStore.fetchTasks()
+  }
+})
+
+// Watch for route query changes
+watch(() => route.query.project_id, async (newProjectId) => {
+  if (newProjectId) {
+    filters.value.project_id = newProjectId
+    await taskStore.fetchTasks({ project_id: newProjectId })
+  } else {
+    filters.value.project_id = ''
+    await taskStore.fetchTasks()
+  }
 })
 
 watch(searchQuery, (newVal) => {
@@ -257,6 +288,18 @@ watch(searchQuery, (newVal) => {
 
 const handleViewChange = (newView) => {
   viewMode.value = newView
+}
+
+const getProjectName = (projectId) => {
+  const project = projectStore.projects.find(p => p.id === projectId)
+  return project ? project.name : 'Unknown Project'
+}
+
+const clearProjectFilter = async () => {
+  filters.value.project_id = ''
+  // Update URL to remove the query parameter
+  await router.push({ path: route.path, query: {} })
+  await taskStore.fetchTasks()
 }
 
 const applyFilters = () => {
@@ -323,7 +366,7 @@ const truncatedDesc = (desc) => {
   font-size: 28px;
   font-weight: 700;
   color: #111827;
-  margin: 0;
+  margin: 0 0 8px 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -333,6 +376,49 @@ const truncatedDesc = (desc) => {
   font-size: 18px;
   font-weight: 400;
   color: #6B7280;
+}
+
+/* Project Filter Indicator */
+.project-filter-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #E0E7FF;
+  border: 1px solid #C7D2FE;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #3730A3;
+  margin-top: 8px;
+}
+
+.filter-icon {
+  font-size: 14px;
+}
+
+.filter-text {
+  font-weight: 500;
+}
+
+.btn-clear-filter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: #6366F1;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-clear-filter:hover {
+  background: #4F46E5;
+  transform: scale(1.1);
 }
 
 .btn-create {
