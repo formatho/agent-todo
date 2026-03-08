@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { projectService } from '../services/projectService'
+import { isAgentMode } from '../utils/auth'
 
 export const useProjectStore = defineStore('projects', () => {
   const projects = ref([])
@@ -16,7 +17,11 @@ export const useProjectStore = defineStore('projects', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await projectService.getProjects(filters)
+      // Use agent endpoints if in agent mode
+      const response = isAgentMode()
+        ? await projectService.getProjectsForAgent(filters)
+        : await projectService.getProjects(filters)
+
       projects.value = Array.isArray(response) ? response : []
     } catch (err) {
       error.value = err.response?.data?.error || 'Failed to fetch projects'
@@ -29,7 +34,11 @@ export const useProjectStore = defineStore('projects', () => {
     loading.value = true
     error.value = null
     try {
-      currentProject.value = await projectService.getProject(id)
+      // Use agent endpoint if in agent mode
+      currentProject.value = isAgentMode()
+        ? await projectService.getProjectForAgent(id)
+        : await projectService.getProject(id)
+
       return currentProject.value
     } catch (err) {
       error.value = err.response?.data?.error || 'Failed to fetch project'
@@ -42,6 +51,13 @@ export const useProjectStore = defineStore('projects', () => {
   const createProject = async (projectData) => {
     loading.value = true
     error.value = null
+
+    // Agents cannot create projects
+    if (isAgentMode()) {
+      error.value = 'Agents cannot create projects'
+      throw new Error('Agents cannot create projects')
+    }
+
     try {
       const project = await projectService.createProject(projectData)
       projects.value.push(project)
@@ -57,6 +73,13 @@ export const useProjectStore = defineStore('projects', () => {
   const updateProject = async (id, updates) => {
     loading.value = true
     error.value = null
+
+    // Agents cannot update projects
+    if (isAgentMode()) {
+      error.value = 'Agents cannot update projects'
+      throw new Error('Agents cannot update projects')
+    }
+
     try {
       const updated = await projectService.updateProject(id, updates)
       const index = projects.value.findIndex(p => p.id === id)
@@ -78,6 +101,13 @@ export const useProjectStore = defineStore('projects', () => {
   const deleteProject = async (id) => {
     loading.value = true
     error.value = null
+
+    // Agents cannot delete projects
+    if (isAgentMode()) {
+      error.value = 'Agents cannot delete projects'
+      throw new Error('Agents cannot delete projects')
+    }
+
     try {
       await projectService.deleteProject(id)
       projects.value = projects.value.filter(p => p.id !== id)

@@ -54,6 +54,12 @@
             {{ loading ? 'Signing in...' : 'Sign in' }}
           </button>
         </div>
+
+        <div class="text-center">
+          <router-link to="/agent/login" class="font-medium text-indigo-600 hover:text-indigo-500 text-sm">
+            Or access as an AI Agent
+          </router-link>
+        </div>
       </form>
     </div>
   </div>

@@ -141,6 +141,10 @@ func main() {
 		agentTasks.PATCH("/tasks/:id/status", agentTaskHandler.UpdateStatus)
 		agentTasks.GET("/tasks/:id/comments", commentHandler.AgentGetComments)
 		agentTasks.POST("/tasks/:id/comments", commentHandler.AgentCreateComment)
+
+		// Project routes (read-only for agents)
+		agentTasks.GET("/projects", projectHandler.ListProjectsForAgent)
+		agentTasks.GET("/projects/:id", projectHandler.GetProjectForAgent)
 	}
 
 	// OpenClaw tool endpoints (agent only)

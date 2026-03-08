@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { isAuthenticated } from '../utils/auth'
 import Login from '../pages/Login.vue'
 import Register from '../pages/Register.vue'
+import AgentLogin from '../pages/AgentLogin.vue'
 import Dashboard from '../pages/Dashboard.vue'
 import Agents from '../pages/Agents.vue'
 import Projects from '../pages/Projects.vue'
@@ -17,6 +18,11 @@ const routes = [
     path: '/register',
     name: 'Register',
     component: Register
+  },
+  {
+    path: '/agent/login',
+    name: 'AgentLogin',
+    component: AgentLogin
   },
   {
     path: '/',
@@ -50,11 +56,11 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore()
+  const authenticated = isAuthenticated()
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+  if (to.meta.requiresAuth && !authenticated) {
     next('/login')
-  } else if ((to.name === 'Login' || to.name === 'Register') && authStore.isAuthenticated) {
+  } else if ((to.name === 'Login' || to.name === 'Register') && authenticated) {
     next('/')
   } else {
     next()

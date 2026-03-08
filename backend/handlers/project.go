@@ -202,3 +202,52 @@ func (h *ProjectHandler) GetProjectTasks(c *gin.Context) {
 
 	c.JSON(http.StatusOK, tasks)
 }
+
+// ListProjectsForAgent godoc
+// @Summary List projects (for agents)
+// @Description Get a list of projects with optional filters (agent accessible)
+// @Tags agent
+// @Produce json
+// @Security X-API-KEY
+// @Param status query string false "Filter by status" Enums(active, archived, completed)
+// @Param search query string false "Search in name and description"
+// @Success 200 {array} models.Project
+// @Failure 401 {object} map[string]string
+// @Router /agent/projects [get]
+func (h *ProjectHandler) ListProjectsForAgent(c *gin.Context) {
+	filter := services.ProjectFilter{
+		Status:     models.ProjectStatus(c.Query("status")),
+		SearchTerm: c.Query("search"),
+	}
+
+	projects, err := h.projectService.List(filter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, projects)
+}
+
+// GetProjectForAgent godoc
+// @Summary Get a project (for agents)
+// @Description Get a specific project by ID (agent accessible)
+// @Tags agent
+// @Produce json
+// @Security X-API-KEY
+// @Param id path string true "Project ID"
+// @Success 200 {object} models.Project
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /agent/projects/{id} [get]
+func (h *ProjectHandler) GetProjectForAgent(c *gin.Context) {
+	id := c.Param("id")
+
+	project, err := h.projectService.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Project not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, project)
+}

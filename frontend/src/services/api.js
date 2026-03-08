@@ -9,13 +9,19 @@ const api = axios.create({
   }
 })
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token (JWT or API Key)
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
-    if (token) {
+    const apiKey = localStorage.getItem('agent_api_key')
+
+    // Prefer API key if set (agent mode), otherwise use JWT (user mode)
+    if (apiKey) {
+      config.headers['X-API-KEY'] = apiKey
+    } else if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+
     return config
   },
   (error) => {
@@ -28,8 +34,20 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      window.location.href = '/login'
+      const apiKey = localStorage.getItem('agent_api_key')
+      const token = localStorage.getItem('token')
+
+      // Clear the appropriate auth based on mode
+      if (apiKey) {
+        localStorage.removeItem('agent_api_key')
+      } else if (token) {
+        localStorage.removeItem('token')
+      }
+
+      // Only redirect to login if not in agent mode
+      if (!apiKey) {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
