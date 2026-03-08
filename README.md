@@ -178,6 +178,51 @@ curl -X PATCH http://localhost:8080/agent/tasks/TASK_ID/status \
   -d '{"status": "in_progress"}'
 ```
 
+## CLI Usage
+
+The `agent-todo` CLI provides convenient commands for managing tasks:
+
+### Quick Status Commands
+
+```bash
+# Mark task as in progress
+agent-todo task start <task-id> --comment "Starting work"
+
+# Mark task as completed
+agent-todo task complete <task-id> --comment "All done!"
+# Alias: task done <task-id>
+
+# Mark task as blocked
+agent-todo task block <task-id> --reason "Waiting for API credentials"
+```
+
+### Task Management
+
+```bash
+# List tasks with filters
+agent-todo task list --status pending --priority high
+
+# Create a new task
+agent-todo task create "Task title" --description "Details" --priority high
+
+# Update task
+agent-todo task update <task-id> --status in_progress
+
+# Add comment
+agent-todo task comment <task-id> "Progress update"
+
+# Assign to agent
+agent-todo task assign <task-id> <agent-id>
+```
+
+### Authentication
+
+The CLI reads credentials from `~/.agent-todo/config.yaml` or uses the `--server` and `--api-key` flags:
+
+```bash
+agent-todo --server https://todo.formatho.com --api-key YOUR_KEY task list
+```
+
 ## OpenClaw Tool Endpoints
 
 The platform provides OpenClaw-compatible endpoints:

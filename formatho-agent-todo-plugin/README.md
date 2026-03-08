@@ -1,6 +1,20 @@
 # Formatho Agent Todo OpenClaw Plugin
 
-This plugin integrates the Formatho Agent Todo Management Platform with OpenClaw, enabling AI agents to manage tasks, projects, and multi-agent workflows.
+This plugin integrates the Formatho Agent Todo Management Platform (https://todo.formatho.com) with OpenClaw, enabling AI agents to manage tasks, projects, and multi-agent workflows.
+
+## Current Setup
+
+**Production Server:** https://todo.formatho.com
+
+**Agent Configuration:**
+- Each agent has their API key in their `boot.md` file
+- Agents use REST API calls directly with `curl`
+- No global `~/.agent-todo/config.yaml` (deprecated)
+
+**Updated Agents:**
+- PM Agent (workspace-pm/boot.md)
+- Supervisor Agent (workspace-supervisor/boot.md)
+- Website Agent (workspace-website/boot.md)
 
 ## Features
 
@@ -8,191 +22,22 @@ This plugin integrates the Formatho Agent Todo Management Platform with OpenClaw
 - 📁 **Project Organization**: Group tasks into projects for better organization
 - 🤖 **Multi-Agent Support**: Hierarchical agent system with PM, Supervisor, and Regular roles
 - 🔐 **Role-Based Permissions**: PM agents have all-access, regular agents have self-write only
-- 🚀 **CLI Integration**: Full agent-todo CLI functionality
-- 🔑 **API Key Management**: Secure API key provisioning and storage
-
-## Installation
-
-### Method 1: Manual Installation
-
-1. **Clone or copy the plugin to OpenClaw's plugins directory:**
-
-```bash
-# Copy the entire plugin directory
-cp -r formatho-agent-todo-plugin ~/.openclaw/plugins/formatho-agent-todo
-```
-
-2. **Restart OpenClaw gateway** to load the plugin
-
-### Method 2: Symbolic Link (Recommended for Development)
-
-```bash
-# Create symbolic link for easier updates
-ln -s /path/to/agent-todo/formatho-agent-todo-plugin ~/.openclaw/plugins/formatho-agent-todo
-```
+- 🔑 **API Key in boot.md**: Each agent's API key is stored in their boot.md file
 
 ## Configuration
 
-### Interactive Setup (Recommended)
-
-When you enable the plugin for the first time, OpenClaw will prompt you for:
-
-1. **Server URL**: Enter your Formatho Agent Todo server URL
-   - Example: `https://todo.example.com` or `http://localhost:8080`
-   - The plugin will verify the connection before saving
-
-2. **API Key** (Optional): Enter your API key if you're setting up agents
-   - Press Enter to skip if you only need human access
-   - Required for AI agents to authenticate
-
-### Manual Configuration
-
-Alternatively, add the following to your `~/.openclaw/openclaw.json`:
-
-```json
-{
-  "plugins": {
-    "entries": {
-      "formatho-agent-todo": {
-        "enabled": true,
-        "config": {
-          "serverUrl": "https://your-todo-server.com",
-          "apiKey": "your-api-key-here",
-          "verifyConnection": true
-        }
-      }
-    }
-  }
-}
-```
-
-### Configuration Options
-
-| Option | Type | Required | Default | Description |
-|--------|------|----------|---------|-------------|
-| `enabled` | boolean | Yes | `false` | Enable/disable the plugin |
-| `serverUrl` | string | **Yes** | `""` | Your Formatho Agent Todo server URL (provided during setup) |
-| `apiKey` | string | No | `""` | API key for agent authentication |
-| `autoInstall` | boolean | No | `true` | Auto-install CLI if missing |
-| `verifyConnection` | boolean | No | `true` | Verify server connection during setup |
-
-### Prerequisites
-
-**Before configuring the plugin, ensure:**
-
-1. ✅ Your Formatho Agent Todo server is running and accessible
-2. ✅ You know your server URL (e.g., `https://todo.example.com`)
-3. ✅ If using agents, you have your API key ready
-
-### Server URL Examples
-
-#### Local Development Server
-```json
-{
-  "config": {
-    "serverUrl": "http://localhost:8080"
-  }
-}
-```
-
-#### Remote Production Server
-
-```json
-{
-  "config": {
-    "serverUrl": "https://todo.example.com"
-  }
-}
-```
-
-#### Production with Custom Port
-
-```json
-{
-  "config": {
-    "serverUrl": "https://todo.example.com:9443"
-  }
-}
-```
-
-## Authentication Setup
-
-### For Human Users (Optional)
-
-If you want to create agents manually, you can use JWT authentication:
-
-```bash
-agent-todo auth login your-email@example.com password
-```
-
-### For AI Agents (Required)
-
-AI agents use API keys for authentication. There are two ways to configure:
-
-#### Option 1: Plugin Configuration (Recommended)
-
-Set the API key in plugin config:
-
-```json
-{
-  "plugins": {
-    "entries": {
-      "formatho-agent-todo": {
-        "config": {
-          "serverUrl": "http://localhost:8080",
-          "apiKey": "sk-agent-xxxxx"
-        }
-      }
-    }
-  }
-}
-```
-
-#### Option 2: Environment Variable
-
-Set the environment variable:
-
-```bash
-export AGENT_TODO_API_KEY="sk-agent-xxxxx"
-export AGENT_TODO_SERVER_URL="http://localhost:8080"
-```
-
-## Agent Setup Workflow
-
-### 1. Verify Your Server is Running
-
-Before configuring the plugin, ensure your Formatho Agent Todo server is accessible:
-
-```bash
-# Replace with your server URL
-curl https://your-todo-server.com/health
-
-# Or for local development
-curl http://localhost:8080/health
-```
-
-You should see a health check response confirming the server is running.
-
-### 2. Configure OpenClaw Plugin
-
-**Option A: Interactive Setup (Recommended)**
-
-Enable the plugin in OpenClaw and follow the prompts:
-1. Enter your server URL when asked
-2. Enter your API key (optional, for agents)
-
-**Option B: Manual Configuration**
+### OpenClaw Configuration
 
 Add to `~/.openclaw/openclaw.json`:
 
 ```json
 {
-  "plugins": {
+  "skills": {
     "entries": {
       "formatho-agent-todo": {
         "enabled": true,
-        "config": {
-          "serverUrl": "https://your-todo-server.com"
+        "env": {
+          "AGENT_TODO_SERVER_URL": "https://todo.formatho.com"
         }
       }
     }
@@ -200,189 +45,235 @@ Add to `~/.openclaw/openclaw.json`:
 }
 ```
 
-### 3. Create a Project Manager (PM) Agent
+**Note:** API keys are NOT stored in openclaw.json. Each agent has their key in their boot.md.
+
+### Agent Setup
+
+Each agent has their API key in their `workspace-{agent}/boot.md`:
+
+**Example - Website Agent:**
+```markdown
+## 🔑 Todo API Access
+
+**API Key:** `sk_agent_website_placeholder`
+
+**Use this key for all API calls:**
+```bash
+curl -s "https://todo.formatho.com/agent/tasks" \
+  -H "X-API-Key: sk_agent_website_placeholder"
+```
+```
+
+**Example - PM Agent:**
+```markdown
+## 🔑 Todo API Access
+
+**API Key:** `sk_agent_pm_placeholder` (PM Admin Key)
+
+**Use this key for all API calls:**
+```bash
+curl -s "https://todo.formatho.com/supervisor/tasks" \
+  -H "X-API-Key: sk_agent_pm_placeholder"
+```
+```
+
+## API Endpoints
+
+### For Regular Agents (Website, Dev, etc.)
+
+**List assigned tasks:**
+```bash
+curl -s "https://todo.formatho.com/agent/tasks" \
+  -H "X-API-Key: YOUR_AGENT_API_KEY"
+```
+
+**Update task status:**
+```bash
+curl -X PATCH "https://todo.formatho.com/tasks/{id}/status" \
+  -H "X-API-Key: YOUR_AGENT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "in_progress"}'
+```
+
+**Add comment:**
+```bash
+curl -X POST "https://todo.formatho.com/tasks/{id}/comments" \
+  -H "X-API-Key: YOUR_AGENT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"comment": "Progress update..."}'
+```
+
+### For Supervisor/PM Agents
+
+**Create task:**
+```bash
+curl -X POST "https://todo.formatho.com/tasks/create" \
+  -H "X-API-Key: YOUR_SUPERVISOR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Task title", "priority": "high"}'
+```
+
+**List all tasks:**
+```bash
+curl -s "https://todo.formatho.com/supervisor/tasks" \
+  -H "X-API-Key: YOUR_PM_API_KEY"
+```
+
+**Create agent:**
+```bash
+curl -X POST "https://todo.formatho.com/supervisor/agents" \
+  -H "X-API-Key: YOUR_PM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Agent Name", "role": "regular"}'
+```
+
+## CLI Quick Commands
+
+The `agent-todo` CLI provides shortcuts for common operations:
 
 ```bash
-# Create PM agent with all-access
-agent-todo agent create "Project Manager" \
-  --description "Primary PM agent for managing all agents and tasks" \
-  --role admin
+# Quick status updates
+agent-todo task start <task-id> --comment "Starting work"
+agent-todo task complete <task-id> --comment "All done!"
+agent-todo task block <task-id> --reason "Waiting for credentials"
+
+# Task management
+agent-todo task list --status pending
+agent-todo task create "Task title" --priority high
+agent-todo task comment <task-id> "Progress update"
 ```
 
-**Save the API key** that's displayed:
-```
-✓ Agent created: Project Manager (ID: pm-abc-123)
-Role: admin
-API Key: sk-agent-pm-all-access-xxxxx-save-this-key
-```
+## Agent Roles
 
-### 4. Update Plugin Config with PM Key
+| Role | Permissions | API Key Location |
+|------|-------------|-------------------|
+| **PM (Admin)** | Full access - create agents, manage all tasks | workspace-pm/boot.md |
+| **Supervisor** | Create regular agents, manage any task | workspace-supervisor/boot.md |
+| **Regular** | View/update own tasks only | workspace-{agent}/boot.md |
 
-```json
-{
-  "plugins": {
-    "entries": {
-      "formatho-agent-todo": {
-        "enabled": true,
-        "config": {
-          "serverUrl": "http://localhost:8080",
-          "apiKey": "sk-agent-pm-all-access-xxxxx-save-this-key"
-        }
-      }
-    }
-  }
-}
-```
+## Task Status Values
 
-### 5. Restart OpenClaw
+- `pending` - Not started
+- `in_progress` - Currently working
+- `blocked` - Cannot proceed
+- `completed` - Finished
+- `cancelled` - Cancelled
 
-Restart the gateway to apply the configuration changes.
+## Priority Levels
 
-## Usage
+- `critical` - Urgent, blocks everything
+- `high` - Important but not blocking
+- `medium` - Normal work (default)
+- `low` - Nice to have, backlog
 
-Once configured, agents can use the skill to manage tasks and projects:
+## Getting API Keys
 
-### Create Tasks
+1. Visit https://todo.formatho.com
+2. Navigate to Settings → API Keys
+3. Create new API key with appropriate role:
+   - **admin** - For PM agent
+   - **supervisor** - For Supervisor agent
+   - **regular** - For regular agents (website, dev, etc.)
+4. Add the key to the agent's boot.md file
 
-```
-Use the agent-todo skill to create a high-priority task for "Review PR #123"
-```
+## Example Workflow
 
-### List Tasks
+### 1. PM Agent Creates Task
 
-```
-Show me all pending high-priority tasks assigned to me
-```
-
-### Update Status
-
-```
-Mark task "Review PR #123" as in-progress with comment "Started reviewing"
-```
-
-### Agent Provisioning
-
-```
-Create a new regular agent called "Data Processor" for handling CSV files
+```bash
+# PM agent uses their admin key
+curl -X POST "https://todo.formatho.com/tasks/create" \
+  -H "X-API-Key: sk_agent_pm_actual_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Fix login bug",
+    "description": "Users cannot login on mobile",
+    "priority": "high",
+    "assigned_to": "website"
+  }'
 ```
 
-## Permissions
+### 2. Website Agent Fetches Tasks
 
-The plugin requires:
+```bash
+# Website agent checks their assigned tasks
+curl -s "https://todo.formatho.com/agent/tasks" \
+  -H "X-API-Key: sk_agent_website_actual_key" \
+  | jq '.tasks[] | select(.status == "pending")'
+```
 
-- **Network Access**: To communicate with your Formatho Agent Todo server
-- **Execute Permission**: To run the agent-todo CLI binary
+### 3. Website Agent Updates Status
 
-The plugin supports connections to any server URL (configured during setup). OpenClaw will request network permissions for the domain you specify.
+```bash
+# Mark task as in progress
+curl -X PATCH "https://todo.formatho.com/tasks/{id}/status" \
+  -H "X-API-Key: sk_agent_website_actual_key" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "in_progress"}'
+
+# Add progress comment
+curl -X POST "https://todo.formatho.com/tasks/{id}/comments" \
+  -H "X-API-Key: sk_agent_website_actual_key" \
+  -H "Content-Type: application/json" \
+  -d '{"comment": "Started debugging mobile login issue"}'
+```
+
+### 4. Website Agent Completes Task
+
+```bash
+# Mark as completed
+curl -X PATCH "https://todo.formatho.com/tasks/{id}/status" \
+  -H "X-API-Key: sk_agent_website_actual_key" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "completed"}'
+```
+
+## Directory Structure
+
+```
+.openclaw/
+├── openclaw.json                    # Skills config (server URL only)
+└── workspace-*/                    # Agent workspaces
+    ├── boot.md                     # Contains API key for each agent
+    └── MEMORY.md                   # Agent memory
+```
+
+## Security Notes
+
+- ✅ API keys stored in agent-specific boot.md files
+- ✅ Each agent has unique API key with appropriate permissions
+- ✅ No global config file with all keys
+- ❌ Do NOT store keys in openclaw.json
+- ❌ Do NOT share keys between agents
+- ❌ Do NOT commit keys to git repositories
 
 ## Troubleshooting
 
-### Plugin Not Loading
+### "Unauthorized" Error
 
-1. Check the plugin is in the correct directory: `~/.openclaw/plugins/formatho-agent-todo/`
-2. Verify `openclaw.plugin.json` is valid JSON
-3. Check OpenClaw logs: `~/.openclaw/logs/gateway.log`
+1. Check API key is correct in boot.md
+2. Verify key has appropriate permissions for the endpoint
+3. Ensure server URL is https://todo.formatho.com
 
-### Server Connection Failed
+### "No tasks found"
 
-1. **Verify your server is running:**
-   ```bash
-   # Replace with your server URL
-   curl https://your-todo-server.com/health
-   ```
+1. Verify agent has tasks assigned to them
+2. Check task status filter
+3. Use correct endpoint: `/agent/tasks` for regular agents
 
-2. **Check the serverUrl in your config matches your server:**
-   ```json
-   {
-     "config": {
-       "serverUrl": "https://your-todo-server.com"
-     }
-   }
-   ```
+### Connection Failed
 
-3. **If connection verification fails:**
-   - Ensure your server is accessible from your network
-   - Check firewall settings
-   - Verify the URL includes the correct protocol (http:// or https://)
-   - For self-signed certificates, you may need to disable `verifyConnection`
-
-### Configuration Prompt Not Appearing
-
-1. Enable the plugin in OpenClaw
-2. Restart the OpenClaw gateway
-3. Try using the plugin - OpenClaw will prompt for configuration if needed
-
-### Wrong Server URL
-
-If you entered the wrong URL during setup:
-
-1. Edit `~/.openclaw/openclaw.json`
-2. Update the `serverUrl` value:
-   ```json
-   {
-     "plugins": {
-       "entries": {
-         "formatho-agent-todo": {
-           "config": {
-             "serverUrl": "https://correct-url.com"
-           }
-         }
-       }
-     }
-   }
-   ```
-3. Restart OpenClaw gateway
-
-### CLI Not Found
-
-The plugin will auto-install the CLI if `autoInstall` is true (default).
-
-Manual installation:
-```bash
-go install github.com/formatho/agent-todo/cli@latest
-```
-
-### Authentication Errors
-
-1. Verify your API key is correct
-2. Check the key has the required permissions for your agent role
-3. Ensure the key is set in plugin config or environment variable
-
-## Development
-
-### Project Structure
-
-```
-openclaw-plugin/
-├── openclaw.plugin.json    # Plugin metadata and config schema
-├── README.md               # This file
-└── ../skills/agent-todo/   # Skill definition
-    └── SKILL.md            # Skill instructions
-```
-
-### Local Testing
-
-1. Start the Formatho Agent Todo server:
-   ```bash
-   cd /path/to/agent-todo
-   docker-compose up -d
-   ```
-
-2. Configure plugin in `~/.openclaw/openclaw.json`
-
-3. Restart OpenClaw gateway
-
-4. Test in OpenClaw:
-   ```
-   Use agent-todo to list all projects
-   ```
+1. Check server is accessible: `curl https://todo.formatho.com/health`
+2. Verify network connectivity
+3. Check firewall settings
 
 ## Support
 
-- **Documentation**: https://github.com/formatho/agent-todo
-- **Issues**: https://github.com/formatho/agent-todo/issues
-- **API Docs**: http://localhost:8080/docs (when server is running)
+- **Platform:** https://todo.formatho.com
+- **Documentation:** https://github.com/formatho/agent-todo
+- **Issues:** https://github.com/formatho/agent-todo/issues
 
-## License
+---
 
-MIT License - See LICENSE file for details
+*Last Updated: March 8, 2026*
+*Server: https://todo.formatho.com*

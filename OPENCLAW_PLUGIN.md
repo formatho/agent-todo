@@ -7,13 +7,13 @@ Quick guide to install and configure the Formatho Agent Todo OpenClaw plugin.
 Before installing the plugin, ensure you have:
 
 - ✅ A running Formatho Agent Todo server
-- ✅ Your server URL (e.g., `https://todo.example.com` or `http://localhost:8080`)
+- ✅ Your server URL (e.g., `https://todo.formatho.com` or `http://localhost:8080`)
 - ✅ Access to configure OpenClaw plugins
 
 **Verify your server is running:**
 ```bash
 # Replace with your server URL
-curl https://your-todo-server.com/health
+curl https://todo.formatho.com/health
 
 # Or for local development
 curl http://localhost:8080/health
@@ -33,7 +33,7 @@ cp -r formatho-agent-todo-plugin ~/.openclaw/plugins/formatho-agent-todo
 The plugin will prompt you for configuration:
 
 1. **Server URL**: Enter your Formatho Agent Todo server URL
-   - Example: `https://todo.example.com`
+   - Example: `https://todo.formatho.com`
    - Example: `http://localhost:8080`
    - The plugin will verify the connection
 
@@ -63,7 +63,7 @@ If you prefer manual configuration, edit `~/.openclaw/openclaw.json`:
       "formatho-agent-todo": {
         "enabled": true,
         "config": {
-          "serverUrl": "https://your-todo-server.com",
+          "serverUrl": "https://todo.formatho.com",
           "apiKey": "sk-agent-xxxxx",
           "verifyConnection": true
         }
@@ -103,7 +103,7 @@ If you prefer manual configuration, edit `~/.openclaw/openclaw.json`:
       "formatho-agent-todo": {
         "enabled": true,
         "config": {
-          "serverUrl": "https://todo.example.com"
+          "serverUrl": "https://todo.formatho.com"
         }
       }
     }
@@ -120,7 +120,7 @@ If you prefer manual configuration, edit `~/.openclaw/openclaw.json`:
       "formatho-agent-todo": {
         "enabled": true,
         "config": {
-          "serverUrl": "https://todo.example.com",
+          "serverUrl": "https://todo.formatho.com",
           "apiKey": "sk-agent-pm-all-access-xxxxx"
         }
       }
@@ -135,7 +135,7 @@ If you need to create a Project Manager agent:
 
 ```bash
 # Create PM agent
-agent-todo --server https://your-todo-server.com agent create "Project Manager" \
+agent-todo --server https://todo.formatho.com agent create "Project Manager" \
   --description "Primary PM agent for managing all agents and tasks" \
   --role admin
 
@@ -160,14 +160,14 @@ agent-todo --server https://your-todo-server.com agent create "Project Manager" 
 
 1. **Verify your server is running:**
    ```bash
-   curl https://your-todo-server.com/health
+   curl https://todo.formatho.com/health
    ```
 
 2. **Check serverUrl in config:**
    ```json
    {
      "config": {
-       "serverUrl": "https://your-todo-server.com"
+       "serverUrl": "https://todo.formatho.com"
      }
    }
    ```

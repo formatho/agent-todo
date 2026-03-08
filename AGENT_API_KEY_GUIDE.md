@@ -83,6 +83,26 @@ curl -H "X-API-KEY: your-agent-api-key" \
 # Get a specific project
 curl -H "X-API-KEY: your-agent-api-key" \
   "http://localhost:8080/agent/projects/{project-id}"
+
+# Update task status
+curl -X PATCH "http://localhost:8080/agent/tasks/{task-id}/status" \
+  -H "X-API-KEY: your-agent-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "completed"}'
+```
+
+### CLI Quick Status Commands
+
+```bash
+# Mark task as in progress
+agent-todo task start <task-id> --comment "Starting work"
+
+# Mark task as completed
+agent-todo task complete <task-id> --comment "All done!"
+# Alias: task done <task-id>
+
+# Mark task as blocked
+agent-todo task block <task-id> --reason "Waiting for credentials"
 ```
 
 ### Frontend Usage
