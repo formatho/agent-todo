@@ -24,7 +24,7 @@ type ToolCreateTaskRequest struct {
 	Title       string             `json:"title" binding:"required" example:"Analyze data"`
 	Description string             `json:"description" example:"Process the CSV files"`
 	Priority    models.TaskPriority `json:"priority" example:"high"`
-	ProjectID   string             `json:"project_id" binding:"required" example:"550e8400-e29b-41d4-a716-446655440000"`
+	ProjectID   string             `json:"project_id" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 
 // ToolUpdateTaskRequest represents a tool request for updating tasks

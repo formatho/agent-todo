@@ -20,7 +20,14 @@ export const useTaskStore = defineStore('tasks', {
       this.loading = true
       this.error = null
       try {
-        this.tasks = await taskService.getTasks(this.filters)
+        const tasks = await taskService.getTasks(this.filters)
+        // Ensure all tasks have comments and events as arrays
+        this.tasks = tasks.map(task => ({
+          ...task,
+          comments: Array.isArray(task.comments) ? task.comments : [],
+          events: Array.isArray(task.events) ? task.events : [],
+          project: task.project || null
+        }))
       } catch (error) {
         this.error = error.message
       } finally {
@@ -32,7 +39,14 @@ export const useTaskStore = defineStore('tasks', {
       this.loading = true
       this.error = null
       try {
-        this.currentTask = await taskService.getTask(id)
+        const task = await taskService.getTask(id)
+        // Ensure task has comments and events as arrays
+        this.currentTask = {
+          ...task,
+          comments: Array.isArray(task.comments) ? task.comments : [],
+          events: Array.isArray(task.events) ? task.events : [],
+          project: task.project || null
+        }
       } catch (error) {
         this.error = error.message
       } finally {
@@ -45,8 +59,15 @@ export const useTaskStore = defineStore('tasks', {
       this.error = null
       try {
         const task = await taskService.createTask(taskData)
-        this.tasks.unshift(task)
-        return task
+        // Ensure task has comments and events as arrays
+        const normalizedTask = {
+          ...task,
+          comments: Array.isArray(task.comments) ? task.comments : [],
+          events: Array.isArray(task.events) ? task.events : [],
+          project: task.project || null
+        }
+        this.tasks.unshift(normalizedTask)
+        return normalizedTask
       } catch (error) {
         this.error = error.message
         throw error
@@ -60,14 +81,21 @@ export const useTaskStore = defineStore('tasks', {
       this.error = null
       try {
         const task = await taskService.updateTask(id, updates)
+        // Ensure task has comments and events as arrays
+        const normalizedTask = {
+          ...task,
+          comments: Array.isArray(task.comments) ? task.comments : [],
+          events: Array.isArray(task.events) ? task.events : [],
+          project: task.project || null
+        }
         const index = this.tasks.findIndex(t => t.id === id)
         if (index !== -1) {
-          this.tasks[index] = task
+          this.tasks[index] = normalizedTask
         }
         if (this.currentTask?.id === id) {
-          this.currentTask = task
+          this.currentTask = normalizedTask
         }
-        return task
+        return normalizedTask
       } catch (error) {
         this.error = error.message
         throw error

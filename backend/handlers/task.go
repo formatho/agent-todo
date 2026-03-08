@@ -26,7 +26,7 @@ type CreateTaskRequest struct {
 	Description     string             `json:"description" example:"Write comprehensive documentation for the project"`
 	Priority        models.TaskPriority `json:"priority" binding:"required" example:"high"`
 	DueDate         *time.Time         `json:"due_date" example:"2024-12-31T23:59:59Z"`
-	ProjectID       string             `json:"project_id" binding:"required" example:"550e8400-e29b-41d4-a716-446655440000"`
+	ProjectID       string             `json:"project_id" example:"550e8400-e29b-41d4-a716-446655440000"`
 	AssignedAgentID *string            `json:"assigned_agent_id" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 

@@ -115,8 +115,15 @@ const truncatedDescription = computed(() => {
     : props.task.description
 })
 
-const commentCount = computed(() => props.task.comments?.length || 0)
-const eventCount = computed(() => props.task.events?.length || 0)
+const commentCount = computed(() => {
+  if (!Array.isArray(props.task.comments)) return 0
+  return props.task.comments.length
+})
+
+const eventCount = computed(() => {
+  if (!Array.isArray(props.task.events)) return 0
+  return props.task.events.length
+})
 
 const cardStyle = computed(() => {
   if (!props.task.assigned_agent) {

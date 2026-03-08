@@ -39,8 +39,12 @@ func (s *TaskService) Create(title, description string, priority models.TaskPrio
 		Status:          models.TaskStatusPending,
 		Priority:        priority,
 		DueDate:         dueDate,
-		ProjectID:       uuid.MustParse(projectID),
 		CreatedByUserID: uuid.MustParse(createdByUserID),
+	}
+
+	if projectID != "" {
+		parsedProjectID := uuid.MustParse(projectID)
+		task.ProjectID = &parsedProjectID
 	}
 
 	if assignedAgentID != nil {

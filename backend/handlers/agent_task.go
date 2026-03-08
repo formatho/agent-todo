@@ -26,7 +26,7 @@ type AgentCreateTaskRequest struct {
 	Description string             `json:"description" example:"Process and analyze the uploaded CSV files"`
 	Priority    models.TaskPriority `json:"priority" binding:"required" example:"medium"`
 	DueDate     *time.Time         `json:"due_date" example:"2024-12-31T23:59:59Z"`
-	ProjectID   string             `json:"project_id" binding:"required" example:"550e8400-e29b-41d4-a716-446655440000"`
+	ProjectID   string             `json:"project_id" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 
 // UpdateTaskStatusRequest represents the request body for updating task status

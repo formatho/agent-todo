@@ -85,7 +85,7 @@ type Task struct {
 	Status          TaskStatus   `gorm:"not null;default:'pending'" json:"status"`
 	Priority        TaskPriority `gorm:"not null;default:'medium'" json:"priority"`
 	DueDate         *time.Time   `json:"due_date"`
-	ProjectID       uuid.UUID    `gorm:"type:uuid;not null" json:"project_id"`
+	ProjectID       *uuid.UUID   `gorm:"type:uuid" json:"project_id"`
 	CreatedByUserID uuid.UUID    `gorm:"type:uuid;not null" json:"created_by_user_id"`
 	AssignedAgentID *uuid.UUID   `gorm:"type:uuid" json:"assigned_agent_id"`
 	Project         *Project     `gorm:"foreignKey:ProjectID" json:"project,omitempty"`
