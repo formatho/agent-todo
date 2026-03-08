@@ -7,22 +7,22 @@ class AgentTodo < Formula
   on_macos do
     on_intel do
       url "https://github.com/formatho/agent-todo/releases/download/v#{version}/agent-todo-darwin-amd64"
-      sha256 "b986a35db9bdd8d4a2fb4822758fd976a0bbf242841628005eb7575c82888ec4"
+      sha256 "08b6f243a7cc585aa88abdea9be61de403cb24e22adfd4382dd333e6ea0f7098"
     end
     on_arm do
       url "https://github.com/formatho/agent-todo/releases/download/v#{version}/agent-todo-darwin-arm64"
-      sha256 "6595bb9462e0dc34319b772dfdea56031157bfdb098c953168f1f78928033817"
+      sha256 "ec2cf743abd39ed8676caa1782aeb940982c3f1d8e99cc357c91e677ba3b5866"
     end
   end
 
   on_linux do
     on_intel do
       url "https://github.com/formatho/agent-todo/releases/download/v#{version}/agent-todo-linux-amd64"
-      sha256 "a0d108503e96882265a84129a423050ed372a225453e3b8209855f2f2c8735c6"
+      sha256 "764d6adb68e8b457ab792da8b4f7d0aebc403885892fe46da4f585bdb1d11da8"
     end
     on_arm do
       url "https://github.com/formatho/agent-todo/releases/download/v#{version}/agent-todo-linux-arm64"
-      sha256 "69ed8aa214ed62dd79f619acf97d5ddbf85b37f617df316d9969ae381d1ac472"
+      sha256 "6a201de6864de21898fa6b3e4117a0b64489f61f1844e675953d94a9993b692b"
     end
   end
 
