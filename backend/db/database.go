@@ -1,3 +1,4 @@
+// Package db provides database connection and seeding functionality
 package db
 
 import (
