@@ -39,6 +39,11 @@ func Connect(databaseURL string) error {
 		return fmt.Errorf("failed to run auto migrations: %w", err)
 	}
 
+	// Run manual migrations to fix foreign key constraints
+	if err := runManualMigrations(); err != nil {
+		log.Printf("Warning: failed to run manual migrations: %v", err)
+	}
+
 	// Seed initial data
 	if err := SeedData(); err != nil {
 		log.Printf("Warning: failed to seed data: %v", err)
@@ -170,5 +175,73 @@ func SeedData() error {
 	}
 
 	log.Println("Seed data created successfully")
+	return nil
+}
+
+// runManualMigrations runs SQL migrations that can't be handled by AutoMigrate
+func runManualMigrations() error {
+	// Drop old foreign key constraint if it exists
+	DB.Exec(`
+		DO $$
+		BEGIN
+			IF EXISTS (
+				SELECT 1 FROM pg_constraint
+				WHERE conname = 'fk_tasks_created_by'
+			) THEN
+				ALTER TABLE tasks DROP CONSTRAINT fk_tasks_created_by;
+			END IF;
+		END $$;
+	`)
+
+	// Drop agent creator constraint if it exists
+	DB.Exec(`
+		DO $$
+		BEGIN
+			IF EXISTS (
+				SELECT 1 FROM pg_constraint
+				WHERE conname = 'fk_tasks_created_by_agent'
+			) THEN
+				ALTER TABLE tasks DROP CONSTRAINT fk_tasks_created_by_agent;
+			END IF;
+		END $$;
+	`)
+
+	// Add proper foreign key constraints with ON DELETE SET NULL
+	DB.Exec(`
+		ALTER TABLE tasks
+		ADD CONSTRAINT IF NOT EXISTS fk_tasks_created_by_user
+		FOREIGN KEY (created_by_user_id)
+		REFERENCES users(id)
+		ON DELETE SET NULL
+		ON UPDATE CASCADE
+	`)
+
+	DB.Exec(`
+		ALTER TABLE tasks
+		ADD CONSTRAINT IF NOT EXISTS fk_tasks_created_by_agent
+		FOREIGN KEY (created_by_agent_id)
+		REFERENCES agents(id)
+		ON DELETE SET NULL
+		ON UPDATE CASCADE
+	`)
+
+	// Ensure check constraint exists for mutual exclusivity
+	DB.Exec(`
+		DO $$
+		BEGIN
+			IF NOT EXISTS (
+				SELECT 1 FROM pg_constraint
+				WHERE conname = 'chk_task_creator'
+			) THEN
+				ALTER TABLE tasks ADD CONSTRAINT chk_task_creator
+				CHECK (
+					(created_by_user_id IS NOT NULL AND created_by_agent_id IS NULL) OR
+					(created_by_user_id IS NULL AND created_by_agent_id IS NOT NULL)
+				);
+			END IF;
+		END $$;
+	`)
+
+	log.Println("Manual migrations completed successfully")
 	return nil
 }
