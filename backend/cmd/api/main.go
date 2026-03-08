@@ -177,10 +177,12 @@ func main() {
 		// Agent management
 		supervisor.POST("/agents", supervisorHandler.CreateAgent)
 		supervisor.GET("/agents", supervisorHandler.ListAgents)
+		supervisor.GET("/agents/activity", supervisorHandler.GetAgentsWithTasks)
 		supervisor.PATCH("/agents/:id", supervisorHandler.UpdateAgent)
 		supervisor.DELETE("/agents/:id", supervisorHandler.DeleteAgent)
 
 		// Task management (any task)
+		supervisor.GET("/tasks", supervisorHandler.ListTasks)
 		supervisor.PATCH("/tasks/:id/status", supervisorHandler.UpdateTaskStatus)
 		supervisor.PATCH("/tasks/:id/assign", supervisorHandler.AssignTask)
 	}

@@ -3,78 +3,156 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/formatho/agent-todo/models"
 	"github.com/formatho/agent-todo/services"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type SupervisorHandler struct {
-	agentService *services.AgentService
-	taskService  *services.TaskService
+	agentService    *services.AgentService
+	supervisorService *services.SupervisorService
 }
 
 func NewSupervisorHandler() *SupervisorHandler {
 	return &SupervisorHandler{
-		agentService: services.NewAgentService(),
-		taskService:  services.NewTaskService(),
+		agentService:    services.NewAgentService(),
+		supervisorService: services.NewSupervisorService(),
 	}
 }
 
-// CreateAgentRequest represents the request body for supervisor creating an agent
-type SupervisorCreateAgentRequest struct {
-	Name        string           `json:"name" binding:"required" example:"My Agent"`
-	Description string           `json:"description" example:"An AI assistant agent"`
-	Role        models.AgentRole `json:"role" binding:"required" example:"regular"`
-}
-
-// SupervisorCreateAgent godoc
-// @Summary Create a new agent (supervisor only)
-// @Description Create a new AI agent with specific role (supervisor/admin only)
-// @Tags supervisor
-// @Accept json
+// CreateAgent godoc
+// @Summary Create a new agent
+// @Description Create a new agent (supervisor/admin only)
+// @Tags agents
 // @Produce json
-// @Security X-API-KEY
-// @Param request body SupervisorCreateAgentRequest true "Agent details"
+// @Security Bearer
+// @Param request body CreateAgentRequest true "Agent details"
 // @Success 201 {object} models.Agent
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
-// @Failure 403 {object} map[string]string
 // @Router /supervisor/agents [post]
 func (h *SupervisorHandler) CreateAgent(c *gin.Context) {
-	var req SupervisorCreateAgentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Validate role
-	if req.Role != models.AgentRoleRegular && req.Role != models.AgentRoleSupervisor && req.Role != models.AgentRoleAdmin {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid role. Must be regular, supervisor, or admin"})
-		return
-	}
-
-	agent, err := h.agentService.CreateWithRole(req.Name, req.Description, req.Role)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, agent)
+	// Use agentHandler logic
+	agentHandler := NewAgentHandler()
+	agentHandler.CreateAgent(c)
 }
 
-// SupervisorListAgents godoc
-// @Summary List all agents (supervisor only)
-// @Description Get a list of all agents (supervisor/admin only)
-// @Tags supervisor
+// ListAgents godoc
+// @Summary List all agents
+// @Description List all agents (supervisor/admin only)
+// @Tags agents
 // @Produce json
-// @Security X-API-KEY
+// @Security Bearer
 // @Success 200 {array} models.Agent
 // @Failure 401 {object} map[string]string
-// @Failure 403 {object} map[string]string
 // @Router /supervisor/agents [get]
 func (h *SupervisorHandler) ListAgents(c *gin.Context) {
-	agents, err := h.agentService.List()
+	// Use agentHandler logic
+	agentHandler := NewAgentHandler()
+	agentHandler.ListAgents(c)
+}
+
+// UpdateAgent godoc
+// @Summary Update an agent
+// @Description Update an agent (supervisor/admin only)
+// @Tags agents
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Agent ID"
+// @Param request body UpdateAgentRequest true "Update details"
+// @Success 200 {object} models.Agent
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /supervisor/agents/{id} [patch]
+func (h *SupervisorHandler) UpdateAgent(c *gin.Context) {
+	// Use agentHandler logic
+	agentHandler := NewAgentHandler()
+	agentHandler.UpdateAgent(c)
+}
+
+// DeleteAgent godoc
+// @Summary Delete an agent
+// @Description Delete an agent (supervisor/admin only)
+// @Tags agents
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Agent ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /supervisor/agents/{id} [delete]
+func (h *SupervisorHandler) DeleteAgent(c *gin.Context) {
+	// Use agentHandler logic
+	agentHandler := NewAgentHandler()
+	agentHandler.DeleteAgent(c)
+}
+
+// ListTasks godoc
+// @Summary List all tasks
+// @Description List all tasks (supervisor/admin only)
+// @Tags tasks
+// @Produce json
+// @Security Bearer
+// @Success 200 {array} models.Task
+// @Failure 401 {object} map[string]string
+// @Router /supervisor/tasks [get]
+func (h *SupervisorHandler) ListTasks(c *gin.Context) {
+	// Use taskHandler logic
+	taskHandler := NewTaskHandler()
+	taskHandler.ListTasks(c)
+}
+
+// UpdateTaskStatus godoc
+// @Summary Update task status
+// @Description Update any task status (supervisor/admin only)
+// @Tags tasks
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Task ID"
+// @Param request body UpdateStatusRequest true "Status update"
+// @Success 200 {object} models.Task
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /supervisor/tasks/{id}/status [patch]
+func (h *SupervisorHandler) UpdateTaskStatus(c *gin.Context) {
+	// Use taskHandler logic
+	taskHandler := NewTaskHandler()
+	c.Set("isSupervisor", true)
+	taskHandler.UpdateTask(c)
+}
+
+// AssignTask godoc
+// @Summary Assign task to agent
+// @Description Assign any task to an agent (supervisor/admin only)
+// @Tags tasks
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Task ID"
+// @Param request body AssignRequest true "Agent assignment"
+// @Success 200 {object} models.Task
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /supervisor/tasks/{id}/assign [patch]
+func (h *SupervisorHandler) AssignTask(c *gin.Context) {
+	// Use taskHandler logic
+	taskHandler := NewTaskHandler()
+	taskHandler.AssignAgent(c)
+}
+
+// GetAgentsWithTasks godoc
+// @Summary Get agents with their active tasks
+// @Description Get all agents along with their in-progress tasks
+// @Tags agents
+// @Produce json
+// @Security Bearer
+// @Success 200 {array} services.AgentWithTasks
+// @Failure 401 {object} map[string]string
+// @Router /supervisor/agents/activity [get]
+func (h *SupervisorHandler) GetAgentsWithTasks(c *gin.Context) {
+	agents, err := h.supervisorService.GetAgentsWithActiveTasks()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -83,159 +161,3 @@ func (h *SupervisorHandler) ListAgents(c *gin.Context) {
 	c.JSON(http.StatusOK, agents)
 }
 
-// SupervisorUpdateAgentRequest represents the request body for updating an agent
-type SupervisorUpdateAgentRequest struct {
-	Name        string           `json:"name" example:"Updated Agent Name"`
-	Description string           `json:"description" example:"Updated description"`
-	Role        models.AgentRole `json:"role" example:"supervisor"`
-	Enabled     *bool            `json:"enabled" example:"true"`
-}
-
-// SupervisorUpdateAgent godoc
-// @Summary Update an agent (supervisor only)
-// @Description Update an agent's details (supervisor/admin only)
-// @Tags supervisor
-// @Accept json
-// @Produce json
-// @Security X-API-KEY
-// @Param id path string true "Agent ID"
-// @Param request body SupervisorUpdateAgentRequest true "Update details"
-// @Success 200 {object} models.Agent
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Failure 403 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Router /supervisor/agents/{id} [patch]
-func (h *SupervisorHandler) UpdateAgent(c *gin.Context) {
-	id := c.Param("id")
-	var req SupervisorUpdateAgentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	agent, err := h.agentService.Update(id, req.Name, req.Description, req.Role, req.Enabled)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, agent)
-}
-
-// SupervisorDeleteAgent godoc
-// @Summary Delete an agent (supervisor only)
-// @Description Delete an agent by ID (supervisor/admin only)
-// @Tags supervisor
-// @Produce json
-// @Security X-API-KEY
-// @Param id path string true "Agent ID"
-// @Success 200 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Failure 403 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Router /supervisor/agents/{id} [delete]
-func (h *SupervisorHandler) DeleteAgent(c *gin.Context) {
-	id := c.Param("id")
-
-	if err := h.agentService.Delete(id); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Agent not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Agent deleted successfully"})
-}
-
-// SupervisorUpdateTaskStatusRequest represents request to update any task status
-type SupervisorUpdateTaskStatusRequest struct {
-	Status  models.TaskStatus `json:"status" binding:"required" example:"in_progress"`
-	Comment string            `json:"comment" example:"Taking over this task"`
-}
-
-// SupervisorUpdateTaskStatus godoc
-// @Summary Update any task status (supervisor only)
-// @Description Update status of any task regardless of assignment (supervisor/admin only)
-// @Tags supervisor
-// @Accept json
-// @Produce json
-// @Security X-API-KEY
-// @Param id path string true "Task ID"
-// @Param request body SupervisorUpdateTaskStatusRequest true "Status update"
-// @Success 200 {object} models.Task
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Failure 403 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Router /supervisor/tasks/{id}/status [patch]
-func (h *SupervisorHandler) UpdateTaskStatus(c *gin.Context) {
-	taskID := c.Param("id")
-	var req SupervisorUpdateTaskStatusRequest
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	task, err := h.taskService.UpdateStatus(taskID, req.Status, c.GetString("agent_name"))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Add comment if provided
-	if req.Comment != "" {
-		agentIDStr := c.GetString("agent_id")
-		agentID := uuid.MustParse(agentIDStr)
-		_, err = h.taskService.AddComment(
-			taskID,
-			req.Comment,
-			agentID,
-			"agent",
-			c.GetString("agent_name"),
-		)
-		if err != nil {
-			// Log error but don't fail the request since comment is optional
-			c.Error(err)
-		}
-	}
-
-	c.JSON(http.StatusOK, task)
-}
-
-// SupervisorAssignTaskRequest represents request to assign task to agent
-type SupervisorAssignTaskRequest struct {
-	AgentID string `json:"agent_id" binding:"required" example:"agent-uuid"`
-}
-
-// SupervisorAssignTask godoc
-// @Summary Assign task to agent (supervisor only)
-// @Description Assign any task to any agent (supervisor/admin only)
-// @Tags supervisor
-// @Accept json
-// @Produce json
-// @Security X-API-KEY
-// @Param id path string true "Task ID"
-// @Param request body SupervisorAssignTaskRequest true "Assignment"
-// @Success 200 {object} models.Task
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Failure 403 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Router /supervisor/tasks/{id}/assign [patch]
-func (h *SupervisorHandler) AssignTask(c *gin.Context) {
-	taskID := c.Param("id")
-	var req SupervisorAssignTaskRequest
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	task, err := h.taskService.AssignAgent(taskID, req.AgentID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, task)
-}

@@ -43,8 +43,13 @@
     </nav>
 
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <!-- Activity Feed -->
-      <ActivityFeed />
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Activity Feed -->
+        <ActivityFeed />
+
+        <!-- Agent Activity -->
+        <AgentsDashboard />
+      </div>
 
       <!-- Task Grid -->
       <TaskGrid />
@@ -57,6 +62,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import TaskGrid from '../components/TaskGrid.vue'
 import ActivityFeed from '../components/ActivityFeed.vue'
+import AgentsDashboard from '../components/AgentsDashboard.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
