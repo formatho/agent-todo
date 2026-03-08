@@ -209,21 +209,35 @@ func runManualMigrations() error {
 
 	// Add proper foreign key constraints with ON DELETE SET NULL
 	DB.Exec(`
-		ALTER TABLE tasks
-		ADD CONSTRAINT IF NOT EXISTS fk_tasks_created_by_user
-		FOREIGN KEY (created_by_user_id)
-		REFERENCES users(id)
-		ON DELETE SET NULL
-		ON UPDATE CASCADE
+		DO $$
+		BEGIN
+			IF NOT EXISTS (
+				SELECT 1 FROM pg_constraint
+				WHERE conname = 'fk_tasks_created_by_user'
+			) THEN
+				ALTER TABLE tasks ADD CONSTRAINT fk_tasks_created_by_user
+				FOREIGN KEY (created_by_user_id)
+				REFERENCES users(id)
+				ON DELETE SET NULL
+				ON UPDATE CASCADE;
+			END IF;
+		END $$;
 	`)
 
 	DB.Exec(`
-		ALTER TABLE tasks
-		ADD CONSTRAINT IF NOT EXISTS fk_tasks_created_by_agent
-		FOREIGN KEY (created_by_agent_id)
-		REFERENCES agents(id)
-		ON DELETE SET NULL
-		ON UPDATE CASCADE
+		DO $$
+		BEGIN
+			IF NOT EXISTS (
+				SELECT 1 FROM pg_constraint
+				WHERE conname = 'fk_tasks_created_by_agent'
+			) THEN
+				ALTER TABLE tasks ADD CONSTRAINT fk_tasks_created_by_agent
+				FOREIGN KEY (created_by_agent_id)
+				REFERENCES agents(id)
+				ON DELETE SET NULL
+				ON UPDATE CASCADE;
+			END IF;
+		END $$;
 	`)
 
 	// Ensure check constraint exists for mutual exclusivity
