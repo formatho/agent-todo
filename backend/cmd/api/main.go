@@ -115,6 +115,7 @@ func main() {
 		agents.POST("", agentHandler.CreateAgent)
 		agents.GET("", agentHandler.ListAgents)
 		agents.GET("/:id", agentHandler.GetAgent)
+		agents.GET("/:id/statistics", agentHandler.GetAgentStatistics)
 		agents.PATCH("/:id", agentHandler.UpdateAgent)
 		agents.DELETE("/:id", agentHandler.DeleteAgent)
 	}
@@ -152,6 +153,7 @@ func main() {
 		agentTasks.PATCH("/tasks/:id/status", agentTaskHandler.UpdateStatus)
 		agentTasks.GET("/tasks/:id/comments", commentHandler.AgentGetComments)
 		agentTasks.POST("/tasks/:id/comments", commentHandler.AgentCreateComment)
+		agentTasks.GET("/statistics", agentHandler.GetMyStatistics)
 
 		// Project routes (read-only for agents)
 		agentTasks.GET("/projects", projectHandler.ListProjectsForAgent)

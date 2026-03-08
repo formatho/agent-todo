@@ -130,3 +130,42 @@ func (s *AgentService) Update(id, name, description string, role models.AgentRol
 
 	return &agent, nil
 }
+
+// AgentStatistics represents statistics for an agent
+type AgentStatistics struct {
+	TotalTasks     int64 `json:"total_tasks"`
+	PendingTasks   int64 `json:"pending_tasks"`
+	InProgress     int64 `json:"in_progress"`
+	CompletedTasks int64 `json:"completed_tasks"`
+	FailedTasks    int64 `json:"failed_tasks"`
+	BlockedTasks   int64 `json:"blocked_tasks"`
+}
+
+// GetStatistics retrieves task statistics for an agent
+func (s *AgentService) GetStatistics(agentID string) (*AgentStatistics, error) {
+	stats := &AgentStatistics{}
+
+	// Get total tasks
+	if err := s.db.Model(&models.Task{}).Where("assigned_agent_id = ?", agentID).Count(&stats.TotalTasks).Error; err != nil {
+		return nil, err
+	}
+
+	// Get tasks by status
+	if err := s.db.Model(&models.Task{}).Where("assigned_agent_id = ? AND status = ?", agentID, "pending").Count(&stats.PendingTasks).Error; err != nil {
+		return nil, err
+	}
+	if err := s.db.Model(&models.Task{}).Where("assigned_agent_id = ? AND status = ?", agentID, "in_progress").Count(&stats.InProgress).Error; err != nil {
+		return nil, err
+	}
+	if err := s.db.Model(&models.Task{}).Where("assigned_agent_id = ? AND status = ?", agentID, "completed").Count(&stats.CompletedTasks).Error; err != nil {
+		return nil, err
+	}
+	if err := s.db.Model(&models.Task{}).Where("assigned_agent_id = ? AND status = ?", agentID, "failed").Count(&stats.FailedTasks).Error; err != nil {
+		return nil, err
+	}
+	if err := s.db.Model(&models.Task{}).Where("assigned_agent_id = ? AND status = ?", agentID, "blocked").Count(&stats.BlockedTasks).Error; err != nil {
+		return nil, err
+	}
+
+	return stats, nil
+}

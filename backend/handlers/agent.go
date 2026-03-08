@@ -171,3 +171,59 @@ func (h *AgentHandler) DeleteAgent(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Agent deleted successfully"})
 }
+
+// GetAgentStatistics godoc
+// @Summary Get agent statistics
+// @Description Get task statistics for a specific agent
+// @Tags agents
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Agent ID"
+// @Success 200 {object} services.AgentStatistics
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /agents/{id}/statistics [get]
+func (h *AgentHandler) GetAgentStatistics(c *gin.Context) {
+	id := c.Param("id")
+
+	// First verify the agent exists
+	_, err := h.agentService.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Agent not found"})
+		return
+	}
+
+	stats, err := h.agentService.GetStatistics(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, stats)
+}
+
+// GetMyStatistics godoc
+// @Summary Get authenticated agent's statistics
+// @Description Get task statistics for the currently authenticated agent
+// @Tags agent
+// @Produce json
+// @Security X-API-KEY
+// @Success 200 {object} services.AgentStatistics
+// @Failure 401 {object} map[string]string
+// @Router /agent/statistics [get]
+func (h *AgentHandler) GetMyStatistics(c *gin.Context) {
+	// Get agent ID from context (set by AgentAuthMiddleware)
+	agentID, exists := c.Get("agent_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Agent not authenticated"})
+		return
+	}
+
+	stats, err := h.agentService.GetStatistics(agentID.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, stats)
+}
