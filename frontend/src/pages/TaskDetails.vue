@@ -197,7 +197,11 @@
                 </div>
                 <div>
                   <dt class="text-sm font-medium text-gray-500">Created By</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ task.created_by?.email }}</dd>
+                  <dd class="mt-1 text-sm text-gray-900">
+                    <span v-if="task.created_by">{{ task.created_by.email }}</span>
+                    <span v-else-if="task.created_by_agent">{{ task.created_by_agent.name }} (Agent)</span>
+                    <span v-else>Unknown</span>
+                  </dd>
                 </div>
                 <div>
                   <dt class="text-sm font-medium text-gray-500">Assigned Agent</dt>

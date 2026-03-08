@@ -59,7 +59,9 @@
         </span>
         <span class="meta-item">
           <span class="meta-icon">👤</span>
-          <span>{{ task.created_by?.email || 'Unknown' }}</span>
+          <span v-if="task.created_by">{{ task.created_by.email }}</span>
+          <span v-else-if="task.created_by_agent">{{ task.created_by_agent.name }} (Agent)</span>
+          <span v-else>Unknown</span>
         </span>
       </div>
 
