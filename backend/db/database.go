@@ -133,7 +133,7 @@ func SeedData() error {
 			Status:          models.TaskStatusPending,
 			Priority:        models.TaskPriorityHigh,
 			ProjectID:       &websiteProject.ID,
-			CreatedByUserID: adminUser.ID,
+			CreatedByUserID: &adminUser.ID,
 			AssignedAgentID: &exampleAgent.ID,
 		},
 		{
@@ -142,7 +142,7 @@ func SeedData() error {
 			Status:          models.TaskStatusPending,
 			Priority:        models.TaskPriorityMedium,
 			ProjectID:       &websiteProject.ID,
-			CreatedByUserID: adminUser.ID,
+			CreatedByUserID: &adminUser.ID,
 		},
 		{
 			Title:           "Design database schema",
@@ -150,7 +150,7 @@ func SeedData() error {
 			Status:          models.TaskStatusInProgress,
 			Priority:        models.TaskPriorityHigh,
 			ProjectID:       &apiProject.ID,
-			CreatedByUserID: adminUser.ID,
+			CreatedByUserID: &adminUser.ID,
 			AssignedAgentID: &exampleAgent.ID,
 		},
 	}
