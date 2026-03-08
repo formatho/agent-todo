@@ -295,35 +295,27 @@ onMounted(async () => {
   await projectStore.fetchProjects({ status: 'active' })
   await agentStore.fetchAgents()
 
-  // Check for query parameters
+  // Check for query parameters and apply them
   const projectIdFromUrl = route.query.project_id
   const agentIdFromUrl = route.query.agent_id
+  const statusFromUrl = route.query.status
+  const priorityFromUrl = route.query.priority
+  const searchFromUrl = route.query.search
 
-  if (projectIdFromUrl) {
-    filters.value.project_id = projectIdFromUrl
+  // Apply filters from URL
+  if (projectIdFromUrl) filters.value.project_id = projectIdFromUrl
+  if (agentIdFromUrl) filters.value.agent_id = agentIdFromUrl
+  if (statusFromUrl) filters.value.status = statusFromUrl
+  if (priorityFromUrl) filters.value.priority = priorityFromUrl
+  if (searchFromUrl) {
+    searchQuery.value = searchFromUrl
+    filters.value.search = searchFromUrl
   }
-  if (agentIdFromUrl) {
-    filters.value.agent_id = agentIdFromUrl
-  }
 
-  if (projectIdFromUrl || agentIdFromUrl) {
-    const params = {}
-    if (projectIdFromUrl) params.project_id = projectIdFromUrl
-    if (agentIdFromUrl) params.agent_id = agentIdFromUrl
-    await taskStore.fetchTasks(params)
-  } else {
-    await taskStore.fetchTasks()
-  }
-})
-
-// Watch for route query changes
-watch([() => route.query.project_id, () => route.query.agent_id], async ([newProjectId, newAgentId]) => {
-  filters.value.project_id = newProjectId || ''
-  filters.value.agent_id = newAgentId || ''
-
+  // Build params for API call
   const params = {}
-  if (newProjectId) params.project_id = newProjectId
-  if (newAgentId) params.agent_id = newAgentId
+  if (projectIdFromUrl) params.project_id = projectIdFromUrl
+  if (agentIdFromUrl) params.agent_id = agentIdFromUrl
 
   if (Object.keys(params).length > 0) {
     await taskStore.fetchTasks(params)
@@ -331,6 +323,35 @@ watch([() => route.query.project_id, () => route.query.agent_id], async ([newPro
     await taskStore.fetchTasks()
   }
 })
+
+// Watch for route query changes
+watch(
+  () => route.query,
+  async (newQuery) => {
+    // Update filters from URL
+    filters.value.project_id = newQuery.project_id || ''
+    filters.value.agent_id = newQuery.agent_id || ''
+    filters.value.status = newQuery.status || ''
+    filters.value.priority = newQuery.priority || ''
+    
+    if (newQuery.search && newQuery.search !== searchQuery.value) {
+      searchQuery.value = newQuery.search
+      filters.value.search = newQuery.search
+    }
+
+    // Fetch tasks with appropriate filters
+    const params = {}
+    if (newQuery.project_id) params.project_id = newQuery.project_id
+    if (newQuery.agent_id) params.agent_id = newQuery.agent_id
+
+    if (Object.keys(params).length > 0) {
+      await taskStore.fetchTasks(params)
+    } else {
+      await taskStore.fetchTasks()
+    }
+  },
+  { deep: true }
+)
 
 watch(searchQuery, (newVal) => {
   filters.value.search = newVal
@@ -374,12 +395,24 @@ const clearAgentFilter = async () => {
   await taskStore.fetchTasks()
 }
 
-const applyFilters = () => {
+const applyFilters = async () => {
+  // Update URL with current filters
+  const query = {}
+  
+  if (filters.value.status) query.status = filters.value.status
+  if (filters.value.priority) query.priority = filters.value.priority
+  if (filters.value.agent_id) query.agent_id = filters.value.agent_id
+  if (filters.value.project_id) query.project_id = filters.value.project_id
+  if (searchQuery.value) query.search = searchQuery.value
+  
+  // Update URL without reloading
+  await router.push({ path: route.path, query })
+  
   taskStore.setFilters(filters.value)
   taskStore.fetchTasks()
 }
 
-const clearFilters = () => {
+const clearFilters = async () => {
   filters.value = {
     status: '',
     priority: '',
@@ -388,6 +421,10 @@ const clearFilters = () => {
     search: ''
   }
   searchQuery.value = ''
+  
+  // Clear URL query parameters
+  await router.push({ path: route.path })
+  
   taskStore.setFilters(filters.value)
   taskStore.fetchTasks()
 }
