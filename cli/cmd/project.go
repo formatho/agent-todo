@@ -75,7 +75,7 @@ var listProjectsCmd = &cobra.Command{
 		status, _ := cmd.Flags().GetString("status")
 		search, _ := cmd.Flags().GetString("search")
 
-		path := "/projects"
+		path := "/api/agent/projects"
 		if status != "" || search != "" {
 			path += "?"
 			if status != "" {
@@ -228,6 +228,71 @@ var deleteProjectCmd = &cobra.Command{
 	},
 }
 
+// TaskForProject represents a task in project tasks listing
+type TaskForProject struct {
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	Priority    string `json:"priority"`
+	ProjectID   string `json:"project_id"`
+	AgentID     *string `json:"agent_id"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+}
+
+var projectTasksCmd = &cobra.Command{
+	Use:     "tasks <project-id>",
+	Short:   "List all tasks for a project",
+	Args:    cobra.ExactArgs(1),
+	Aliases: []string{"ls"},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		projectID := args[0]
+		status, _ := cmd.Flags().GetString("status")
+		priority, _ := cmd.Flags().GetString("priority")
+
+		path := "/api/agent/tasks?project_id=" + projectID
+		if status != "" {
+			path += "&status=" + status
+		}
+		if priority != "" {
+			path += "&priority=" + priority
+		}
+
+		c := client.New()
+		resp, err := c.Get(path, true)
+		if err != nil {
+			return fmt.Errorf("error making request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("failed to list tasks: %s", string(body))
+		}
+
+		var tasks []TaskForProject
+		if err := json.NewDecoder(resp.Body).Decode(&tasks); err != nil {
+			return fmt.Errorf("error decoding response: %w", err)
+		}
+
+		if len(tasks) == 0 {
+			fmt.Println("No tasks found for this project")
+			return nil
+		}
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+		fmt.Fprintln(w, "ID\tTITLE\tSTATUS\tPRIORITY\tCREATED")
+		for _, t := range tasks {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", t.ID, t.Title, t.Status, t.Priority, t.CreatedAt[:10])
+		}
+		w.Flush()
+
+		fmt.Printf("\nTotal: %d task(s)\n", len(tasks))
+		return nil
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(projectCmd)
 
@@ -244,9 +309,14 @@ func init() {
 	updateProjectCmd.Flags().StringP("description", "d", "", "Project description")
 	updateProjectCmd.Flags().StringP("status", "s", "", "Project status")
 
+	// Project tasks
+	projectTasksCmd.Flags().StringP("status", "s", "", "Filter by status")
+	projectTasksCmd.Flags().StringP("priority", "P", "", "Filter by priority")
+
 	projectCmd.AddCommand(createProjectCmd)
 	projectCmd.AddCommand(listProjectsCmd)
 	projectCmd.AddCommand(getProjectCmd)
 	projectCmd.AddCommand(updateProjectCmd)
 	projectCmd.AddCommand(deleteProjectCmd)
+	projectCmd.AddCommand(projectTasksCmd)
 }
