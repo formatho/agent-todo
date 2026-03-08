@@ -59,6 +59,28 @@ func (s *AgentService) CreateWithRole(name, description string, role models.Agen
 	return agent, nil
 }
 
+// CreateWithOrganisation creates a new agent with organisation context
+func (s *AgentService) CreateWithOrganisation(name, description string, role models.AgentRole, organisationID string) (*models.Agent, error) {
+	// Generate API key
+	apiKey := "sk_agent_" + uuid.New().String()
+
+	orgUUID := uuid.MustParse(organisationID)
+	agent := &models.Agent{
+		Name:           name,
+		APIKey:         apiKey,
+		Description:    description,
+		Role:           role,
+		Enabled:        true,
+		OrganisationID: &orgUUID,
+	}
+
+	if err := s.db.Create(agent).Error; err != nil {
+		return nil, err
+	}
+
+	return agent, nil
+}
+
 // GetByID retrieves an agent by ID
 func (s *AgentService) GetByID(id string) (*models.Agent, error) {
 	var agent models.Agent
@@ -86,6 +108,16 @@ func (s *AgentService) GetByAPIKey(apiKey string) (*models.Agent, error) {
 func (s *AgentService) List() ([]models.Agent, error) {
 	var agents []models.Agent
 	err := s.db.Find(&agents).Error
+	if err != nil {
+		return nil, err
+	}
+	return agents, nil
+}
+
+// ListByOrganisation retrieves all agents for a specific organisation
+func (s *AgentService) ListByOrganisation(organisationID string) ([]models.Agent, error) {
+	var agents []models.Agent
+	err := s.db.Where("organisation_id = ?", organisationID).Find(&agents).Error
 	if err != nil {
 		return nil, err
 	}

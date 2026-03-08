@@ -69,6 +69,14 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		return
 	}
 
+	// Get organisation context
+	var orgID *string
+	if organisationID, exists := c.Get("organisation_id"); exists {
+		if orgIDStr, ok := organisationID.(string); ok && orgIDStr != "" {
+			orgID = &orgIDStr
+		}
+	}
+
 	task, err := h.taskService.Create(
 		req.Title,
 		req.Description,
@@ -77,6 +85,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		req.ProjectID,
 		&userID, // Pass as pointer
 		req.AssignedAgentID,
+		orgID,
 	)
 
 	if err != nil {
@@ -140,7 +149,21 @@ func (h *TaskHandler) ListTasks(c *gin.Context) {
 func (h *TaskHandler) GetTask(c *gin.Context) {
 	id := c.Param("id")
 
-	task, err := h.taskService.GetByID(id)
+	var task *models.Task
+	var err error
+
+	// Use organisation context if available
+	if orgID, exists := c.Get("organisation_id"); exists {
+		if orgIDStr, ok := orgID.(string); ok && orgIDStr != "" {
+			task, err = h.taskService.GetByIDAndOrganisation(id, orgIDStr)
+		}
+	}
+
+	// Fallback to non-organisation-aware query if no org context
+	if task == nil {
+		task, err = h.taskService.GetByID(id)
+	}
+
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
 		return

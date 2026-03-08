@@ -50,7 +50,21 @@ func (h *AgentHandler) CreateAgent(c *gin.Context) {
 		req.Role = models.AgentRoleRegular
 	}
 
-	agent, err := h.agentService.CreateWithRole(req.Name, req.Description, req.Role)
+	var agent *models.Agent
+	var err error
+
+	// Use organisation context if available
+	if orgID, exists := c.Get("organisation_id"); exists {
+		if orgIDStr, ok := orgID.(string); ok && orgIDStr != "" {
+			agent, err = h.agentService.CreateWithOrganisation(req.Name, req.Description, req.Role, orgIDStr)
+		}
+	}
+
+	// Fallback if no organisation context
+	if agent == nil {
+		agent, err = h.agentService.CreateWithRole(req.Name, req.Description, req.Role)
+	}
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -69,7 +83,21 @@ func (h *AgentHandler) CreateAgent(c *gin.Context) {
 // @Failure 401 {object} map[string]string
 // @Router /agents [get]
 func (h *AgentHandler) ListAgents(c *gin.Context) {
-	agents, err := h.agentService.List()
+	var agents []models.Agent
+	var err error
+
+	// Use organisation context if available
+	if orgID, exists := c.Get("organisation_id"); exists {
+		if orgIDStr, ok := orgID.(string); ok && orgIDStr != "" {
+			agents, err = h.agentService.ListByOrganisation(orgIDStr)
+		}
+	}
+
+	// Fallback to all agents if no organisation context
+	if agents == nil {
+		agents, err = h.agentService.List()
+	}
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

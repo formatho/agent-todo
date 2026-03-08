@@ -87,6 +87,14 @@ func (h *ToolsHandler) CreateTask(c *gin.Context) {
 		return
 	}
 
+	// Get organisation context
+	var orgID *string
+	if organisationID, exists := c.Get("organisation_id"); exists {
+		if orgIDStr, ok := organisationID.(string); ok && orgIDStr != "" {
+			orgID = &orgIDStr
+		}
+	}
+
 	// Agent creates task using CreateByAgent
 	task, err := h.taskService.CreateByAgent(
 		req.Title,
@@ -97,6 +105,7 @@ func (h *ToolsHandler) CreateTask(c *gin.Context) {
 		agentID,
 		agentName,
 		&agentID,
+		orgID,
 	)
 
 	if err != nil {

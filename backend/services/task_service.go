@@ -36,7 +36,8 @@ type TaskFilter struct {
 // createdByUserID: UUID of the user creating the task (for human-created tasks)
 // createdByAgentID: UUID of the agent creating the task (for agent-created tasks)
 // Exactly one of createdByUserID or createdByAgentID must be provided
-func (s *TaskService) Create(title, description string, priority models.TaskPriority, dueDate *time.Time, projectID string, createdByUserID *string, assignedAgentID *string) (*models.Task, error) {
+// organisationID: Optional UUID of the organisation the task belongs to
+func (s *TaskService) Create(title, description string, priority models.TaskPriority, dueDate *time.Time, projectID string, createdByUserID *string, assignedAgentID *string, organisationID *string) (*models.Task, error) {
 	task := &models.Task{
 		Title:       title,
 		Description: description,
@@ -66,6 +67,12 @@ func (s *TaskService) Create(title, description string, priority models.TaskPrio
 		task.AssignedAgentID = &parsedID
 	}
 
+	// Set organisation if provided
+	if organisationID != nil && *organisationID != "" {
+		parsedOrgID := uuid.MustParse(*organisationID)
+		task.OrganisationID = &parsedOrgID
+	}
+
 	if err := s.db.Create(task).Error; err != nil {
 		return nil, err
 	}
@@ -78,7 +85,8 @@ func (s *TaskService) Create(title, description string, priority models.TaskPrio
 
 // CreateByAgent creates a new task on behalf of an agent
 // createdByAgentName is used for activity feed attribution
-func (s *TaskService) CreateByAgent(title, description string, priority models.TaskPriority, dueDate *time.Time, projectID, createdByAgentID, createdByAgentName string, assignedAgentID *string) (*models.Task, error) {
+// organisationID: Optional UUID of the organisation the task belongs to
+func (s *TaskService) CreateByAgent(title, description string, priority models.TaskPriority, dueDate *time.Time, projectID, createdByAgentID, createdByAgentName string, assignedAgentID *string, organisationID *string) (*models.Task, error) {
 	task := &models.Task{
 		Title:       title,
 		Description: description,
@@ -103,6 +111,12 @@ func (s *TaskService) CreateByAgent(title, description string, priority models.T
 		task.AssignedAgentID = &parsedID
 	}
 
+	// Set organisation if provided
+	if organisationID != nil && *organisationID != "" {
+		parsedOrgID := uuid.MustParse(*organisationID)
+		task.OrganisationID = &parsedOrgID
+	}
+
 	if err := s.db.Create(task).Error; err != nil {
 		return nil, err
 	}
@@ -122,6 +136,17 @@ func (s *TaskService) GetByID(id string) (*models.Task, error) {
 	var task models.Task
 	err := s.db.Preload("Project").Preload("CreatedBy").Preload("CreatedByAgent").Preload("AssignedAgent").Preload("Comments").Preload("Events").
 		Where("id = ?", id).First(&task).Error
+	if err != nil {
+		return nil, err
+	}
+	return &task, nil
+}
+
+// GetByIDAndOrganisation retrieves a task by ID, ensuring it belongs to the specified organisation
+func (s *TaskService) GetByIDAndOrganisation(id, organisationID string) (*models.Task, error) {
+	var task models.Task
+	err := s.db.Preload("Project").Preload("CreatedBy").Preload("CreatedByAgent").Preload("AssignedAgent").Preload("Comments").Preload("Events").
+		Where("id = ? AND organisation_id = ?", id, organisationID).First(&task).Error
 	if err != nil {
 		return nil, err
 	}

@@ -65,6 +65,14 @@ func (h *AgentTaskHandler) CreateTask(c *gin.Context) {
 		return
 	}
 
+	// Get organisation context
+	var orgID *string
+	if organisationID, exists := c.Get("organisation_id"); exists {
+		if orgIDStr, ok := organisationID.(string); ok && orgIDStr != "" {
+			orgID = &orgIDStr
+		}
+	}
+
 	// Agent creates task for itself
 	task, err := h.taskService.CreateByAgent(
 		req.Title,
@@ -75,6 +83,7 @@ func (h *AgentTaskHandler) CreateTask(c *gin.Context) {
 		agentID,   // Agent ID as creator
 		agentName, // Agent name for activity feed
 		&agentID,  // Auto-assign to self
+		orgID,     // Organisation context
 	)
 
 	if err != nil {
