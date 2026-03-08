@@ -6,6 +6,11 @@ export const agentService = {
     return response.data
   },
 
+  async getAgentsWithTasks() {
+    const response = await api.get('/agents/activity')
+    return response.data
+  },
+
   async getAgent(id) {
     const response = await api.get(`/agents/${id}`)
     return response.data

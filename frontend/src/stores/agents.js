@@ -22,6 +22,19 @@ export const useAgentStore = defineStore('agents', {
       }
     },
 
+    async fetchAgentsWithTasks() {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await agentService.getAgentsWithTasks()
+        this.agents = Array.isArray(response) ? response : []
+      } catch (error) {
+        this.error = error.message
+      } finally {
+        this.loading = false
+      }
+    },
+
     async createAgent(agentData) {
       this.loading = true
       this.error = null

@@ -148,6 +148,26 @@ func (h *AgentHandler) UpdateAgent(c *gin.Context) {
 // @Security Bearer
 // @Param id path string true "Agent ID"
 // @Success 200 {object} map[string]string
+
+// GetAgentsWithTasks godoc
+// @Summary Get all agents with their active tasks
+// @Description Get a list of all agents with their in-progress tasks
+// @Tags agents
+// @Produce json
+// @Security Bearer
+// @Success 200 {array} services.AgentWithTasks
+// @Failure 401 {object} map[string]string
+// @Router /agents/activity [get]
+func (h *AgentHandler) GetAgentsWithTasks(c *gin.Context) {
+	supervisorService := services.NewSupervisorService()
+	agents, err := supervisorService.GetAgentsWithActiveTasks()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, agents)
+}
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string

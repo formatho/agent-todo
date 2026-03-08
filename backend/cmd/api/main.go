@@ -114,6 +114,7 @@ func main() {
 	{
 		agents.POST("", agentHandler.CreateAgent)
 		agents.GET("", agentHandler.ListAgents)
+		agents.GET("/activity", agentHandler.GetAgentsWithTasks)
 		agents.GET("/:id", agentHandler.GetAgent)
 		agents.GET("/:id/statistics", agentHandler.GetAgentStatistics)
 		agents.PATCH("/:id", agentHandler.UpdateAgent)

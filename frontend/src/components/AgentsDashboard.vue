@@ -46,7 +46,7 @@ const loading = ref(true)
 
 onMounted(async () => {
   try {
-    await agentStore.fetchAgents()
+    await agentStore.fetchAgentsWithTasks()
     agents.value = agentStore.agents
   } catch (error) {
     console.error('Failed to load agents:', error)
