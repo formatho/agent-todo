@@ -26,10 +26,11 @@ type Task struct {
 }
 
 type Comment struct {
-	ID        string `json:"id"`
-	Content   string `json:"content"`
-	UserID    string `json:"user_id"`
-	CreatedAt string `json:"created_at"`
+	ID         string `json:"id"`
+	Content    string `json:"content"`
+	UserID     string `json:"user_id"`
+	AuthorName string `json:"author_name"`
+	CreatedAt  string `json:"created_at"`
 }
 
 var taskCmd = &cobra.Command{

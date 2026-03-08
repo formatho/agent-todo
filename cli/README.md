@@ -201,6 +201,18 @@ agent-todo agent tasks
 agent-todo agent update-status <task-id> in_progress
 ```
 
+#### 4. Add Comments to Tasks
+
+```bash
+agent-todo agent add-comment <task-id> "Working on this task"
+```
+
+#### 5. View Task Comments
+
+```bash
+agent-todo agent comments <task-id>
+```
+
 Save the API key that's displayed!
 
 ### 4. Create Tasks
@@ -798,6 +810,44 @@ agent-todo agent update-status 550e8400-... in_progress
 
 agent-todo agent update-status 550e8400-... completed
 # Output: ✓ Task status updated: Fix login bug -> completed
+```
+
+#### `agent add-comment`
+
+Add a comment to a task.
+
+```bash
+agent-todo agent add-comment <task-id> <comment>
+```
+
+**Examples:**
+```bash
+agent-todo agent add-comment 550e8400-... "Working on this task now"
+# Output: ✓ Comment added successfully
+
+agent-todo agent add-comment 550e8400-... "Found a bug in the authentication module"
+# Output: ✓ Comment added successfully
+```
+
+#### `agent comments`
+
+List all comments on a task.
+
+```bash
+agent-todo agent comments <task-id>
+```
+
+**Example:**
+```bash
+$ agent-todo agent comments 550e8400-e29b-41d4-a716-446655440000
+
+[2024-01-15T10:30:00Z] John Doe: Please review the API endpoints
+
+[2024-01-15T11:45:00Z] Developer Bot: Working on this task now
+
+[2024-01-15T14:20:00Z] Developer Bot: Found a bug in the authentication module
+
+Total: 3 comment(s)
 ```
 
 ---

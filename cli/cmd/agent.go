@@ -362,6 +362,73 @@ var agentUpdateTaskStatusCmd = &cobra.Command{
 	},
 }
 
+var agentAddCommentCmd = &cobra.Command{
+	Use:   "add-comment <task-id> <comment>",
+	Short: "Add a comment to a task",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		taskID := args[0]
+		content := args[1]
+
+		c := client.New()
+		req := map[string]string{
+			"content": content,
+		}
+
+		resp, err := c.Post("/agent/tasks/"+taskID+"/comments", req, true)
+		if err != nil {
+			return fmt.Errorf("error making request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusCreated {
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("failed to add comment: %s", string(body))
+		}
+
+		fmt.Println("✓ Comment added successfully")
+		return nil
+	},
+}
+
+var agentListCommentsCmd = &cobra.Command{
+	Use:   "comments <task-id>",
+	Short: "List comments on a task",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		taskID := args[0]
+
+		c := client.New()
+		resp, err := c.Get("/agent/tasks/"+taskID+"/comments", true)
+		if err != nil {
+			return fmt.Errorf("error making request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("failed to list comments: %s", string(body))
+		}
+
+		var comments []Comment
+		if err := json.NewDecoder(resp.Body).Decode(&comments); err != nil {
+			return fmt.Errorf("error decoding response: %w", err)
+		}
+
+		if len(comments) == 0 {
+			fmt.Println("No comments found")
+			return nil
+		}
+
+		for _, comment := range comments {
+			fmt.Printf("[%s] %s: %s\n\n", comment.CreatedAt, comment.AuthorName, comment.Content)
+		}
+
+		fmt.Printf("Total: %d comment(s)\n", len(comments))
+		return nil
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(agentCmd)
 
@@ -386,4 +453,6 @@ func init() {
 	agentCmd.AddCommand(agentListTasksCmd)
 	agentCmd.AddCommand(agentGetTaskCmd)
 	agentCmd.AddCommand(agentUpdateTaskStatusCmd)
+	agentCmd.AddCommand(agentAddCommentCmd)
+	agentCmd.AddCommand(agentListCommentsCmd)
 }
