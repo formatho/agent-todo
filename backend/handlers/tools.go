@@ -78,7 +78,8 @@ func (h *ToolsHandler) CreateTask(c *gin.Context) {
 		return
 	}
 
-	task, err := h.taskService.Create(
+	// Agent creates task using CreateByAgent
+	task, err := h.taskService.CreateByAgent(
 		req.Title,
 		req.Description,
 		req.Priority,

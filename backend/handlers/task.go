@@ -75,7 +75,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		req.Priority,
 		req.DueDate,
 		req.ProjectID,
-		userID,
+		&userID, // Pass as pointer
 		req.AssignedAgentID,
 	)
 

@@ -91,19 +91,21 @@ const (
 // Task represents a todo item
 type Task struct {
 	Base
-	Title           string        `gorm:"not null" json:"title"`
-	Description     string        `json:"description"`
-	Status          TaskStatus    `gorm:"not null;default:'pending'" json:"status"`
-	Priority        TaskPriority  `gorm:"not null;default:'medium'" json:"priority"`
-	DueDate         *time.Time    `json:"due_date"`
-	ProjectID       *uuid.UUID    `gorm:"type:uuid" json:"project_id"`
-	CreatedByUserID uuid.UUID     `gorm:"type:uuid;not null" json:"created_by_user_id"`
-	AssignedAgentID *uuid.UUID    `gorm:"type:uuid" json:"assigned_agent_id"`
-	Project         *Project      `gorm:"foreignKey:ProjectID" json:"project,omitempty"`
-	CreatedBy       *User         `gorm:"foreignKey:CreatedByUserID" json:"created_by,omitempty"`
-	AssignedAgent   *Agent        `gorm:"foreignKey:AssignedAgentID" json:"assigned_agent,omitempty"`
-	Comments        []TaskComment `gorm:"foreignKey:TaskID" json:"comments,omitempty"`
-	Events          []TaskEvent   `gorm:"foreignKey:TaskID" json:"events,omitempty"`
+	Title            string        `gorm:"not null" json:"title"`
+	Description      string        `json:"description"`
+	Status           TaskStatus    `gorm:"not null;default:'pending'" json:"status"`
+	Priority         TaskPriority  `gorm:"not null;default:'medium'" json:"priority"`
+	DueDate          *time.Time    `json:"due_date"`
+	ProjectID        *uuid.UUID    `gorm:"type:uuid" json:"project_id"`
+	CreatedByUserID  *uuid.UUID    `gorm:"type:uuid" json:"created_by_user_id"` // Nullable for agent-created tasks
+	CreatedByAgentID *uuid.UUID    `gorm:"type:uuid" json:"created_by_agent_id"` // Nullable for user-created tasks
+	AssignedAgentID  *uuid.UUID    `gorm:"type:uuid" json:"assigned_agent_id"`
+	Project          *Project      `gorm:"foreignKey:ProjectID" json:"project,omitempty"`
+	CreatedBy        *User         `gorm:"foreignKey:CreatedByUserID" json:"created_by,omitempty"`
+	CreatedByAgent   *Agent        `gorm:"foreignKey:CreatedByAgentID" json:"created_by_agent,omitempty"`
+	AssignedAgent    *Agent        `gorm:"foreignKey:AssignedAgentID" json:"assigned_agent,omitempty"`
+	Comments         []TaskComment `gorm:"foreignKey:TaskID" json:"comments,omitempty"`
+	Events           []TaskEvent   `gorm:"foreignKey:TaskID" json:"events,omitempty"`
 }
 
 // TaskEventType represents the type of event

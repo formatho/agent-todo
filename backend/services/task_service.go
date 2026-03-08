@@ -32,14 +32,63 @@ type TaskFilter struct {
 }
 
 // Create creates a new task
-func (s *TaskService) Create(title, description string, priority models.TaskPriority, dueDate *time.Time, projectID string, createdByUserID string, assignedAgentID *string) (*models.Task, error) {
+// createdByUserID: UUID of the user creating the task (for human-created tasks)
+// createdByAgentID: UUID of the agent creating the task (for agent-created tasks)
+// Exactly one of createdByUserID or createdByAgentID must be provided
+func (s *TaskService) Create(title, description string, priority models.TaskPriority, dueDate *time.Time, projectID string, createdByUserID *string, assignedAgentID *string) (*models.Task, error) {
 	task := &models.Task{
-		Title:           title,
-		Description:     description,
-		Status:          models.TaskStatusPending,
-		Priority:        priority,
-		DueDate:         dueDate,
-		CreatedByUserID: uuid.MustParse(createdByUserID),
+		Title:       title,
+		Description: description,
+		Status:      models.TaskStatusPending,
+		Priority:    priority,
+		DueDate:     dueDate,
+	}
+
+	// Set creator - exactly one must be provided
+	if createdByUserID != nil && *createdByUserID != "" {
+		parsedID := uuid.MustParse(*createdByUserID)
+		task.CreatedByUserID = &parsedID
+	} else {
+		task.CreatedByUserID = nil
+	}
+
+	// Note: createdByAgentID will be set by a separate method or by the handler
+	// We'll add a CreateByAgent method for clarity
+
+	if projectID != "" {
+		parsedProjectID := uuid.MustParse(projectID)
+		task.ProjectID = &parsedProjectID
+	}
+
+	if assignedAgentID != nil {
+		parsedID := uuid.MustParse(*assignedAgentID)
+		task.AssignedAgentID = &parsedID
+	}
+
+	if err := s.db.Create(task).Error; err != nil {
+		return nil, err
+	}
+
+	// Create creation event
+	s.createEvent(task.ID, models.TaskEventCreated, "", string(task.Status), "system")
+
+	return task, nil
+}
+
+// CreateByAgent creates a new task on behalf of an agent
+func (s *TaskService) CreateByAgent(title, description string, priority models.TaskPriority, dueDate *time.Time, projectID, createdByAgentID string, assignedAgentID *string) (*models.Task, error) {
+	task := &models.Task{
+		Title:       title,
+		Description: description,
+		Status:      models.TaskStatusPending,
+		Priority:    priority,
+		DueDate:     dueDate,
+	}
+
+	// Set agent as creator
+	if createdByAgentID != "" {
+		parsedID := uuid.MustParse(createdByAgentID)
+		task.CreatedByAgentID = &parsedID
 	}
 
 	if projectID != "" {
@@ -65,7 +114,7 @@ func (s *TaskService) Create(title, description string, priority models.TaskPrio
 // GetByID retrieves a task with relationships
 func (s *TaskService) GetByID(id string) (*models.Task, error) {
 	var task models.Task
-	err := s.db.Preload("Project").Preload("CreatedBy").Preload("AssignedAgent").Preload("Comments").Preload("Events").
+	err := s.db.Preload("Project").Preload("CreatedBy").Preload("CreatedByAgent").Preload("AssignedAgent").Preload("Comments").Preload("Events").
 		Where("id = ?", id).First(&task).Error
 	if err != nil {
 		return nil, err
@@ -76,7 +125,7 @@ func (s *TaskService) GetByID(id string) (*models.Task, error) {
 // List retrieves tasks with filters
 func (s *TaskService) List(filter TaskFilter) ([]models.Task, error) {
 	var tasks []models.Task
-	query := s.db.Preload("Project").Preload("CreatedBy").Preload("AssignedAgent")
+	query := s.db.Preload("Project").Preload("CreatedBy").Preload("CreatedByAgent").Preload("AssignedAgent")
 
 	if filter.Status != "" {
 		query = query.Where("status = ?", filter.Status)

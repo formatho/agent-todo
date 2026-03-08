@@ -59,16 +59,14 @@ func (h *AgentTaskHandler) CreateTask(c *gin.Context) {
 		return
 	}
 
-	// Agent creates tasks for itself
-	// Note: Using agent ID as created_by_user_id - this should be reconsidered
-	// as ideally agents should create tasks on behalf of a user
-	task, err := h.taskService.Create(
+	// Agent creates task for itself
+	task, err := h.taskService.CreateByAgent(
 		req.Title,
 		req.Description,
 		req.Priority,
 		req.DueDate,
 		req.ProjectID,
-		agentID,  // Using agent ID as creator (will need to update service)
+		agentID, // Agent ID as creator
 		&agentID, // Auto-assign to self
 	)
 
