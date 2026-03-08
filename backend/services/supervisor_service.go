@@ -21,20 +21,20 @@ func NewSupervisorService() *SupervisorService {
 
 // AgentWithTasks represents an agent with their active tasks
 type AgentWithTasks struct {
-	ID          uuid.UUID      `json:"id"`
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
+	ID          uuid.UUID        `json:"id"`
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
 	Role        models.AgentRole `json:"role"`
-	Enabled     bool           `json:"enabled"`
-	CreatedAt   time.Time      `json:"created_at"`
-	ActiveTasks []TaskSummary  `json:"active_tasks"`
+	Enabled     bool             `json:"enabled"`
+	CreatedAt   time.Time        `json:"created_at"`
+	ActiveTasks []TaskSummary    `json:"active_tasks"`
 }
 
 // TaskSummary represents a brief task summary
 type TaskSummary struct {
-	ID       uuid.UUID         `json:"id"`
-	Title    string            `json:"title"`
-	Status   models.TaskStatus `json:"status"`
+	ID       uuid.UUID           `json:"id"`
+	Title    string              `json:"title"`
+	Status   models.TaskStatus   `json:"status"`
 	Priority models.TaskPriority `json:"priority"`
 }
 

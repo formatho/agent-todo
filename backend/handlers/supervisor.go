@@ -8,13 +8,13 @@ import (
 )
 
 type SupervisorHandler struct {
-	agentService    *services.AgentService
+	agentService      *services.AgentService
 	supervisorService *services.SupervisorService
 }
 
 func NewSupervisorHandler() *SupervisorHandler {
 	return &SupervisorHandler{
-		agentService:    services.NewAgentService(),
+		agentService:      services.NewAgentService(),
 		supervisorService: services.NewSupervisorService(),
 	}
 }
@@ -160,4 +160,3 @@ func (h *SupervisorHandler) GetAgentsWithTasks(c *gin.Context) {
 
 	c.JSON(http.StatusOK, agents)
 }
-
