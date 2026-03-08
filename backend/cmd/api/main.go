@@ -66,6 +66,7 @@ func main() {
 
 	// Apply middleware
 	router.Use(middleware.CORSMiddleware())
+	router.Use(middleware.RateLimitMiddleware(100)) // 100 requests per minute per IP
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler()
@@ -85,8 +86,9 @@ func main() {
 	// Swagger documentation
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Auth routes
+	// Auth routes (stricter rate limiting)
 	auth := router.Group("/auth")
+	auth.Use(middleware.RateLimitMiddleware(20)) // 20 requests per minute for auth
 	{
 		auth.POST("/register", authHandler.Register)
 		auth.POST("/login", authHandler.Login)
@@ -134,6 +136,7 @@ func main() {
 	// Agent task routes (agent only)
 	agentTasks := router.Group("/agent")
 	agentTasks.Use(middleware.AgentAuthMiddleware())
+	agentTasks.Use(middleware.RateLimitByAPIKey(60)) // 60 requests per minute per agent
 	{
 		agentTasks.POST("/tasks", agentTaskHandler.CreateTask)
 		agentTasks.GET("/tasks", agentTaskHandler.ListTasks)
@@ -150,6 +153,7 @@ func main() {
 	// OpenClaw tool endpoints (agent only)
 	tools := router.Group("/tools")
 	tools.Use(middleware.AgentAuthMiddleware())
+	tools.Use(middleware.RateLimitByAPIKey(60)) // 60 requests per minute per agent
 	{
 		tools.POST("/tasks/create", toolsHandler.CreateTask)
 		tools.POST("/tasks/update", toolsHandler.UpdateTask)
