@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/formatho/agent-todo/middleware"
 	"github.com/formatho/agent-todo/models"
@@ -50,6 +51,12 @@ type AuthResponse struct {
 // @Failure 400 {object} map[string]string
 // @Router /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
+	// Check if registration is disabled
+	if os.Getenv("DISABLE_REGISTRATION") == "true" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Registration is currently disabled"})
+		return
+	}
+
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

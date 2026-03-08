@@ -5,12 +5,6 @@
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Sign in to your account
         </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-          Or
-          <router-link to="/register" class="font-medium text-indigo-600 hover:text-indigo-500">
-            create a new account
-          </router-link>
-        </p>
       </div>
 
       <form class="mt-8 space-y-6" @submit.prevent="handleLogin">

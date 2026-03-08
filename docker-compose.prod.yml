@@ -30,6 +30,7 @@ services:
       GIN_MODE: release
       JWT_SECRET: ${JWT_SECRET:?JWT secret required}
       FRONTEND_URL: ${FRONTEND_URL:-https://todo.formatho.com}
+      DISABLE_REGISTRATION: "true"
     depends_on:
       postgres:
         condition: service_healthy

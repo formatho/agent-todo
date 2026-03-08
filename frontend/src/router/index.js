@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { isAuthenticated } from '../utils/auth'
 import Login from '../pages/Login.vue'
-import Register from '../pages/Register.vue'
+// import Register from '../pages/Register.vue' // Disabled: registration is closed
 import AgentLogin from '../pages/AgentLogin.vue'
 import Dashboard from '../pages/Dashboard.vue'
 import Agents from '../pages/Agents.vue'
@@ -14,10 +14,15 @@ const routes = [
     name: 'Login',
     component: Login
   },
+  // Registration disabled
+  // {
+  //   path: '/register',
+  //   name: 'Register',
+  //   component: Register
+  // },
   {
     path: '/register',
-    name: 'Register',
-    component: Register
+    redirect: '/login' // Redirect registration attempts to login
   },
   {
     path: '/agent/login',
@@ -60,7 +65,7 @@ router.beforeEach((to, from, next) => {
 
   if (to.meta.requiresAuth && !authenticated) {
     next('/login')
-  } else if ((to.name === 'Login' || to.name === 'Register') && authenticated) {
+  } else if (to.name === 'Login' && authenticated) {
     next('/')
   } else {
     next()
