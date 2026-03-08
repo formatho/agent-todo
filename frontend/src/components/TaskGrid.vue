@@ -9,9 +9,16 @@
 
       <ViewToggle v-model="viewMode" :options="viewOptions" @change="handleViewChange" />
 
-      <button @click="handleCreateTask" class="btn-create">
+      <button @click="handleCreateTask" class="btn-create" :disabled="projectStore.activeProjects.length === 0">
         + Create Task
       </button>
+    </div>
+
+    <!-- Warning if no projects -->
+    <div v-if="projectStore.activeProjects.length === 0" class="no-projects-warning">
+      <span class="warning-icon">⚠️</span>
+      <span>No active projects. You need a project to create tasks.</span>
+      <router-link to="/projects" class="btn-create-project">Create Project</router-link>
     </div>
 
     <!-- Filters Bar -->
@@ -35,6 +42,16 @@
 
     <!-- Expanded Filters -->
     <div v-if="showFilters" class="filters-panel">
+      <div class="filter-group">
+        <label>Project</label>
+        <select v-model="filters.project_id" @change="applyFilters" class="filter-select">
+          <option value="">All Projects</option>
+          <option v-for="project in projectStore.activeProjects" :key="project.id" :value="project.id">
+            {{ project.name }}
+          </option>
+        </select>
+      </div>
+
       <div class="filter-group">
         <label>Status</label>
         <select v-model="filters.status" @change="applyFilters" class="filter-select">
@@ -90,6 +107,7 @@
         <thead>
           <tr>
             <th>Task</th>
+            <th>Project</th>
             <th>Status</th>
             <th>Priority</th>
             <th>Agent</th>
@@ -102,6 +120,9 @@
             <td>
               <div class="task-cell-title">{{ task.title }}</div>
               <div class="task-cell-desc">{{ truncatedDesc(task.description) }}</div>
+            </td>
+            <td>
+              <span class="project-badge">{{ task.project?.name || '-' }}</span>
             </td>
             <td>
               <span :class="['status-badge', task.status]">
@@ -133,14 +154,14 @@
     </div>
 
     <!-- Kanban Board View -->
-    <KanbanBoard v-else-if="viewMode === 'board'" />
+    <KanbanBoard v-else-if="viewMode === 'board'" :projectFilter="filters.project_id" />
 
     <!-- Empty State -->
     <div v-if="filteredTasks.length === 0" class="empty-state">
       <div class="empty-icon">📋</div>
       <h3>No tasks found</h3>
       <p>{{ emptyMessage }}</p>
-      <button @click="handleCreateTask" class="btn-create-empty">
+      <button v-if="!hasActiveFilters && projectStore.activeProjects.length > 0" @click="handleCreateTask" class="btn-create-empty">
         Create your first task
       </button>
     </div>
@@ -150,6 +171,7 @@
       v-if="showCreateModal"
       @close="showCreateModal = false"
       @saved="handleTaskCreated"
+      :preselectedProjectId="filters.project_id"
     />
   </div>
 </template>
@@ -158,6 +180,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useTaskStore } from '../stores/tasks'
 import { useAgentStore } from '../stores/agents'
+import { useProjectStore } from '../stores/projects'
 import TaskCard from './TaskCard.vue'
 import AgentAvatar from './AgentAvatar.vue'
 import TaskModal from './TaskModal.vue'
@@ -166,6 +189,7 @@ import KanbanBoard from './KanbanBoard.vue'
 
 const taskStore = useTaskStore()
 const agentStore = useAgentStore()
+const projectStore = useProjectStore()
 
 const viewMode = ref('grid')
 const searchQuery = ref('')
@@ -182,6 +206,7 @@ const filters = ref({
   status: '',
   priority: '',
   agent_id: '',
+  project_id: '',
   search: ''
 })
 
@@ -195,6 +220,7 @@ const hasActiveFilters = computed(() => {
   return filters.value.status ||
          filters.value.priority ||
          filters.value.agent_id ||
+         filters.value.project_id ||
          searchQuery.value
 })
 
@@ -203,6 +229,7 @@ const activeFilterCount = computed(() => {
   if (filters.value.status) count++
   if (filters.value.priority) count++
   if (filters.value.agent_id) count++
+  if (filters.value.project_id) count++
   if (searchQuery.value) count++
   return count
 })
@@ -211,10 +238,14 @@ const emptyMessage = computed(() => {
   if (hasActiveFilters.value) {
     return 'No tasks match your current filters. Try adjusting your search criteria.'
   }
+  if (projectStore.activeProjects.length === 0) {
+    return 'Create a project first, then add tasks.'
+  }
   return 'Get started by creating your first task.'
 })
 
 onMounted(async () => {
+  await projectStore.fetchProjects({ status: 'active' })
   await taskStore.fetchTasks()
   await agentStore.fetchAgents()
 })
@@ -238,6 +269,7 @@ const clearFilters = () => {
     status: '',
     priority: '',
     agent_id: '',
+    project_id: '',
     search: ''
   }
   searchQuery.value = ''
@@ -246,6 +278,9 @@ const clearFilters = () => {
 }
 
 const handleCreateTask = () => {
+  if (projectStore.activeProjects.length === 0) {
+    return
+  }
   showCreateModal.value = true
 }
 
@@ -311,9 +346,46 @@ const truncatedDesc = (desc) => {
   transition: all 0.2s ease;
 }
 
-.btn-create:hover {
+.btn-create:hover:not(:disabled) {
   background: #2563EB;
   transform: translateY(-1px);
+}
+
+.btn-create:disabled {
+  background: #9CA3AF;
+  cursor: not-allowed;
+}
+
+/* No Projects Warning */
+.no-projects-warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #FEF3C7;
+  border: 1px solid #FCD34D;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  color: #92400E;
+}
+
+.warning-icon {
+  font-size: 20px;
+}
+
+.btn-create-project {
+  padding: 6px 12px;
+  background: #F59E0B;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.btn-create-project:hover {
+  background: #D97706;
 }
 
 /* Filters Bar */
@@ -504,6 +576,17 @@ const truncatedDesc = (desc) => {
 .task-cell-desc {
   font-size: 13px;
   color: #6B7280;
+}
+
+.project-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: #E0E7FF;
+  color: #3730A3;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .status-badge,

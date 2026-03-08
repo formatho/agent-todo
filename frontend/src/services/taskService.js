@@ -6,6 +6,7 @@ export const taskService = {
     if (filters.status) params.append('status', filters.status)
     if (filters.agent_id) params.append('agent_id', filters.agent_id)
     if (filters.priority) params.append('priority', filters.priority)
+    if (filters.project_id) params.append('project_id', filters.project_id)
     if (filters.search) params.append('search', filters.search)
 
     const response = await api.get(`/tasks?${params}`)

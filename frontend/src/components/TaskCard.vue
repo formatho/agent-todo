@@ -32,6 +32,12 @@
       </span>
     </div>
 
+    <!-- Project Badge -->
+    <div v-if="task.project" class="project-indicator">
+      <span class="project-icon">📁</span>
+      <span class="project-name">{{ task.project.name }}</span>
+    </div>
+
     <!-- Agent Indicator -->
     <div v-if="task.assigned_agent" class="agent-indicator">
       <AgentAvatar :agent="task.assigned_agent" size="small" />
@@ -245,6 +251,28 @@ const handleEdit = () => {
   font-weight: 600;
   border: 1px solid;
   align-self: flex-start;
+}
+
+/* Project Indicator */
+.project-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #E0E7FF;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  width: fit-content;
+}
+
+.project-icon {
+  font-size: 12px;
+}
+
+.project-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #3730A3;
 }
 
 /* Agent Indicator */

@@ -1,0 +1,37 @@
+import api from './api'
+
+export const projectService = {
+  async getProjects(filters = {}) {
+    const params = new URLSearchParams()
+    if (filters.status) params.append('status', filters.status)
+    if (filters.search) params.append('search', filters.search)
+
+    const response = await api.get(`/projects?${params}`)
+    return response.data
+  },
+
+  async getProject(id) {
+    const response = await api.get(`/projects/${id}`)
+    return response.data
+  },
+
+  async createProject(projectData) {
+    const response = await api.post('/projects', projectData)
+    return response.data
+  },
+
+  async updateProject(id, updates) {
+    const response = await api.patch(`/projects/${id}`, updates)
+    return response.data
+  },
+
+  async deleteProject(id) {
+    const response = await api.delete(`/projects/${id}`)
+    return response.data
+  },
+
+  async getProjectTasks(projectId) {
+    const response = await api.get(`/projects/${projectId}/tasks`)
+    return response.data
+  }
+}

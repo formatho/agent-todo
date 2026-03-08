@@ -165,6 +165,15 @@
             <div class="px-4 py-5 sm:px-6">
               <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Details</h3>
               <dl class="space-y-3">
+                <div v-if="task.project">
+                  <dt class="text-sm font-medium text-gray-500">Project</dt>
+                  <dd class="mt-1 text-sm text-gray-900 flex items-center gap-2">
+                    <span>📁</span>
+                    <router-link :to="`/projects`" class="text-indigo-600 hover:underline">
+                      {{ task.project.name }}
+                    </router-link>
+                  </dd>
+                </div>
                 <div>
                   <dt class="text-sm font-medium text-gray-500">Status</dt>
                   <dd class="mt-1 text-sm text-gray-900">{{ formatStatus(task.status) }}</dd>

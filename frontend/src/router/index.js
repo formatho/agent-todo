@@ -4,6 +4,7 @@ import Login from '../pages/Login.vue'
 import Register from '../pages/Register.vue'
 import Dashboard from '../pages/Dashboard.vue'
 import Agents from '../pages/Agents.vue'
+import Projects from '../pages/Projects.vue'
 import TaskDetails from '../pages/TaskDetails.vue'
 
 const routes = [
@@ -27,6 +28,12 @@ const routes = [
     path: '/agents',
     name: 'Agents',
     component: Agents,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/projects',
+    name: 'Projects',
+    component: Projects,
     meta: { requiresAuth: true }
   },
   {
