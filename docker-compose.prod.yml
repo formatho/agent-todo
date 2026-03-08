@@ -1,0 +1,72 @@
+version: '3.8'
+
+# Production Docker Compose configuration
+# Usage: docker compose -f docker-compose.prod.yml up -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: agent-todo-db-prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-agent_todo}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Database password required}
+      POSTGRES_DB: ${DB_NAME:-agent_todo}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-agent_todo}"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agent-todo-network
+    # Don't expose to host in production
+    # expose:
+    #   - "5432"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - GO_VERSION=1.21
+    container_name: agent-todo-backend-prod
+    restart: always
+    environment:
+      DATABASE_URL: postgres://${DB_USER:-agent_todo}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-agent_todo}?sslmode=disable
+      PORT: 8080
+      GIN_MODE: release
+      JWT_SECRET: ${JWT_SECRET:?JWT secret required}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - agent-todo-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: agent-todo-frontend-prod
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    networks:
+      - agent-todo-network
+
+networks:
+  agent-todo-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

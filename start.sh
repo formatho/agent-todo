@@ -3,20 +3,38 @@
 echo "🚀 Starting Agent Todo Platform..."
 echo ""
 
-# Check if docker compose is available
-if ! command -v docker &> /dev/null; then
-    echo "❌ Docker is not installed. Please install Docker first."
+# Check if Docker is running
+if ! docker info > /dev/null 2>&1; then
+    echo "❌ Docker is not running. Please start Docker and try again."
     exit 1
 fi
 
-# Stop any running containers
-echo "🛑 Stopping any running containers..."
-docker compose down 2>/dev/null
+# Start services
+docker compose up -d
 
-# Build and start services
-echo "🔨 Building and starting services..."
 echo ""
-docker compose up --build
+echo "⏳ Waiting for services to be ready..."
+sleep 5
 
-# If user presses Ctrl+C, stop containers
-trap 'echo ""; echo "🛑 Stopping services..."; docker compose down; exit 0' INT
+# Check if services are healthy
+echo ""
+echo "📊 Service Status:"
+docker compose ps
+
+echo ""
+echo "✅ Agent Todo Platform is starting!"
+echo ""
+echo "📍 Access Points:"
+echo "   Frontend:  http://localhost:3000"
+echo "   Backend:   http://localhost:8080"
+echo "   Swagger:   http://localhost:8080/docs"
+echo "   Health:    http://localhost:8080/health"
+echo ""
+echo "🔑 Default Credentials:"
+echo "   Email:    admin@example.com"
+echo "   Password: admin123"
+echo ""
+echo "📝 Useful Commands:"
+echo "   View logs:  docker compose logs -f"
+echo "   Stop:       ./stop.sh or docker compose down"
+echo ""
