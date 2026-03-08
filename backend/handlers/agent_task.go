@@ -72,9 +72,9 @@ func (h *AgentTaskHandler) CreateTask(c *gin.Context) {
 		req.Priority,
 		req.DueDate,
 		req.ProjectID,
-		agentID,     // Agent ID as creator
-		agentName,   // Agent name for activity feed
-		&agentID,    // Auto-assign to self
+		agentID,   // Agent ID as creator
+		agentName, // Agent name for activity feed
+		&agentID,  // Auto-assign to self
 	)
 
 	if err != nil {
