@@ -6,6 +6,7 @@ import (
 	"github.com/formatho/agent-todo/models"
 	"github.com/formatho/agent-todo/services"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type SupervisorHandler struct {
@@ -183,8 +184,19 @@ func (h *SupervisorHandler) UpdateTaskStatus(c *gin.Context) {
 
 	// Add comment if provided
 	if req.Comment != "" {
-		commentService := services.NewCommentService()
-		commentService.Create(taskID, c.GetString("agent_id"), "agent", c.GetString("agent_name"), req.Comment)
+		agentIDStr := c.GetString("agent_id")
+		agentID := uuid.MustParse(agentIDStr)
+		_, err = h.taskService.AddComment(
+			taskID,
+			req.Comment,
+			agentID,
+			"agent",
+			c.GetString("agent_name"),
+		)
+		if err != nil {
+			// Log error but don't fail the request
+			// Comment is optional
+		}
 	}
 
 	c.JSON(http.StatusOK, task)

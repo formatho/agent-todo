@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/formatho/agent-todo/models"
 	"github.com/formatho/agent-todo/services"
 	"github.com/gin-gonic/gin"
 )
