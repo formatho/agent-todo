@@ -85,6 +85,9 @@ func (h *AgentTaskHandler) CreateTask(c *gin.Context) {
 // @Produce json
 // @Security X-API-KEY
 // @Param status query string false "Filter by status" Enums(pending, in_progress, completed, failed)
+// @Param priority query string false "Filter by priority" Enums(low, medium, high, critical)
+// @Param project_id query string false "Filter by project ID"
+// @Param search query string false "Search in title and description"
 // @Success 200 {array} models.Task
 // @Failure 401 {object} map[string]string
 // @Router /agent/tasks [get]
@@ -98,6 +101,9 @@ func (h *AgentTaskHandler) ListTasks(c *gin.Context) {
 	filter := services.TaskFilter{
 		AssignedAgentID: agentID,
 		Status:          models.TaskStatus(c.Query("status")),
+		Priority:        models.TaskPriority(c.Query("priority")),
+		ProjectID:       c.Query("project_id"),
+		SearchTerm:      c.Query("search"),
 	}
 
 	tasks, err := h.taskService.List(filter)
