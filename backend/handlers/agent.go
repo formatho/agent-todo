@@ -20,9 +20,9 @@ func NewAgentHandler() *AgentHandler {
 
 // CreateAgentRequest represents the request body for creating an agent
 type CreateAgentRequest struct {
-	Name        string              `json:"name" binding:"required" example:"My Agent"`
-	Description string              `json:"description" example:"An AI assistant agent"`
-	Role        models.AgentRole    `json:"role" example:"regular"`
+	Name        string           `json:"name" binding:"required" example:"My Agent"`
+	Description string           `json:"description" example:"An AI assistant agent"`
+	Role        models.AgentRole `json:"role" example:"regular"`
 }
 
 // CreateAgent godoc
@@ -102,10 +102,10 @@ func (h *AgentHandler) GetAgent(c *gin.Context) {
 
 // UpdateAgentRequest represents the request body for updating an agent
 type UpdateAgentRequest struct {
-	Name        string              `json:"name" example:"Updated Agent Name"`
-	Description string              `json:"description" example:"Updated description"`
-	Role        models.AgentRole    `json:"role" example:"supervisor"`
-	Enabled     *bool               `json:"enabled" example:"true"`
+	Name        string           `json:"name" example:"Updated Agent Name"`
+	Description string           `json:"description" example:"Updated description"`
+	Role        models.AgentRole `json:"role" example:"supervisor"`
+	Enabled     *bool            `json:"enabled" example:"true"`
 }
 
 // UpdateAgent godoc

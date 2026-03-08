@@ -148,8 +148,8 @@ func (h *SupervisorHandler) DeleteAgent(c *gin.Context) {
 
 // SupervisorUpdateTaskStatusRequest represents request to update any task status
 type SupervisorUpdateTaskStatusRequest struct {
-	Status models.TaskStatus `json:"status" binding:"required" example:"in_progress"`
-	Comment string           `json:"comment" example:"Taking over this task"`
+	Status  models.TaskStatus `json:"status" binding:"required" example:"in_progress"`
+	Comment string            `json:"comment" example:"Taking over this task"`
 }
 
 // SupervisorUpdateTaskStatus godoc
@@ -194,8 +194,8 @@ func (h *SupervisorHandler) UpdateTaskStatus(c *gin.Context) {
 			c.GetString("agent_name"),
 		)
 		if err != nil {
-			// Log error but don't fail the request
-			// Comment is optional
+			// Log error but don't fail the request since comment is optional
+			c.Error(err)
 		}
 	}
 
