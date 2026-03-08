@@ -148,7 +148,7 @@ func (h *AgentTaskHandler) GetTask(c *gin.Context) {
 
 // AgentUpdateStatus godoc
 // @Summary Update task status (Agent)
-// @Description Update the status of a task assigned to the agent
+// @Description Update the status of a task assigned to the agent (or any task if supervisor/admin)
 // @Tags agent
 // @Accept json
 // @Produce json
@@ -175,21 +175,31 @@ func (h *AgentTaskHandler) UpdateStatus(c *gin.Context) {
 		return
 	}
 
+	agent, err := middleware.GetAgent(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
 	var req UpdateTaskStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Verify task is assigned to this agent
+	// Verify task is assigned to this agent, or agent is supervisor/admin
 	task, err := h.taskService.GetByID(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
 		return
 	}
 
-	if task.AssignedAgentID == nil || task.AssignedAgentID.String() != agentID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Task not assigned to this agent"})
+	// Check permissions: assigned agent OR supervisor/admin
+	isAssignedAgent := task.AssignedAgentID != nil && task.AssignedAgentID.String() == agentID
+	isPrivileged := agent.Role == models.AgentRoleSupervisor || agent.Role == models.AgentRoleAdmin
+
+	if !isAssignedAgent && !isPrivileged {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Task not assigned to this agent and insufficient privileges"})
 		return
 	}
 

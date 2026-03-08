@@ -8,7 +8,12 @@
       <AgentAvatar :agent="agent" size="large" />
 
       <div class="agent-info">
-        <h3 class="agent-name">{{ agent.name }}</h3>
+        <div class="agent-name-row">
+          <h3 class="agent-name">{{ agent.name }}</h3>
+          <span :class="['role-badge', `role-${agent.role}`]">
+            {{ formatRole(agent.role) }}
+          </span>
+        </div>
         <p class="agent-description">{{ descriptionText }}</p>
       </div>
 
@@ -95,6 +100,15 @@ const descriptionText = computed(() => {
   return props.agent.description || 'No description provided'
 })
 
+const formatRole = (role) => {
+  const roles = {
+    regular: 'Regular',
+    supervisor: 'Supervisor',
+    admin: 'Admin'
+  }
+  return roles[role] || role
+}
+
 const maskedApiKey = computed(() => {
   return props.agent.api_key.slice(0, 12) + '...' + props.agent.api_key.slice(-4)
 })
@@ -168,11 +182,42 @@ const handleCopyKey = async () => {
   flex: 1;
 }
 
+.agent-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
 .agent-name {
   font-size: 18px;
   font-weight: 700;
   color: #111827;
-  margin: 0 0 4px 0;
+  margin: 0;
+}
+
+.role-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.role-badge.role-regular {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+.role-badge.role-supervisor {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.role-badge.role-admin {
+  background: #FEE2E2;
+  color: #991B1B;
 }
 
 .agent-description {

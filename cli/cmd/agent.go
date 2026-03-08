@@ -15,8 +15,8 @@ import (
 type Agent struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Model       string `json:"model"`
+	Description string `json:"description"`
+	Role        string `json:"role"`
 	Enabled     bool   `json:"enabled"`
 	APIKey      string `json:"api_key"`
 	CreatedAt   string `json:"created_at"`
@@ -25,6 +25,7 @@ type Agent struct {
 
 var (
 	agentEnabled bool
+	agentRole    string
 )
 
 var agentCmd = &cobra.Command{
@@ -39,18 +40,26 @@ var createAgentCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
-		agentType, _ := cmd.Flags().GetString("type")
-		model, _ := cmd.Flags().GetString("model")
+		description, _ := cmd.Flags().GetString("description")
+		role, _ := cmd.Flags().GetString("role")
+
+		// Default to regular role if not specified
+		if role == "" {
+			role = "regular"
+		}
+
+		// Validate role
+		if role != "regular" && role != "supervisor" && role != "admin" {
+			return fmt.Errorf("invalid role: %s (must be regular, supervisor, or admin)", role)
+		}
 
 		c := client.New()
 		req := map[string]interface{}{
 			"name": name,
+			"role": role,
 		}
-		if agentType != "" {
-			req["type"] = agentType
-		}
-		if model != "" {
-			req["model"] = model
+		if description != "" {
+			req["description"] = description
 		}
 
 		resp, err := c.Post("/agents", req, true)
@@ -70,6 +79,7 @@ var createAgentCmd = &cobra.Command{
 		}
 
 		fmt.Printf("✓ Agent created: %s (ID: %s)\n", agent.Name, agent.ID)
+		fmt.Printf("Role: %s\n", agent.Role)
 		fmt.Printf("API Key: %s\n", agent.APIKey)
 		fmt.Println("\n⚠ Save this API key securely. It won't be shown again.")
 		return nil
@@ -103,13 +113,13 @@ var listAgentsCmd = &cobra.Command{
 		}
 
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		fmt.Fprintln(w, "ID\tNAME\tTYPE\tMODEL\tENABLED")
+		fmt.Fprintln(w, "ID\tNAME\tROLE\tENABLED")
 		for _, a := range agents {
 			enabled := "✓"
 			if !a.Enabled {
 				enabled = "✗"
 			}
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", a.ID, a.Name, a.Type, a.Model, enabled)
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", a.ID, a.Name, a.Role, enabled)
 		}
 		w.Flush()
 
@@ -142,13 +152,14 @@ var getAgentCmd = &cobra.Command{
 			return fmt.Errorf("error decoding response: %w", err)
 		}
 
-		fmt.Printf("ID:        %s\n", agent.ID)
-		fmt.Printf("Name:      %s\n", agent.Name)
-		fmt.Printf("Type:      %s\n", agent.Type)
-		fmt.Printf("Model:     %s\n", agent.Model)
-		fmt.Printf("Enabled:   %v\n", agent.Enabled)
-		fmt.Printf("Created:   %s\n", agent.CreatedAt)
-		fmt.Printf("Updated:   %s\n", agent.UpdatedAt)
+		fmt.Printf("ID:          %s\n", agent.ID)
+		fmt.Printf("Name:        %s\n", agent.Name)
+		fmt.Printf("Description: %s\n", agent.Description)
+		fmt.Printf("Role:        %s\n", agent.Role)
+		fmt.Printf("Enabled:     %v\n", agent.Enabled)
+		fmt.Printf("API Key:     %s\n", agent.APIKey)
+		fmt.Printf("Created:     %s\n", agent.CreatedAt)
+		fmt.Printf("Updated:     %s\n", agent.UpdatedAt)
 		return nil
 	},
 }
@@ -160,19 +171,23 @@ var updateAgentCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		id := args[0]
 		name, _ := cmd.Flags().GetString("name")
-		agentType, _ := cmd.Flags().GetString("type")
-		model, _ := cmd.Flags().GetString("model")
+		description, _ := cmd.Flags().GetString("description")
+		role, _ := cmd.Flags().GetString("role")
 		enabled, _ := cmd.Flags().GetBool("enabled")
 
 		req := make(map[string]interface{})
 		if name != "" {
 			req["name"] = name
 		}
-		if agentType != "" {
-			req["type"] = agentType
+		if description != "" {
+			req["description"] = description
 		}
-		if model != "" {
-			req["model"] = model
+		if role != "" {
+			// Validate role
+			if role != "regular" && role != "supervisor" && role != "admin" {
+				return fmt.Errorf("invalid role: %s (must be regular, supervisor, or admin)", role)
+			}
+			req["role"] = role
 		}
 		if cmd.Flags().Changed("enabled") {
 			req["enabled"] = enabled
@@ -199,7 +214,7 @@ var updateAgentCmd = &cobra.Command{
 			return fmt.Errorf("error decoding response: %w", err)
 		}
 
-		fmt.Printf("✓ Agent updated: %s\n", agent.Name)
+		fmt.Printf("✓ Agent updated: %s (Role: %s)\n", agent.Name, agent.Role)
 		return nil
 	},
 }
@@ -232,13 +247,13 @@ func init() {
 	rootCmd.AddCommand(agentCmd)
 
 	// Create agent
-	createAgentCmd.Flags().StringP("type", "t", "", "Agent type")
-	createAgentCmd.Flags().StringP("model", "m", "", "Agent model")
+	createAgentCmd.Flags().StringP("description", "d", "", "Agent description")
+	createAgentCmd.Flags().StringP("role", "r", "", "Agent role (regular, supervisor, admin)")
 
 	// Update agent
 	updateAgentCmd.Flags().StringP("name", "n", "", "Agent name")
-	updateAgentCmd.Flags().StringP("type", "t", "", "Agent type")
-	updateAgentCmd.Flags().StringP("model", "m", "", "Agent model")
+	updateAgentCmd.Flags().StringP("description", "d", "", "Agent description")
+	updateAgentCmd.Flags().StringP("role", "r", "", "Agent role (regular, supervisor, admin)")
 	updateAgentCmd.Flags().BoolVarP(&agentEnabled, "enabled", "e", false, "Enable/disable agent")
 
 	agentCmd.AddCommand(createAgentCmd)

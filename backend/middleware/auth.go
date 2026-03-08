@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/formatho/agent-todo/models"
 	"github.com/formatho/agent-todo/services"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -66,8 +67,16 @@ func AgentAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		// Check if agent is enabled
+		if !agent.Enabled {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Agent is disabled"})
+			c.Abort()
+			return
+		}
+
 		c.Set("agent_id", agent.ID.String())
 		c.Set("agent_name", agent.Name)
+		c.Set("agent", agent)
 		c.Next()
 	}
 }
@@ -97,4 +106,33 @@ func GetAgentName(c *gin.Context) (string, error) {
 		return "", errors.New("agent not authenticated")
 	}
 	return agentName.(string), nil
+}
+
+// GetAgent retrieves agent object from context
+func GetAgent(c *gin.Context) (*models.Agent, error) {
+	agent, exists := c.Get("agent")
+	if !exists {
+		return nil, errors.New("agent not authenticated")
+	}
+	return agent.(*models.Agent), nil
+}
+
+// RequireSupervisor middleware checks if agent has supervisor or admin role
+func RequireSupervisor() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		agent, err := GetAgent(c)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Agent not authenticated"})
+			c.Abort()
+			return
+		}
+
+		if agent.Role != models.AgentRoleSupervisor && agent.Role != models.AgentRoleAdmin {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions. Supervisor or admin role required"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
 }

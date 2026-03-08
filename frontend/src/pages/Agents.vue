@@ -122,6 +122,21 @@
                     class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md border p-2"
                   ></textarea>
                 </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Role</label>
+                  <select
+                    v-model="agentForm.role"
+                    class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md border p-2"
+                  >
+                    <option value="regular">Regular - Can only update own tasks</option>
+                    <option value="supervisor">Supervisor - Can update any task & create agents</option>
+                    <option value="admin">Admin - Full system access</option>
+                  </select>
+                  <p class="mt-1 text-xs text-gray-500">
+                    Regular agents can only update tasks assigned to them. Supervisors can update any task and create new agents.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -166,7 +181,8 @@ const loading = ref(false)
 
 const agentForm = ref({
   name: '',
-  description: ''
+  description: '',
+  role: 'regular'
 })
 
 onMounted(async () => {
@@ -185,7 +201,7 @@ const handleCreateAgent = async () => {
   try {
     await agentStore.createAgent(agentForm.value)
     showCreateModal.value = false
-    agentForm.value = { name: '', description: '' }
+    agentForm.value = { name: '', description: '', role: 'regular' }
   } catch (error) {
     alert(error.response?.data?.error || 'Failed to create agent')
   } finally {

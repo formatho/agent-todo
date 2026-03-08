@@ -84,6 +84,8 @@ func SeedData() error {
 		Name:        "Example Agent",
 		APIKey:      "sk_agent_example_key_12345",
 		Description: "An example agent for testing",
+		Role:        models.AgentRoleRegular,
+		Enabled:     true,
 	}
 
 	if err := DB.Create(exampleAgent).Error; err != nil {

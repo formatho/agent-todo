@@ -75,6 +75,7 @@ func main() {
 	agentTaskHandler := handlers.NewAgentTaskHandler()
 	commentHandler := handlers.NewCommentHandler()
 	toolsHandler := handlers.NewToolsHandler()
+	supervisorHandler := handlers.NewSupervisorHandler()
 
 	// Health check
 	router.GET("/health", func(c *gin.Context) {
@@ -111,6 +112,7 @@ func main() {
 		agents.POST("", agentHandler.CreateAgent)
 		agents.GET("", agentHandler.ListAgents)
 		agents.GET("/:id", agentHandler.GetAgent)
+		agents.PATCH("/:id", agentHandler.UpdateAgent)
 		agents.DELETE("/:id", agentHandler.DeleteAgent)
 	}
 
@@ -149,6 +151,22 @@ func main() {
 		tools.POST("/tasks/update", toolsHandler.UpdateTask)
 		tools.POST("/tasks/list", toolsHandler.ListTasks)
 		tools.GET("/tasks/status/:id", toolsHandler.GetStatus)
+	}
+
+	// Supervisor endpoints (supervisor/admin agents only)
+	supervisor := router.Group("/supervisor")
+	supervisor.Use(middleware.AgentAuthMiddleware())
+	supervisor.Use(middleware.RequireSupervisor())
+	{
+		// Agent management
+		supervisor.POST("/agents", supervisorHandler.CreateAgent)
+		supervisor.GET("/agents", supervisorHandler.ListAgents)
+		supervisor.PATCH("/agents/:id", supervisorHandler.UpdateAgent)
+		supervisor.DELETE("/agents/:id", supervisorHandler.DeleteAgent)
+
+		// Task management (any task)
+		supervisor.PATCH("/tasks/:id/status", supervisorHandler.UpdateTaskStatus)
+		supervisor.PATCH("/tasks/:id/assign", supervisorHandler.AssignTask)
 	}
 
 	// Start server

@@ -29,12 +29,23 @@ type User struct {
 	PasswordHash string `gorm:"not null" json:"-"`
 }
 
+// AgentRole represents the permission level of an agent
+type AgentRole string
+
+const (
+	AgentRoleRegular    AgentRole = "regular"    // Can only update own tasks
+	AgentRoleSupervisor AgentRole = "supervisor" // Can update any task, create agents
+	AgentRoleAdmin      AgentRole = "admin"      // Full permissions
+)
+
 // Agent represents an AI agent
 type Agent struct {
 	Base
-	Name        string `gorm:"not null" json:"name"`
-	APIKey      string `gorm:"uniqueIndex;not null" json:"api_key"`
-	Description string `json:"description"`
+	Name        string    `gorm:"not null" json:"name"`
+	APIKey      string    `gorm:"uniqueIndex;not null" json:"api_key"`
+	Description string    `json:"description"`
+	Role        AgentRole `gorm:"not null;default:'regular'" json:"role"`
+	Enabled     bool      `gorm:"not null;default:true" json:"enabled"`
 }
 
 // ProjectStatus represents the status of a project

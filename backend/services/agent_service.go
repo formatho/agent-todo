@@ -28,6 +28,28 @@ func (s *AgentService) Create(name, description string) (*models.Agent, error) {
 		Name:        name,
 		APIKey:      apiKey,
 		Description: description,
+		Role:        models.AgentRoleRegular,
+		Enabled:     true,
+	}
+
+	if err := s.db.Create(agent).Error; err != nil {
+		return nil, err
+	}
+
+	return agent, nil
+}
+
+// CreateWithRole creates a new agent with a specific role
+func (s *AgentService) CreateWithRole(name, description string, role models.AgentRole) (*models.Agent, error) {
+	// Generate API key
+	apiKey := "sk_agent_" + uuid.New().String()
+
+	agent := &models.Agent{
+		Name:        name,
+		APIKey:      apiKey,
+		Description: description,
+		Role:        role,
+		Enabled:     true,
 	}
 
 	if err := s.db.Create(agent).Error; err != nil {
@@ -73,4 +95,38 @@ func (s *AgentService) List() ([]models.Agent, error) {
 // Delete deletes an agent
 func (s *AgentService) Delete(id string) error {
 	return s.db.Where("id = ?", id).Delete(&models.Agent{}).Error
+}
+
+// Update updates an agent's details
+func (s *AgentService) Update(id, name, description string, role models.AgentRole, enabled *bool) (*models.Agent, error) {
+	var agent models.Agent
+	if err := s.db.Where("id = ?", id).First(&agent).Error; err != nil {
+		return nil, err
+	}
+
+	updates := make(map[string]interface{})
+
+	if name != "" {
+		updates["name"] = name
+	}
+	if description != "" {
+		updates["description"] = description
+	}
+	if role != "" {
+		updates["role"] = role
+	}
+	if enabled != nil {
+		updates["enabled"] = *enabled
+	}
+
+	if err := s.db.Model(&agent).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+
+	// Reload to get updated data
+	if err := s.db.Where("id = ?", id).First(&agent).Error; err != nil {
+		return nil, err
+	}
+
+	return &agent, nil
 }

@@ -19,8 +19,9 @@ func NewAgentHandler() *AgentHandler {
 
 // CreateAgentRequest represents the request body for creating an agent
 type CreateAgentRequest struct {
-	Name        string `json:"name" binding:"required" example:"My Agent"`
-	Description string `json:"description" example:"An AI assistant agent"`
+	Name        string              `json:"name" binding:"required" example:"My Agent"`
+	Description string              `json:"description" example:"An AI assistant agent"`
+	Role        models.AgentRole    `json:"role" example:"regular"`
 }
 
 // CreateAgent godoc
@@ -42,7 +43,12 @@ func (h *AgentHandler) CreateAgent(c *gin.Context) {
 		return
 	}
 
-	agent, err := h.agentService.Create(req.Name, req.Description)
+	// Default to regular role if not specified
+	if req.Role == "" {
+		req.Role = models.AgentRoleRegular
+	}
+
+	agent, err := h.agentService.CreateWithRole(req.Name, req.Description, req.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -87,6 +93,45 @@ func (h *AgentHandler) GetAgent(c *gin.Context) {
 	agent, err := h.agentService.GetByID(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Agent not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, agent)
+}
+
+// UpdateAgentRequest represents the request body for updating an agent
+type UpdateAgentRequest struct {
+	Name        string              `json:"name" example:"Updated Agent Name"`
+	Description string              `json:"description" example:"Updated description"`
+	Role        models.AgentRole    `json:"role" example:"supervisor"`
+	Enabled     *bool               `json:"enabled" example:"true"`
+}
+
+// UpdateAgent godoc
+// @Summary Update an agent
+// @Description Update an agent's name, description, role, or enabled status
+// @Tags agents
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Agent ID"
+// @Param request body UpdateAgentRequest true "Update details"
+// @Success 200 {object} models.Agent
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /agents/{id} [patch]
+func (h *AgentHandler) UpdateAgent(c *gin.Context) {
+	id := c.Param("id")
+	var req UpdateAgentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	agent, err := h.agentService.Update(id, req.Name, req.Description, req.Role, req.Enabled)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
