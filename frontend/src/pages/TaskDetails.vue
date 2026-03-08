@@ -108,15 +108,18 @@
                   <span class="font-medium text-gray-900">{{ comment.author_name }}</span>
                   <span class="text-sm text-gray-500">{{ formatDate(comment.created_at) }}</span>
                 </div>
-                <p class="text-gray-700">{{ comment.content }}</p>
+                <div class="comment-content prose prose-sm max-w-none" v-html="renderMarkdown(comment.content)"></div>
               </div>
 
               <!-- Add Comment -->
               <div class="mt-4">
+                <div class="mb-2">
+                  <span class="text-xs text-gray-500">Markdown supported (e.g., **bold**, *italic*, `code`, - lists)</span>
+                </div>
                 <textarea
                   v-model="newComment"
                   rows="3"
-                  placeholder="Add a comment..."
+                  placeholder="Add a comment... (Markdown supported)"
                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2"
                 ></textarea>
                 <div class="mt-2 flex justify-end">
@@ -269,6 +272,7 @@ import { useTaskStore } from '../stores/tasks'
 import { useAgentStore } from '../stores/agents'
 import { taskService } from '../services/taskService'
 import TaskModal from '../components/TaskModal.vue'
+import { marked } from 'marked'
 
 const route = useRoute()
 const router = useRouter()
@@ -350,6 +354,18 @@ const handleAddComment = async () => {
   }
 }
 
+const renderMarkdown = (content) => {
+  if (!content) return ''
+  
+  // Configure marked for safe rendering
+  marked.setOptions({
+    breaks: true,
+    gfm: true
+  })
+  
+  return marked(content)
+}
+
 const formatStatus = (status) => {
   return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
 }
@@ -390,3 +406,103 @@ const formatDate = (dateStr) => {
   return new Date(dateStr).toLocaleString()
 }
 </script>
+
+<style>
+.comment-content {
+  line-height: 1.6;
+}
+
+.comment-content h1,
+.comment-content h2,
+.comment-content h3 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.comment-content h1 {
+  font-size: 1.5rem;
+}
+
+.comment-content h2 {
+  font-size: 1.25rem;
+}
+
+.comment-content h3 {
+  font-size: 1.125rem;
+}
+
+.comment-content p {
+  margin-bottom: 0.75rem;
+}
+
+.comment-content ul,
+.comment-content ol {
+  margin-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.comment-content ul {
+  list-style-type: disc;
+}
+
+.comment-content ol {
+  list-style-type: decimal;
+}
+
+.comment-content li {
+  margin-bottom: 0.25rem;
+}
+
+.comment-content code {
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.comment-content pre {
+  background-color: #f3f4f6;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  margin-bottom: 0.75rem;
+}
+
+.comment-content pre code {
+  background-color: transparent;
+  padding: 0;
+  font-size: 0.875rem;
+}
+
+.comment-content blockquote {
+  border-left: 3px solid #d1d5db;
+  padding-left: 1rem;
+  margin-left: 0;
+  margin-bottom: 0.75rem;
+  color: #6b7280;
+}
+
+.comment-content a {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+
+.comment-content a:hover {
+  color: #4338ca;
+}
+
+.comment-content strong {
+  font-weight: 600;
+}
+
+.comment-content em {
+  font-style: italic;
+}
+
+.comment-content hr {
+  border-top: 1px solid #e5e7eb;
+  margin: 1rem 0;
+}
+</style>
