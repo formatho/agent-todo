@@ -37,7 +37,7 @@ func (s *ActivityService) GetRecentActivity(limit int) ([]ActivityEvent, error) 
 	var events []ActivityEvent
 
 	query := `
-		SELECT 
+		SELECT
 			te.id,
 			te.task_id,
 			t.title as task_title,
@@ -46,16 +46,22 @@ func (s *ActivityService) GetRecentActivity(limit int) ([]ActivityEvent, error) 
 			te.new_state,
 			te.changed_by,
 			te.created_at,
-			COALESCE(u.email, a.name) as actor_name,
-			CASE 
-				WHEN u.id IS NOT NULL THEN 'user'
+			CASE
+				WHEN te.changed_by = 'system' THEN 'system'
+				WHEN a.id IS NOT NULL THEN a.name
+				WHEN u.id IS NOT NULL THEN u.email
+				ELSE te.changed_by
+			END as actor_name,
+			CASE
+				WHEN te.changed_by = 'system' THEN 'system'
 				WHEN a.id IS NOT NULL THEN 'agent'
+				WHEN u.id IS NOT NULL THEN 'user'
 				ELSE 'system'
 			END as actor_type
 		FROM task_events te
 		JOIN tasks t ON te.task_id = t.id
 		LEFT JOIN users u ON te.changed_by = u.id::text
-		LEFT JOIN agents a ON te.changed_by = a.id::text
+		LEFT JOIN agents a ON te.changed_by = a.name
 		ORDER BY te.created_at DESC
 		LIMIT ?
 	`
