@@ -43,6 +43,9 @@
     </nav>
 
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <!-- Activity Feed -->
+      <ActivityFeed />
+
       <!-- Task Grid -->
       <TaskGrid />
     </div>
@@ -53,6 +56,7 @@
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import TaskGrid from '../components/TaskGrid.vue'
+import ActivityFeed from '../components/ActivityFeed.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()

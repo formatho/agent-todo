@@ -77,6 +77,7 @@ func main() {
 	commentHandler := handlers.NewCommentHandler()
 	toolsHandler := handlers.NewToolsHandler()
 	supervisorHandler := handlers.NewSupervisorHandler()
+	activityHandler := handlers.NewActivityHandler()
 
 	// Health check
 	router.GET("/health", func(c *gin.Context) {
@@ -131,6 +132,13 @@ func main() {
 		tasks.PATCH("/:id/unassign", taskHandler.UnassignAgent)
 		tasks.GET("/:id/comments", commentHandler.GetComments)
 		tasks.POST("/:id/comments", commentHandler.CreateComment)
+	}
+
+	// Activity feed routes
+	activity := router.Group("/activity")
+	activity.Use(middleware.AuthMiddleware())
+	{
+		activity.GET("", activityHandler.GetActivityFeed)
 	}
 
 	// Agent task routes (agent only)
