@@ -51,6 +51,12 @@
                 Edit
               </button>
               <button
+                @click="handleDeleteTask"
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </button>
+              <button
                 v-if="!task.assigned_agent_id"
                 @click="showAssignModal = true"
                 class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
@@ -298,6 +304,17 @@ const handleLogout = () => {
 const handleTaskUpdated = () => {
   showEditModal.value = false
   loadTask()
+}
+
+const handleDeleteTask = async () => {
+  if (!confirm('Are you sure you want to delete this task?')) return
+
+  try {
+    await taskStore.deleteTask(route.params.id)
+    router.push('/')
+  } catch (error) {
+    alert(error.response?.data?.error || 'Failed to delete task')
+  }
 }
 
 const handleAssign = async (agentId) => {

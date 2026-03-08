@@ -13,7 +13,8 @@ export const useAgentStore = defineStore('agents', {
       this.loading = true
       this.error = null
       try {
-        this.agents = await agentService.getAgents()
+        const response = await agentService.getAgents()
+        this.agents = Array.isArray(response) ? response : []
       } catch (error) {
         this.error = error.message
       } finally {

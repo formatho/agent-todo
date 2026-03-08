@@ -143,6 +143,9 @@
             >
               Activate
             </button>
+            <button @click="deleteProject(project)" class="btn-action delete">
+              Delete
+            </button>
           </div>
 
           <div class="project-meta">
@@ -237,11 +240,12 @@ const form = ref({
 })
 
 const filteredProjects = computed(() => {
-  let projects = projectStore.projects
+  let projects = Array.isArray(projectStore.projects) ? projectStore.projects : []
+  const tasks = Array.isArray(taskStore.tasks) ? taskStore.tasks : []
   
   // Add task counts to projects
   projects = projects.map(project => {
-    const projectTasks = taskStore.tasks.filter(t => t.project_id === project.id)
+    const projectTasks = tasks.filter(t => t.project_id === project.id)
     return {
       ...project,
       taskCount: projectTasks.length,
@@ -321,6 +325,17 @@ const activateProject = async (project) => {
     await projectStore.fetchProjects()
   } catch (error) {
     alert('Failed to activate project')
+  }
+}
+
+const deleteProject = async (project) => {
+  if (confirm(`Are you sure you want to delete project "${project.name}"? This action cannot be undone.`)) {
+    try {
+      await projectStore.deleteProject(project.id)
+      await projectStore.fetchProjects(statusFilter.value ? { status: statusFilter.value } : {})
+    } catch (error) {
+      alert(error.response?.data?.error || 'Failed to delete project')
+    }
   }
 }
 
@@ -542,6 +557,15 @@ const formatDate = (dateStr) => {
 
 .btn-action.activate:hover {
   background: #A7F3D0;
+}
+
+.btn-action.delete {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.btn-action.delete:hover {
+  background: #FECACA;
 }
 
 .project-meta {

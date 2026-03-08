@@ -211,10 +211,10 @@ const filters = ref({
 })
 
 const filteredTasks = computed(() => {
-  return taskStore.tasks
+  return Array.isArray(taskStore.tasks) ? taskStore.tasks : []
 })
 
-const agents = computed(() => agentStore.agents)
+const agents = computed(() => Array.isArray(agentStore.agents) ? agentStore.agents : [])
 
 const hasActiveFilters = computed(() => {
   return filters.value.status ||

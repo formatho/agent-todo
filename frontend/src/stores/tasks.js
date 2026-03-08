@@ -20,9 +20,10 @@ export const useTaskStore = defineStore('tasks', {
       this.loading = true
       this.error = null
       try {
-        const tasks = await taskService.getTasks(this.filters)
+        const tasksResponse = await taskService.getTasks(this.filters)
+        const tasksArray = Array.isArray(tasksResponse) ? tasksResponse : []
         // Ensure all tasks have comments and events as arrays
-        this.tasks = tasks.map(task => ({
+        this.tasks = tasksArray.map(task => ({
           ...task,
           comments: Array.isArray(task.comments) ? task.comments : [],
           events: Array.isArray(task.events) ? task.events : [],

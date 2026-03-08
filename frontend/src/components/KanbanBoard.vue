@@ -82,58 +82,52 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { reactive, computed, watch, onMounted } from 'vue'
 import draggable from 'vuedraggable'
 import AgentAvatar from './AgentAvatar.vue'
 import { useTaskStore } from '../stores/tasks'
 
 const taskStore = useTaskStore()
 
-// Create reactive arrays for each column
-const pendingTasks = ref([])
-const inProgressTasks = ref([])
-const completedTasks = ref([])
-const failedTasks = ref([])
-
-const columns = [
+const columns = reactive([
   {
     id: 'pending',
     name: 'To Do',
     icon: '📋',
     color: '#F59E0B',
-    tasks: pendingTasks
+    tasks: []
   },
   {
     id: 'in_progress',
     name: 'In Progress',
     icon: '🔄',
     color: '#3B82F6',
-    tasks: inProgressTasks
+    tasks: []
   },
   {
     id: 'completed',
     name: 'Done',
     icon: '✅',
     color: '#10B981',
-    tasks: completedTasks
+    tasks: []
   },
   {
     id: 'failed',
     name: 'Failed',
     icon: '❌',
     color: '#EF4444',
-    tasks: failedTasks
+    tasks: []
   }
-]
+])
 
 // Load tasks into columns
 const loadTasks = () => {
   // Ensure tasks is an array
   const tasks = Array.isArray(taskStore.tasks) ? taskStore.tasks : []
-  pendingTasks.value = tasks.filter(task => task.status === 'pending')
-  inProgressTasks.value = tasks.filter(task => task.status === 'in_progress')
-  completedTasks.value = tasks.filter(task => task.status === 'completed')
-  failedTasks.value = tasks.filter(task => task.status === 'failed')
+  columns[0].tasks = tasks.filter(task => task.status === 'pending')
+  columns[1].tasks = tasks.filter(task => task.status === 'in_progress')
+  columns[2].tasks = tasks.filter(task => task.status === 'completed')
+  columns[3].tasks = tasks.filter(task => task.status === 'failed')
 }
 
 // Watch for store changes and refresh columns

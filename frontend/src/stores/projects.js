@@ -16,10 +16,10 @@ export const useProjectStore = defineStore('projects', () => {
     loading.value = true
     error.value = null
     try {
-      projects.value = await projectService.getProjects(filters)
+      const response = await projectService.getProjects(filters)
+      projects.value = Array.isArray(response) ? response : []
     } catch (err) {
       error.value = err.response?.data?.error || 'Failed to fetch projects'
-      throw err
     } finally {
       loading.value = false
     }
