@@ -168,6 +168,7 @@ func (h *AgentHandler) GetAgentsWithTasks(c *gin.Context) {
 
 	c.JSON(http.StatusOK, agents)
 }
+
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
