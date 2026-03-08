@@ -1,0 +1,25 @@
+{
+  "plugins": {
+    "entries": {
+      "formatho-agent-todo": {
+        "enabled": true,
+        "config": {
+          "serverUrl": "http://localhost:8080",
+          "apiKey": "",
+          "autoInstall": true
+        }
+      }
+    }
+  },
+  "skills": {
+    "entries": {
+      "formatho-agent-todo": {
+        "enabled": true,
+        "apiKey": "",
+        "env": {
+          "AGENT_TODO_SERVER_URL": "http://localhost:8080"
+        }
+      }
+    }
+  }
+}

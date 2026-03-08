@@ -1,44 +1,39 @@
 ---
-name: agent-todo
-description: Manage tasks, projects, and agents in the Agent Todo platform via CLI or API
-metadata:
-{
-  "openclaw":
-  {
-    "emoji": "✅",
-    "homepage": "https://github.com/formatho/agent-todo",
-    "requires":
-    {
-      "bins": ["agent-todo"],
-      "anyBins": ["curl"]
-    },
-    "primaryEnv": "AGENT_TODO_API_KEY",
-    "install":
-    [
-      {
-        "id": "go-build",
-        "kind": "go",
-        "repo": "github.com/formatho/agent-todo",
-        "importPath": "github.com/formatho/agent-todo/cli",
-        "bins": ["agent-todo"],
-        "label": "Install agent-todo CLI (go)"
-      },
-      {
-        "id": "manual",
-        "kind": "download",
-        "url": "https://github.com/formatho/agent-todo/releases",
-        "label": "Download from GitHub Releases"
-      }
-    ]
-  }
-}
+name: formatho-agent-todo
+description: Manage tasks, projects, and agents in the Formatho Agent Todo platform via CLI or API
+metadata: {"openclaw":{"emoji":"✅","homepage":"https://github.com/formatho/agent-todo","requires":{"bins":["agent-todo"],"anyBins":["curl"]},"primaryEnv":"AGENT_TODO_API_KEY","install":[{"id":"go-build","kind":"go","repo":"github.com/formatho/agent-todo","importPath":"github.com/formatho/agent-todo/cli","bins":["agent-todo"],"label":"Install agent-todo CLI (go)"},{"id":"manual","kind":"download","url":"https://github.com/formatho/agent-todo/releases","label":"Download from GitHub Releases"}]}}
 ---
 
-# Agent Todo Management
+# Formatho Agent Todo Management
 
-Interact with the Agent Todo Management Platform to create and manage tasks, projects, and AI agents.
+Interact with the Formatho Agent Todo Management Platform to create and manage tasks, projects, and AI agents.
 
 ## Installation
+
+### Prerequisite Check
+
+**Before using this skill, always verify the CLI is installed:**
+
+```bash
+# Check if agent-todo CLI is installed
+if ! command -v agent-todo &> /dev/null; then
+    echo "agent-todo CLI not found. Installing..."
+    # Auto-install using Go
+    go install github.com/formatho/agent-todo/cli@latest
+    # Verify installation
+    if command -v agent-todo &> /dev/null; then
+        echo "✓ agent-todo CLI installed successfully"
+        agent-todo --version
+    else
+        echo "✗ Installation failed. Please install manually:"
+        echo "  go install github.com/formatho/agent-todo/cli@latest"
+        exit 1
+    fi
+else
+    echo "✓ agent-todo CLI is already installed"
+    agent-todo --version
+fi
+```
 
 ### Quick Install (Go)
 ```bash
@@ -60,11 +55,6 @@ agent-todo --help
 ```
 
 ## Authentication
-
-### For Human Users (JWT)
-```bash
-agent-todo auth login email@example.com password
-```
 
 ### For AI Agents (API Key)
 Set the `AGENT_TODO_API_KEY` environment variable:
@@ -103,47 +93,123 @@ Override server URL:
 agent-todo --server https://api.example.com project list
 ```
 
+### OpenClaw Plugin Configuration
+
+When using the Formatho Agent Todo OpenClaw plugin, configure the server URL in `~/.openclaw/openclaw.json`:
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "formatho-agent-todo": {
+        "enabled": true,
+        "config": {
+          "serverUrl": "http://localhost:8080",
+          "apiKey": "sk-agent-xxxxx",
+          "autoInstall": true
+        }
+      }
+    }
+  }
+}
+```
+
+**Required Configuration:**
+- `serverUrl`: Your Formatho Agent Todo server URL (e.g., `http://localhost:8080` or `https://todo.example.com`)
+- `apiKey`: API key for agent authentication (optional for humans, required for agents)
+
+**Plugin Configuration Options:**
+| Option | Type | Required | Default | Description |
+|--------|------|----------|---------|-------------|
+| `enabled` | boolean | Yes | `false` | Enable/disable the plugin |
+| `serverUrl` | string | **Yes** | `http://localhost:8080` | Formatho Agent Todo server URL |
+| `apiKey` | string | No | `""` | API key for agent authentication |
+| `autoInstall` | boolean | No | `true` | Auto-install CLI if missing |
+
+For full plugin installation instructions, see `../formatho-agent-todo-plugin/README.md`
+
 ## Master Agent & Agent Provisioning
 
 ### Overview
 
 The Agent Todo platform supports a hierarchical agent system where:
-1. **Human** creates a "Master Agent" (supervisor role) with API key access
-2. **OpenClaw** uses the master agent's key to provision other agents
-3. **Each agent** must use their own unique API key at boot/initialization
+1. **Human** creates a "Project Manager (PM) Agent" (admin role) with all-access API key
+2. **PM agent** is responsible for creating API keys for all subordinate agents
+3. **Each agent** must use their own unique API key at boot/initialization, loaded from boot.md
 
-### Agent Roles
+### Agent Roles and Permissions
 
-- **Regular**: Can only update tasks assigned to themselves
-- **Supervisor**: Can update any task, create new agents, assign tasks
-- **Admin**: Full system access
+- **Project Manager (PM)**: Full system access (all-access API key)
+  - Can create, update, delete any task, project, or agent
+  - Can provision new agents and generate their API keys
+  - Can assign tasks to any agent
+  - Responsible for managing team of agents
 
-### Step 1: Create Master Agent
+- **Supervisor**: Can manage tasks and create regular agents
+  - Can update any task status
+  - Can create regular agents (not supervisor/admin)
+  - Can assign tasks to agents
+  - Responsible for provisioning and managing sub-ordinate agents
 
-As a human user, create a supervisor agent that will serve as the master:
+- **Regular**: Self-write access only (restricted API key)
+  - Can only view and update tasks assigned to themselves
+  - Cannot create other agents
+  - Cannot view or modify other agents' tasks
+  - Must use their own unique API key
+
+### Step 1: Create Project Manager (PM) Agent
+
+As a human user, create a Project Manager agent with full access:
 
 ```bash
-# Login as human
-agent-todo auth login human@example.com password
-
-# Create master/supervisor agent
-agent-todo agent create "Master Agent" \
-  --description "Primary supervisor agent for provisioning other agents" \
-  --role supervisor
+# Create PM agent with all-access
+agent-todo agent create "Project Manager" \
+  --description "Primary PM agent for managing all agents and tasks" \
+  --role admin
 ```
 
 **Save the API key** that's displayed:
 ```
-✓ Agent created: Master Agent (ID: abc-123)
-Role: supervisor
-API Key: sk-agent-master-xxxxx-save-this-key
+✓ Agent created: Project Manager (ID: pm-abc-123)
+Role: admin
+API Key: sk-agent-pm-all-access-xxxxx-save-this-key
 
 ⚠ Save this API key securely. It won't be shown again.
 ```
 
-### Step 2: Configure OpenClaw with Master Key
+### Step 2: Configure OpenClaw with PM Key
 
-Add the master agent's key to `~/.openclaw/openclaw.json`:
+**IMPORTANT:** PM agent must save its API key in OpenClaw's agent boot configuration.
+
+Add the PM agent's key to `~/.openclaw/agents/<pm-agent-id>/boot.md`:
+
+```markdown
+# Agent Boot Configuration
+
+## Agent Todo Credentials
+
+- **Agent ID**: pm-abc-123
+- **Agent Name**: Project Manager
+- **Role**: admin
+- **API Key**: sk-agent-pm-all-access-xxxxx-save-this-key
+- **Server URL**: http://localhost:8080
+
+## Environment Variables
+
+```bash
+export AGENT_TODO_API_KEY="sk-agent-pm-all-access-xxxxx-save-this-key"
+export AGENT_TODO_SERVER_URL="http://localhost:8080"
+```
+
+## Permissions
+
+- Full system access
+- Can create/update/delete any task, project, or agent
+- Can provision new agents
+- Responsible for managing subordinate agents
+```
+
+Alternatively, add to `~/.openclaw/openclaw.json`:
 
 ```json
 {
@@ -151,7 +217,7 @@ Add the master agent's key to `~/.openclaw/openclaw.json`:
     "entries": {
       "agent-todo": {
         "enabled": true,
-        "apiKey": "sk-agent-master-xxxxx-save-this-key",
+        "apiKey": "sk-agent-pm-all-access-xxxxx-save-this-key",
         "env": {
           "AGENT_TODO_SERVER_URL": "http://localhost:8080"
         }
@@ -161,22 +227,18 @@ Add the master agent's key to `~/.openclaw/openclaw.json`:
 }
 ```
 
-Or set as environment variable:
-```bash
-export AGENT_TODO_API_KEY="sk-agent-master-xxxxx-save-this-key"
-export AGENT_TODO_SERVER_URL="http://localhost:8080"
-```
+### Step 3: PM Agent Provisions New Agents
 
-### Step 3: OpenClaw Provisions New Agents
+**PM/S supervisor agent responsibility:** The PM agent is responsible for creating API keys for all subordinate agents.
 
-Using the master agent's credentials, OpenClaw can now create other agents:
+Using the PM agent's all-access credentials, OpenClaw can now create other agents:
 
 #### Via API (OpenClaw Internal)
 
 ```bash
-# Create a new regular agent
+# PM agent creates a new regular agent
 curl -X POST http://localhost:8080/supervisor/agents \
-  -H "X-API-KEY: sk-agent-master-xxxxx-save-this-key" \
+  -H "X-API-KEY: sk-agent-pm-all-access-xxxxx-save-this-key" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Data Processing Agent",
@@ -200,18 +262,60 @@ curl -X POST http://localhost:8080/supervisor/agents \
 #### Via CLI
 
 ```bash
-# Using the master agent's credentials
+# Using the PM agent's credentials
+export AGENT_TODO_API_KEY="sk-agent-pm-all-access-xxxxx-save-this-key"
+
 agent-todo agent create "Data Processing Agent" \
   --description "Handles CSV and JSON data processing" \
   --role regular
 ```
 
-### Step 4: Agent Boot Requirements
+### Step 4: Save New Agent Key in Boot Configuration
 
-Each agent **must** have their unique API key available in their environment when starting/booting:
+**PM agent responsibility:** After creating a new agent, the PM agent must save the new agent's API key in OpenClaw's agent boot configuration.
+
+Create or update `~/.openclaw/agents/<new-agent-id>/boot.md`:
+
+```markdown
+# Agent Boot Configuration
+
+## Agent Todo Credentials
+
+- **Agent ID**: agent-uuid-456
+- **Agent Name**: Data Processing Agent
+- **Role**: regular
+- **API Key**: sk-agent-new-xxxxx
+- **Server URL**: http://localhost:8080
+
+## Environment Variables
+
+```bash
+export AGENT_TODO_API_KEY="sk-agent-new-xxxxx"
+export AGENT_TODO_SERVER_URL="http://localhost:8080"
+```
+
+## Permissions
+
+- Self-write access only
+- Can only update tasks assigned to this agent
+- Cannot create other agents
+- Cannot view other agents' tasks
+
+## Boot Instructions
+
+1. Load this boot.md file to get credentials
+2. Set AGENT_TODO_API_KEY environment variable
+3. Verify authentication with API
+4. Start processing assigned tasks
+```
+
+### Step 5: Agent Boot Requirements
+
+Each agent **must** load their unique API key from their boot.md file when starting/booting:
 
 #### Environment Variable
 ```bash
+# Load from boot.md
 export AGENT_TODO_API_KEY="sk-agent-new-xxxxx"
 ```
 
@@ -229,7 +333,7 @@ env:
 import os
 from agent_todo import AgentTodoClient
 
-# Agent must have API key at boot
+# Agent loads API key from boot.md at boot time
 api_key = os.environ["AGENT_TODO_API_KEY"]
 server_url = os.environ.get("AGENT_TODO_SERVER_URL", "http://localhost:8080")
 
@@ -239,7 +343,11 @@ client = AgentTodoClient(
     server_url=server_url
 )
 
-# Agent can now perform operations
+# Verify authentication and permissions
+me = client.get_agent_info()
+print(f"Agent {me['name']} (Role: {me['role']}) authenticated successfully")
+
+# Agent can now perform operations within permissions
 tasks = client.list_my_tasks()
 ```
 
@@ -334,10 +442,13 @@ class AgentPool:
 
 ### Key Management
 
-1. **Master Agent Key**: Store securely, only used by OpenClaw
-2. **Agent Keys**: Each agent gets unique key, never shared
-3. **Key Rotation**: Regularly rotate agent API keys
-4. **Key Scope**: Supervisor/admin keys have more permissions
+1. **PM Agent Key**: All-access key, stored in PM agent's boot.md, used for provisioning
+2. **Supervisor Keys**: Can create regular agents, stored in their boot.md
+3. **Regular Agent Keys**: Self-write only, stored in their boot.md, never shared
+4. **Key Creation**: PM/supervisor agents are responsible for creating keys for subordinate agents
+5. **Key Storage**: All agents must save their keys in `~/.openclaw/agents/<agent-id>/boot.md`
+6. **Key Rotation**: PM agent can rotate keys by creating new ones and updating boot.md files
+7. **Key Scope**: Permissions are tied to agent role (PM=all, supervisor=manage, regular=self)
 
 ### Agent Isolation
 
@@ -349,21 +460,39 @@ class AgentPool:
 ### Bootstrap Sequence
 
 ```bash
-# 1. Human creates master agent
-agent-todo agent create "Master" --role supervisor
-# → sk-agent-master-abc
+# 1. Human creates PM agent with all-access
+PM_KEY=$(agent-todo agent create "Project Manager" --role admin | grep "API Key" | awk '{print $3}')
+# → sk-agent-pm-all-access-abc
 
-# 2. Configure OpenClaw with master key
-export AGENT_TODO_API_KEY="sk-agent-master-abc"
+# 2. PM saves its key in boot.md
+mkdir -p ~/.openclaw/agents/pm-abc-123
+cat > ~/.openclaw/agents/pm-abc-123/boot.md << EOF
+# Agent Boot Configuration
+## Agent Todo Credentials
+- **API Key**: $PM_KEY
+- **Role**: admin
+## Environment Variables
+export AGENT_TODO_API_KEY="$PM_KEY"
+EOF
 
-# 3. OpenClaw provisions new agent
-curl -X POST http://localhost:8080/supervisor/agents \
-  -H "X-API-KEY: sk-agent-master-abc" \
-  -d '{"name": "Worker", "role": "regular"}'
+# 3. PM agent provisions new regular agent
+export AGENT_TODO_API_KEY="$PM_KEY"
+WORKER_KEY=$(agent-todo agent create "Worker" --role regular | grep "API Key" | awk '{print $3}')
 # → sk-agent-worker-xyz
 
-# 4. Worker agent boots with its own key
-export AGENT_TODO_API_KEY="sk-agent-worker-xyz"
+# 4. PM saves worker's key in worker's boot.md
+mkdir -p ~/.openclaw/agents/worker-uuid-456
+cat > ~/.openclaw/agents/worker-uuid-456/boot.md << EOF
+# Agent Boot Configuration
+## Agent Todo Credentials
+- **API Key**: $WORKER_KEY
+- **Role**: regular
+## Environment Variables
+export AGENT_TODO_API_KEY="$WORKER_KEY"
+EOF
+
+# 5. Worker agent boots with its own key from boot.md
+source ~/.openclaw/agents/worker-uuid-456/boot.md
 python worker_agent.py  # Agent starts, authenticates, works on tasks
 ```
 
@@ -411,6 +540,11 @@ agent-todo task update <task-id> \
   --status completed \
   --priority medium \
   --description "Updated description"
+```
+
+### Get Task Details
+```bash
+agent-todo task get <task-id>
 ```
 
 ### Delete a Task
@@ -494,6 +628,11 @@ agent-todo agent create "Master Agent" \
 ```bash
 agent-todo agent list
 # Shows: ID, NAME, ROLE, ENABLED
+```
+
+### Get Agent Details
+```bash
+agent-todo agent get <agent-id>
 ```
 
 ### Update Agent
@@ -655,6 +794,22 @@ agent-todo task comment <task-id> "Analysis complete, generated insights"
 
 ## Tips for AI Agents
 
+### For Project Manager (PM) Agents
+1. **Create API keys for all subordinate agents** - this is your primary responsibility
+2. **Save each agent's key in their boot.md** - ensure proper boot configuration
+3. **Use your all-access power wisely** - create agents only when needed
+4. **Monitor agent workload** before spinning up new agents
+5. **Assign tasks thoughtfully** - match agent capabilities to task requirements
+6. **Audit agent permissions regularly** - disable unused agents, rotate keys if needed
+7. **Document agent purposes** in descriptions for team visibility
+
+### For Supervisor Agents
+1. **Create regular agents for specific tasks** - you cannot create other supervisors
+2. **Save each agent's key in their boot.md** - ensure proper boot configuration
+3. **Monitor your sub-ordinate agents** - track their performance and task completion
+4. **Assign tasks thoughtfully** - match agent capabilities to task requirements
+5. **Document agent purposes** in descriptions for visibility
+
 ### For Regular Agents
 1. **Always add comments** when updating status to provide context
 2. **Use descriptive titles** and detailed descriptions for tasks
@@ -662,21 +817,15 @@ agent-todo task comment <task-id> "Analysis complete, generated insights"
 4. **Report blockers** immediately by setting status to "blocked"
 5. **Set appropriate priorities** based on task urgency
 6. **Only update tasks assigned to you** (security restriction for regular agents)
-
-### For Supervisor/Admin Agents
-1. **Use your provisioning power wisely** - each agent should have a specific purpose
-2. **Create agents with appropriate roles** - not all agents need supervisor access
-3. **Monitor agent workload** before spinning up new agents
-4. **Assign tasks thoughtfully** - match agent capabilities to task requirements
-5. **Audit agent permissions regularly** - disable unused agents
-6. **Document agent purposes** in descriptions for team visibility
+7. **Load your API key from boot.md** at boot time
 
 ### Agent Boot Requirements
-1. **Must have AGENT_TODO_API_KEY set** before starting
+1. **Must have AGENT_TODO_API_KEY set** before starting (from boot.md)
 2. **Each agent uses their own unique key** - never share credentials
 3. **Verify authentication on startup** - fail fast if credentials invalid
 4. **Cache server URL** - set AGENT_TODO_SERVER_URL for reliability
 5. **Implement graceful degradation** - handle API unavailability gracefully
+6. **Load credentials from boot.md** - PM/Supervisor agents create this for you
 
 ## Error Handling
 
@@ -746,54 +895,50 @@ agent-todo task list --agent <design-agent>
 agent-todo task list --agent <dev-agent>
 ```
 
-### Example 4: Master Agent Provisioning Workflow
+### Example 4: PM Agent Provisioning Workflow
 ```bash
-# Step 1: Human creates master supervisor agent
-agent-todo auth login admin@example.com password
-MASTER_KEY=$(agent-todo agent create "Orchestrator" \
-  --description "Master agent for provisioning workers" \
-  --role supervisor \
+# Step 1: Human creates PM agent with all-access
+PM_KEY=$(agent-todo agent create "Project Manager" \
+  --description "Primary PM agent for managing all agents and tasks" \
+  --role admin \
   | grep "API Key" | awk '{print $3}')
 
-echo "Master Key: $MASTER_KEY"
+echo "PM Key: $PM_KEY"
 
-# Step 2: Configure environment with master key
-export AGENT_TODO_API_KEY="$MASTER_KEY"
+# Step 2: PM saves its key in boot.md
+mkdir -p ~/.openclaw/agents/pm-abc-123
+cat > ~/.openclaw/agents/pm-abc-123/boot.md << EOF
+# Agent Boot Configuration
+## Agent Todo Credentials
+- **API Key**: $PM_KEY
+- **Role**: admin
+## Environment Variables
+export AGENT_TODO_API_KEY="$PM_KEY"
+EOF
 
-# Step 3: Master agent creates specialized workers
-agent-todo agent create "Data Ingestion Worker" \
-  --description "Ingests CSV/JSON data from APIs" \
-  --role regular
+# Step 3: PM agent provisions new regular agent
+export AGENT_TODO_API_KEY="$PM_KEY"
+WORKER_KEY=$(agent-todo agent create "Worker" \
+  --description "Handles task execution" \
+  --role regular \
+  | grep "API Key" | awk '{print $3}')
 
-# → Returns: sk-agent-worker-ingest-abc123
+# → Returns: sk-agent-worker-xyz
 
-agent-todo agent create "Data Analysis Worker" \
-  --description "Analyzes processed data" \
-  --role regular
+# Step 4: PM saves worker's key in worker's boot.md
+mkdir -p ~/.openclaw/agents/worker-uuid-456
+cat > ~/.openclaw/agents/worker-uuid-456/boot.md << EOF
+# Agent Boot Configuration
+## Agent Todo Credentials
+- **API Key**: $WORKER_KEY
+- **Role**: regular
+## Environment Variables
+export AGENT_TODO_API_KEY="$WORKER_KEY"
+EOF
 
-# → Returns: sk-agent-worker-analysis-def456
-
-# Step 4: Bootstrap worker agents with their keys
-# Worker 1 starts with its own key
-export AGENT_TODO_API_KEY="sk-agent-worker-ingest-abc123"
-python data_ingestor.py
-
-# Worker 2 starts with its own key
-export AGENT_TODO_API_KEY="sk-agent-worker-analysis-def456"
-python data_analyzer.py
-
-# Step 5: Master agent orchestrates task assignment
-agent-todo task create "Import sales data" \
-  --description "Fetch Q1 sales from API" \
-  --priority high
-
-agent-todo task create "Analyze trends" \
-  --description "Find patterns in sales data" \
-  --priority high
-
-# Master assigns tasks to appropriate workers
-agent-todo task assign <import-task-id> <ingest-worker-id>
-agent-todo task assign <analysis-task-id> <analysis-worker-id>
+# Step 5: Worker agent boots with its own key from boot.md
+source ~/.openclaw/agents/worker-uuid-456/boot.md
+python worker_agent.py  # Agent starts, authenticates, works on tasks
 ```
 
 ## Support

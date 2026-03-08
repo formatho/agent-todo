@@ -1,0 +1,51 @@
+{
+  "name": "formatho-agent-todo",
+  "displayName": "Formatho Agent Todo Management",
+  "version": "1.0.0",
+  "description": "Manage tasks, projects, and AI agents in the Formatho Agent Todo platform",
+  "author": "formatho",
+  "homepage": "https://github.com/formatho/agent-todo",
+  "license": "MIT",
+  "skills": ["../skills/formatho-agent-todo"],
+  "config": {
+    "enabled": {
+      "type": "boolean",
+      "description": "Enable the Formatho Agent Todo plugin",
+      "default": false
+    },
+    "serverUrl": {
+      "type": "string",
+      "description": "Formatho Agent Todo server URL (required)",
+      "format": "uri",
+      "required": true,
+      "default": "http://localhost:8080"
+    },
+    "apiKey": {
+      "type": "string",
+      "description": "API key for authentication (required for agent usage)",
+      "required": false,
+      "default": ""
+    },
+    "autoInstall": {
+      "type": "boolean",
+      "description": "Automatically install agent-todo CLI if not found",
+      "default": true
+    }
+  },
+  "permissions": {
+    "network": {
+      "description": "Access Formatho Agent Todo server",
+      "domains": ["localhost", "127.0.0.1"],
+      "ports": [8080]
+    },
+    "exec": {
+      "description": "Execute agent-todo CLI",
+      "binaries": ["agent-todo"]
+    }
+  },
+  "requirements": {
+    "bins": ["agent-todo"],
+    "anyBins": ["curl", "go"],
+    "env": ["AGENT_TODO_SERVER_URL", "AGENT_TODO_API_KEY"]
+  }
+}
