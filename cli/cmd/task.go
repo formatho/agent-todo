@@ -388,6 +388,112 @@ var addCommentCmd = &cobra.Command{
 	},
 }
 
+var completeTaskCmd = &cobra.Command{
+	Use:     "complete <task-id>",
+	Short:   "Mark a task as completed",
+	Args:    cobra.ExactArgs(1),
+	Aliases: []string{"done"},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id := args[0]
+		comment, _ := cmd.Flags().GetString("comment")
+
+		c := client.New()
+		req := map[string]string{
+			"status": "completed",
+		}
+
+		resp, err := c.Patch("/tasks/"+id, req, true)
+		if err != nil {
+			return fmt.Errorf("error making request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("failed to complete task: %s", string(body))
+		}
+
+		// Add comment if provided
+		if comment != "" {
+			commentReq := map[string]string{"content": comment}
+			c.Post("/tasks/"+id+"/comments", commentReq, false)
+		}
+
+		fmt.Printf("✓ Task %s marked as completed\n", id)
+		return nil
+	},
+}
+
+var startTaskCmd = &cobra.Command{
+	Use:   "start <task-id>",
+	Short: "Mark a task as in progress",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id := args[0]
+		comment, _ := cmd.Flags().GetString("comment")
+
+		c := client.New()
+		req := map[string]string{
+			"status": "in_progress",
+		}
+
+		resp, err := c.Patch("/tasks/"+id, req, true)
+		if err != nil {
+			return fmt.Errorf("error making request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("failed to start task: %s", string(body))
+		}
+
+		// Add comment if provided
+		if comment != "" {
+			commentReq := map[string]string{"content": comment}
+			c.Post("/tasks/"+id+"/comments", commentReq, false)
+		}
+
+		fmt.Printf("✓ Task %s marked as in progress\n", id)
+		return nil
+	},
+}
+
+var blockTaskCmd = &cobra.Command{
+	Use:   "block <task-id>",
+	Short: "Mark a task as blocked",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id := args[0]
+		reason, _ := cmd.Flags().GetString("reason")
+
+		c := client.New()
+		req := map[string]string{
+			"status": "blocked",
+		}
+
+		resp, err := c.Patch("/tasks/"+id, req, true)
+		if err != nil {
+			return fmt.Errorf("error making request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("failed to block task: %s", string(body))
+		}
+
+		// Add blocker reason as comment
+		if reason != "" {
+			commentReq := map[string]string{"content": "Blocked: " + reason}
+			c.Post("/tasks/"+id+"/comments", commentReq, false)
+		}
+
+		fmt.Printf("✓ Task %s marked as blocked\n", id)
+		return nil
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(taskCmd)
 
@@ -418,4 +524,16 @@ func init() {
 	taskCmd.AddCommand(unassignTaskCmd)
 	taskCmd.AddCommand(listCommentsCmd)
 	taskCmd.AddCommand(addCommentCmd)
+	taskCmd.AddCommand(completeTaskCmd)
+	taskCmd.AddCommand(startTaskCmd)
+	taskCmd.AddCommand(blockTaskCmd)
+
+	// Complete task flags
+	completeTaskCmd.Flags().StringP("comment", "c", "", "Optional completion comment")
+
+	// Start task flags
+	startTaskCmd.Flags().StringP("comment", "c", "", "Optional start comment")
+
+	// Block task flags
+	blockTaskCmd.Flags().StringP("reason", "r", "", "Reason for blocking")
 }
