@@ -4,6 +4,7 @@ import Login from '../pages/Login.vue'
 // import Register from '../pages/Register.vue' // Disabled: registration is closed
 import AgentLogin from '../pages/AgentLogin.vue'
 import Dashboard from '../pages/Dashboard.vue'
+import Tasks from '../pages/Tasks.vue'
 import Agents from '../pages/Agents.vue'
 import Projects from '../pages/Projects.vue'
 import TaskDetails from '../pages/TaskDetails.vue'
@@ -33,6 +34,12 @@ const routes = [
     path: '/',
     name: 'Dashboard',
     component: Dashboard,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/tasks',
+    name: 'Tasks',
+    component: Tasks,
     meta: { requiresAuth: true }
   },
   {

@@ -6,7 +6,7 @@
         <div class="flex justify-between h-16">
           <div class="flex items-center">
             <router-link
-              to="/"
+              to="/tasks"
               class="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
             >
               &larr; Back to Tasks
