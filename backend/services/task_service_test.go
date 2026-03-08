@@ -13,7 +13,7 @@ func TestTaskService_SoftDelete(t *testing.T) {
 	// Skip if no database connection
 	t.Skip("Requires database connection - run as integration test")
 
-	taskService := NewTaskService()
+	_ = NewTaskService() // Initialize for documentation purposes
 
 	// Create a task first
 	// task, err := taskService.Create("Test Task", "Description", "medium", nil, "", &userID, nil)
