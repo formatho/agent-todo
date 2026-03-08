@@ -2,8 +2,6 @@ package services
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestTaskService_SoftDelete(t *testing.T) {
