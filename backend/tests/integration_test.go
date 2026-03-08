@@ -10,7 +10,6 @@ import (
 
 	"github.com/formatho/agent-todo/db"
 	"github.com/formatho/agent-todo/handlers"
-	"github.com/formatho/agent-todo/models"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +21,7 @@ func setupTestDB() {
 }
 
 func setupRouter() *gin.Engine {
-	gin.Set(gin.TestMode)
+	gin.SetMode(gin.TestMode)
 	router := gin.Default()
 
 	// Setup routes
@@ -124,6 +123,7 @@ func TestAgentCreationAndTaskManagement(t *testing.T) {
 	json.Unmarshal(w.Body.Bytes(), &agentResponse)
 	agentID := agentResponse["id"].(string)
 	apiKey := agentResponse["api_key"].(string)
+	assert.NotEmpty(t, agentID)
 	assert.NotEmpty(t, apiKey)
 
 	// Agent creates a task
@@ -174,10 +174,9 @@ func TestAgentCreationAndTaskManagement(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var tasksResponse map[string]interface{}
+	var tasksResponse []interface{}
 	json.Unmarshal(w.Body.Bytes(), &tasksResponse)
-	tasks := tasksResponse.([]interface{})
-	assert.Greater(t, len(tasks), 0)
+	assert.Greater(t, len(tasksResponse), 0)
 }
 
 func TestHumanEditsAgentTask(t *testing.T) {
