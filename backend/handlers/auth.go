@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 
+	apperrors "github.com/formatho/agent-todo/errors"
 	"github.com/formatho/agent-todo/middleware"
 	"github.com/formatho/agent-todo/models"
 	"github.com/formatho/agent-todo/services"
@@ -53,25 +54,27 @@ type AuthResponse struct {
 func (h *AuthHandler) Register(c *gin.Context) {
 	// Check if registration is disabled
 	if os.Getenv("DISABLE_REGISTRATION") == "true" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Registration is currently disabled"})
+		middleware.HandleError(c, apperrors.Forbidden("Registration is currently disabled"))
 		return
 	}
 
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		middleware.HandleError(c, apperrors.BadRequest("Invalid request body").WithDetails(map[string]interface{}{
+			"validation_error": err.Error(),
+		}))
 		return
 	}
 
 	user, err := h.userService.Register(req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		middleware.HandleError(c, apperrors.BadRequest(err.Error()))
 		return
 	}
 
 	token, err := h.jwtService.GenerateToken(user.ID.String(), user.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		middleware.HandleError(c, apperrors.InternalServerError("Failed to generate token").WithInternal(err))
 		return
 	}
 
@@ -94,19 +97,19 @@ func (h *AuthHandler) Register(c *gin.Context) {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		middleware.HandleError(c, apperrors.BadRequest("Invalid request body"))
 		return
 	}
 
 	user, err := h.userService.Login(req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		middleware.HandleError(c, apperrors.Unauthorized(err.Error()))
 		return
 	}
 
 	token, err := h.jwtService.GenerateToken(user.ID.String(), user.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		middleware.HandleError(c, apperrors.InternalServerError("Failed to generate token").WithInternal(err))
 		return
 	}
 
