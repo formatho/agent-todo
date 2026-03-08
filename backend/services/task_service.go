@@ -329,3 +329,46 @@ func (s *TaskService) createEvent(taskID uuid.UUID, eventType models.TaskEventTy
 	}
 	return s.db.Create(event).Error
 }
+
+// GetUpcomingDueTasks retrieves tasks with due dates within the specified duration
+// that are not completed yet
+func (s *TaskService) GetUpcomingDueTasks(within time.Duration) ([]models.Task, error) {
+	var tasks []models.Task
+	now := time.Now()
+	dueBefore := now.Add(within)
+
+	err := s.db.Preload("Project").Preload("CreatedByAgent").Preload("AssignedAgent").
+		Where("due_date IS NOT NULL").
+		Where("due_date > ?", now).
+		Where("due_date <= ?", dueBefore).
+		Where("status != ?", models.TaskStatusCompleted).
+		Where("status != ?", models.TaskStatusFailed).
+		Order("due_date ASC").
+		Find(&tasks).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
+// GetOverdueTasks retrieves tasks that are past their due date and not completed
+func (s *TaskService) GetOverdueTasks() ([]models.Task, error) {
+	var tasks []models.Task
+	now := time.Now()
+
+	err := s.db.Preload("Project").Preload("CreatedByAgent").Preload("AssignedAgent").
+		Where("due_date IS NOT NULL").
+		Where("due_date < ?", now).
+		Where("status != ?", models.TaskStatusCompleted).
+		Where("status != ?", models.TaskStatusFailed).
+		Order("due_date ASC").
+		Find(&tasks).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}

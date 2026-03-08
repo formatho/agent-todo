@@ -78,11 +78,19 @@ func main() {
 	toolsHandler := handlers.NewToolsHandler()
 	supervisorHandler := handlers.NewSupervisorHandler()
 	activityHandler := handlers.NewActivityHandler()
+	reminderHandler := handlers.NewReminderHandler()
 
 	// Health check
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
+
+	// Reminder endpoints (for cron/scheduled tasks)
+	reminders := router.Group("/reminders")
+	{
+		reminders.GET("/upcoming", reminderHandler.GetUpcomingDueTasks)
+		reminders.GET("/overdue", reminderHandler.GetOverdueTasks)
+	}
 
 	// Swagger documentation
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
