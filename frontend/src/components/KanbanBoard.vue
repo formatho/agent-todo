@@ -120,14 +120,31 @@ const columns = reactive([
   }
 ])
 
+// Priority order mapping (higher number = higher priority)
+const priorityOrder = {
+  critical: 4,
+  high: 3,
+  medium: 2,
+  low: 1
+}
+
+// Sort tasks by priority (highest first)
+const sortByPriority = (tasks) => {
+  return [...tasks].sort((a, b) => {
+    const priorityA = priorityOrder[a.priority] || 0
+    const priorityB = priorityOrder[b.priority] || 0
+    return priorityB - priorityA
+  })
+}
+
 // Load tasks into columns
 const loadTasks = () => {
   // Ensure tasks is an array
   const tasks = Array.isArray(taskStore.tasks) ? taskStore.tasks : []
-  columns[0].tasks = tasks.filter(task => task.status === 'pending')
-  columns[1].tasks = tasks.filter(task => task.status === 'in_progress')
-  columns[2].tasks = tasks.filter(task => task.status === 'completed')
-  columns[3].tasks = tasks.filter(task => task.status === 'failed')
+  columns[0].tasks = sortByPriority(tasks.filter(task => task.status === 'pending'))
+  columns[1].tasks = sortByPriority(tasks.filter(task => task.status === 'in_progress'))
+  columns[2].tasks = sortByPriority(tasks.filter(task => task.status === 'completed'))
+  columns[3].tasks = sortByPriority(tasks.filter(task => task.status === 'failed'))
 }
 
 // Watch for store changes and refresh columns

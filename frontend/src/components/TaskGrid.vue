@@ -228,14 +228,29 @@ const filters = ref({
   search: ''
 })
 
+// Priority order mapping (higher number = higher priority)
+const priorityOrder = {
+  critical: 4,
+  high: 3,
+  medium: 2,
+  low: 1
+}
+
 const filteredTasks = computed(() => {
   let tasks = Array.isArray(taskStore.tasks) ? taskStore.tasks : []
-  
+
   // Filter out completed tasks if toggle is off
   if (!showCompleted.value) {
     tasks = tasks.filter(task => task.status !== 'completed')
   }
-  
+
+  // Sort by priority (highest first)
+  tasks.sort((a, b) => {
+    const priorityA = priorityOrder[a.priority] || 0
+    const priorityB = priorityOrder[b.priority] || 0
+    return priorityB - priorityA
+  })
+
   return tasks
 })
 
