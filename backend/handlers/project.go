@@ -27,8 +27,8 @@ type CreateProjectRequest struct {
 
 // UpdateProjectRequest represents the request body for updating a project
 type UpdateProjectRequest struct {
-	Name        *string                `json:"name" example:"Updated project name"`
-	Description *string                `json:"description" example:"Updated description"`
+	Name        *string               `json:"name" example:"Updated project name"`
+	Description *string               `json:"description" example:"Updated description"`
 	Status      *models.ProjectStatus `json:"status" example:"active"`
 }
 

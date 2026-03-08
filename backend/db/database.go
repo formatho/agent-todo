@@ -93,15 +93,15 @@ func SeedData() error {
 	// Create example projects
 	projects := []models.Project{
 		{
-			Name:           "Website Redesign",
-			Description:    "Redesign the company website with new branding",
-			Status:         models.ProjectStatusActive,
+			Name:            "Website Redesign",
+			Description:     "Redesign the company website with new branding",
+			Status:          models.ProjectStatusActive,
 			CreatedByUserID: adminUser.ID,
 		},
 		{
-			Name:           "API Development",
-			Description:    "Build RESTful API for mobile applications",
-			Status:         models.ProjectStatusActive,
+			Name:            "API Development",
+			Description:     "Build RESTful API for mobile applications",
+			Status:          models.ProjectStatusActive,
 			CreatedByUserID: adminUser.ID,
 		},
 	}

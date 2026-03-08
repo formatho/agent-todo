@@ -22,21 +22,21 @@ func NewTaskHandler() *TaskHandler {
 
 // CreateTaskRequest represents the request body for creating a task
 type CreateTaskRequest struct {
-	Title           string             `json:"title" binding:"required" example:"Complete project documentation"`
-	Description     string             `json:"description" example:"Write comprehensive documentation for the project"`
+	Title           string              `json:"title" binding:"required" example:"Complete project documentation"`
+	Description     string              `json:"description" example:"Write comprehensive documentation for the project"`
 	Priority        models.TaskPriority `json:"priority" binding:"required" example:"high"`
-	DueDate         *time.Time         `json:"due_date" example:"2024-12-31T23:59:59Z"`
-	ProjectID       string             `json:"project_id" example:"550e8400-e29b-41d4-a716-446655440000"`
-	AssignedAgentID *string            `json:"assigned_agent_id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	DueDate         *time.Time          `json:"due_date" example:"2024-12-31T23:59:59Z"`
+	ProjectID       string              `json:"project_id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	AssignedAgentID *string             `json:"assigned_agent_id" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 
 // UpdateTaskRequest represents the request body for updating a task
 type UpdateTaskRequest struct {
-	Title           *string             `json:"title" example:"Updated task title"`
-	Description     *string             `json:"description" example:"Updated description"`
+	Title           *string              `json:"title" example:"Updated task title"`
+	Description     *string              `json:"description" example:"Updated description"`
 	Priority        *models.TaskPriority `json:"priority" example:"medium"`
-	DueDate         **time.Time        `json:"due_date"`
-	AssignedAgentID *string            `json:"assigned_agent_id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	DueDate         **time.Time          `json:"due_date"`
+	AssignedAgentID *string              `json:"assigned_agent_id" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 
 // AssignAgentRequest represents the request body for assigning an agent

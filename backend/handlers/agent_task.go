@@ -22,11 +22,11 @@ func NewAgentTaskHandler() *AgentTaskHandler {
 
 // AgentCreateTaskRequest represents the request body for agent task creation
 type AgentCreateTaskRequest struct {
-	Title       string             `json:"title" binding:"required" example:"Process data files"`
-	Description string             `json:"description" example:"Process and analyze the uploaded CSV files"`
+	Title       string              `json:"title" binding:"required" example:"Process data files"`
+	Description string              `json:"description" example:"Process and analyze the uploaded CSV files"`
 	Priority    models.TaskPriority `json:"priority" binding:"required" example:"medium"`
-	DueDate     *time.Time         `json:"due_date" example:"2024-12-31T23:59:59Z"`
-	ProjectID   string             `json:"project_id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	DueDate     *time.Time          `json:"due_date" example:"2024-12-31T23:59:59Z"`
+	ProjectID   string              `json:"project_id" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 
 // UpdateTaskStatusRequest represents the request body for updating task status
@@ -68,7 +68,7 @@ func (h *AgentTaskHandler) CreateTask(c *gin.Context) {
 		req.Priority,
 		req.DueDate,
 		req.ProjectID,
-		agentID, // Using agent ID as creator (will need to update service)
+		agentID,  // Using agent ID as creator (will need to update service)
 		&agentID, // Auto-assign to self
 	)
 

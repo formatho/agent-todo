@@ -1,8 +1,8 @@
 package services
 
 import (
-	"github.com/formatho/agent-todo/models"
 	"github.com/formatho/agent-todo/db"
+	"github.com/formatho/agent-todo/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -27,9 +27,9 @@ type ProjectFilter struct {
 // Create creates a new project
 func (s *ProjectService) Create(name, description string, createdByUserID string) (*models.Project, error) {
 	project := &models.Project{
-		Name:           name,
-		Description:    description,
-		Status:         models.ProjectStatusActive,
+		Name:            name,
+		Description:     description,
+		Status:          models.ProjectStatusActive,
 		CreatedByUserID: uuid.MustParse(createdByUserID),
 	}
 

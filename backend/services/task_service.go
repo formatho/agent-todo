@@ -3,8 +3,8 @@ package services
 import (
 	"time"
 
-	"github.com/formatho/agent-todo/models"
 	"github.com/formatho/agent-todo/db"
+	"github.com/formatho/agent-todo/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )

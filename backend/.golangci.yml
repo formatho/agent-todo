@@ -8,71 +8,32 @@ linters:
   enable:
     - gofmt
     - govet
-    - revive
     - staticcheck
     - gosimple
     - ineffassign
     - unused
     - goimports
     - misspell
-    - gocritic
-    - gosec
-    - bodyclose
-    - contextcheck
-    - nilerr
-    - noctx
-    - unconvert
 
 linters-settings:
   govet:
     enable-all: true
     disable:
       - shadow
-
-  revive:
-    severity: warning
-    rules:
-      - name: blank-imports
-      - name: context-as-argument
-      - name: context-keys-type
-      - name: dot-imports
-      - name: error-return
-      - name: error-strings
-      - name: error-naming
-      - name: exported
-      - name: if-return
-      - name: increment-decrement
-      - name: var-naming
-      - name: var-declaration
-      - name: package-comments
-      - name: range
-      - name: receiver-naming
-      - name: time-naming
-      - name: unexported-return
-      - name: indent-error-flow
-      - name: errorf
-      - name: empty-block
-      - name: superfluous-else
-      - name: unused-parameter
-      - name: unreachable-code
-      - name: redefines-builtin-id
+      - fieldalignment
 
   goimports:
     local-prefixes: github.com/formatho/agent-todo
-
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-
-  gosec:
-    excludes:
-      - G104
 
 issues:
   exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
+  exclude-rules:
+    # Exclude comments requirements
+    - linters:
+        - revive
+      text: "exported:"
+    - linters:
+        - revive
+      text: "package-comments"

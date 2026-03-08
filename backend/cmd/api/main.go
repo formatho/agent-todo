@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/formatho/agent-todo/db"
+	_ "github.com/formatho/agent-todo/docs"
 	"github.com/formatho/agent-todo/handlers"
 	"github.com/formatho/agent-todo/middleware"
-	_ "github.com/formatho/agent-todo/docs"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
