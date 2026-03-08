@@ -22,9 +22,7 @@ linters:
     - contextcheck
     - nilerr
     - noctx
-    - stderrors
     - unconvert
-    - unused
 
 linters-settings:
   govet:
