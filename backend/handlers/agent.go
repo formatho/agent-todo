@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/formatho/agent-todo/models"
 	"github.com/formatho/agent-todo/services"
@@ -141,12 +142,13 @@ func (h *AgentHandler) UpdateAgent(c *gin.Context) {
 
 // DeleteAgent godoc
 // @Summary Delete an agent
-// @Description Delete an agent by ID
+// @Description Delete an agent by ID. Agent must not have any tasks assigned.
 // @Tags agents
 // @Produce json
 // @Security Bearer
 // @Param id path string true "Agent ID"
 // @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Router /agents/{id} [delete]
@@ -154,6 +156,15 @@ func (h *AgentHandler) DeleteAgent(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := h.agentService.Delete(id); err != nil {
+		// Check if it's a foreign key constraint violation
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "violates foreign key constraint") ||
+		   strings.Contains(errMsg, "still referenced") {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Cannot delete agent: tasks are still assigned to this agent. Please reassign or unassign tasks first.",
+			})
+			return
+		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "Agent not found"})
 		return
 	}
