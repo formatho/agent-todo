@@ -11,16 +11,19 @@ export const useTaskStore = defineStore('tasks', {
       status: '',
       agent_id: '',
       priority: '',
+      project_id: '',
       search: ''
     }
   }),
 
   actions: {
-    async fetchTasks() {
+    async fetchTasks(params = {}) {
       this.loading = true
       this.error = null
       try {
-        const tasksResponse = await taskService.getTasks(this.filters)
+        // Merge store filters with any params passed directly
+        const filtersToUse = { ...this.filters, ...params }
+        const tasksResponse = await taskService.getTasks(filtersToUse)
         const tasksArray = Array.isArray(tasksResponse) ? tasksResponse : []
         // Ensure all tasks have comments and events as arrays
         this.tasks = tasksArray.map(task => ({
