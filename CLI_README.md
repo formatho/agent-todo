@@ -8,11 +8,13 @@ Official CLI tool for the Agent Todo Management Platform.
 
 ```bash
 # Add the tap
-brew tap formatho/tap https://github.com/formatho/agent-todo
+brew tap formatho/tap
 
 # Install
 brew install agent-todo
 ```
+
+**Note:** The Homebrew tap is maintained at [github.com/formatho/homebrew-tap](https://github.com/formatho/homebrew-tap).
 
 ### Binary Download
 

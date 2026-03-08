@@ -55,15 +55,21 @@ jobs:
           LINUX_AMD64_SHA=$(curl -sL https://github.com/formatho/agent-todo/releases/download/${VERSION}/agent-todo-linux-amd64.sha256 | cut -d' ' -f1)
           LINUX_ARM64_SHA=$(curl -sL https://github.com/formatho/agent-todo/releases/download/${VERSION}/agent-todo-linux-arm64.sha256 | cut -d' ' -f1)
           
+          # Clone tap repository
+          git clone https://github.com/formatho/homebrew-tap.git
+          cd homebrew-tap
+          
           # Update formula file
-          sed -i "s/version \".*\"/version \"${VERSION#v}\"/" homebrew-tap/agent-todo.rb
-          sed -i "0,/sha256 \"PLACEHOLDER\"/s//sha256 \"${DARWIN_AMD64_SHA}\"/" homebrew-tap/agent-todo.rb
-          sed -i "0,/sha256 \"PLACEHOLDER\"/s//sha256 \"${DARWIN_ARM64_SHA}\"/" homebrew-tap/agent-todo.rb
-          sed -i "0,/sha256 \"PLACEHOLDER\"/s//sha256 \"${LINUX_AMD64_SHA}\"/" homebrew-tap/agent-todo.rb
-          sed -i "0,/sha256 \"PLACEHOLDER\"/s//sha256 \"${LINUX_ARM64_SHA}\"/" homebrew-tap/agent-todo.rb
+          sed -i "s/version \".*\"/version \"${VERSION#v}\"/" Formula/agent-todo.rb
+          sed -i "0,/sha256 \"PLACEHOLDER\"/s//sha256 \"${DARWIN_AMD64_SHA}\"/" Formula/agent-todo.rb
+          sed -i "0,/sha256 \"PLACEHOLDER\"/s//sha256 \"${DARWIN_ARM64_SHA}\"/" Formula/agent-todo.rb
+          sed -i "0,/sha256 \"PLACEHOLDER\"/s//sha256 \"${LINUX_AMD64_SHA}\"/" Formula/agent-todo.rb
+          sed -i "0,/sha256 \"PLACEHOLDER\"/s//sha256 \"${LINUX_ARM64_SHA}\"/" Formula/agent-todo.rb
           
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add homebrew-tap/agent-todo.rb
-          git commit -m "Update Homebrew formula to ${VERSION}"
+          git add Formula/agent-todo.rb
+          git commit -m "Update agent-todo to ${VERSION}"
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.TAP_TOKEN }}
