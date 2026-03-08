@@ -110,6 +110,13 @@ func (h *TaskHandler) ListTasks(c *gin.Context) {
 		SearchTerm:      c.Query("search"),
 	}
 
+	// Add organisation filter if present in context
+	if orgID, exists := c.Get("organisation_id"); exists {
+		if orgIDStr, ok := orgID.(string); ok && orgIDStr != "" {
+			filter.OrganisationID = orgIDStr
+		}
+	}
+
 	tasks, err := h.taskService.List(filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

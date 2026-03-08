@@ -13,8 +13,9 @@ import (
 )
 
 type Claims struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
+	UserID         string `json:"user_id"`
+	Email          string `json:"email"`
+	OrganisationID string `json:"organisation_id,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -45,6 +46,12 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		c.Set("user_id", claims.UserID)
 		c.Set("user_email", claims.Email)
+
+		// Set organisation_id if present in token
+		if claims.OrganisationID != "" {
+			c.Set("organisation_id", claims.OrganisationID)
+		}
+
 		c.Next()
 	}
 }

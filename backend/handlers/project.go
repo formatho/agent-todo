@@ -57,11 +57,27 @@ func (h *ProjectHandler) CreateProject(c *gin.Context) {
 		return
 	}
 
-	project, err := h.projectService.Create(
-		req.Name,
-		req.Description,
-		userID,
-	)
+	var project *models.Project
+
+	// Use organisation context if available
+	if orgID, exists := c.Get("organisation_id"); exists {
+		if orgIDStr, ok := orgID.(string); ok && orgIDStr != "" {
+			project, err = h.projectService.CreateWithOrganisation(
+				req.Name,
+				req.Description,
+				userID,
+				orgIDStr,
+			)
+		}
+	}
+
+	if project == nil {
+		project, err = h.projectService.Create(
+			req.Name,
+			req.Description,
+			userID,
+		)
+	}
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -86,6 +102,13 @@ func (h *ProjectHandler) ListProjects(c *gin.Context) {
 	filter := services.ProjectFilter{
 		Status:     models.ProjectStatus(c.Query("status")),
 		SearchTerm: c.Query("search"),
+	}
+
+	// Add organisation filter if present in context
+	if orgID, exists := c.Get("organisation_id"); exists {
+		if orgIDStr, ok := orgID.(string); ok && orgIDStr != "" {
+			filter.OrganisationID = orgIDStr
+		}
 	}
 
 	projects, err := h.projectService.List(filter)

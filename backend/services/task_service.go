@@ -29,6 +29,7 @@ type TaskFilter struct {
 	SearchTerm      string              `json:"search_term"`
 	DueDateFrom     *time.Time          `json:"due_date_from"`
 	DueDateTo       *time.Time          `json:"due_date_to"`
+	OrganisationID  string              `json:"organisation_id"` // Optional: filter by organisation
 }
 
 // Create creates a new task
@@ -163,6 +164,11 @@ func (s *TaskService) List(filter TaskFilter) ([]models.Task, error) {
 
 	if filter.DueDateTo != nil {
 		query = query.Where("due_date <= ?", *filter.DueDateTo)
+	}
+
+	// Filter by organisation if provided
+	if filter.OrganisationID != "" {
+		query = query.Where("organisation_id = ?", filter.OrganisationID)
 	}
 
 	err := query.Order("created_at DESC").Find(&tasks).Error

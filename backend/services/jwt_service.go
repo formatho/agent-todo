@@ -20,16 +20,23 @@ func NewJWTService() *JWTService {
 }
 
 type Claims struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
+	UserID         string `json:"user_id"`
+	Email          string `json:"email"`
+	OrganisationID string `json:"organisation_id,omitempty"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken generates a JWT token for a user
 func (s *JWTService) GenerateToken(userID, email string) (string, error) {
+	return s.GenerateTokenWithOrg(userID, email, "")
+}
+
+// GenerateTokenWithOrg generates a JWT token for a user with organisation context
+func (s *JWTService) GenerateTokenWithOrg(userID, email, organisationID string) (string, error) {
 	claims := &Claims{
-		UserID: userID,
-		Email:  email,
+		UserID:         userID,
+		Email:          email,
+		OrganisationID: organisationID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

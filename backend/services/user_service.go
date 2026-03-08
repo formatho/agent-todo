@@ -5,6 +5,7 @@ import (
 
 	"github.com/formatho/agent-todo/db"
 	"github.com/formatho/agent-todo/models"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -85,5 +86,22 @@ func (s *UserService) GetByEmail(email string) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	return &user, nil
+}
+
+// SetCurrentOrganisation updates the user's current organisation
+func (s *UserService) SetCurrentOrganisation(userID, organisationID string) (*models.User, error) {
+	var user models.User
+	if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
+		return nil, err
+	}
+
+	orgUUID := uuid.MustParse(organisationID)
+	user.CurrentOrgID = &orgUUID
+
+	if err := s.db.Save(&user).Error; err != nil {
+		return nil, err
+	}
+
 	return &user, nil
 }

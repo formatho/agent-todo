@@ -79,6 +79,7 @@ func main() {
 	supervisorHandler := handlers.NewSupervisorHandler()
 	activityHandler := handlers.NewActivityHandler()
 	reminderHandler := handlers.NewReminderHandler()
+	organisationHandler := handlers.NewOrganisationHandler()
 
 	// Health check
 	router.GET("/health", func(c *gin.Context) {
@@ -102,6 +103,22 @@ func main() {
 		auth.POST("/register", authHandler.Register)
 		auth.POST("/login", authHandler.Login)
 		auth.GET("/me", middleware.AuthMiddleware(), authHandler.GetCurrentUser)
+		auth.POST("/switch-organisation", middleware.AuthMiddleware(), authHandler.SwitchOrganisation)
+	}
+
+	// Organisation routes
+	organisations := router.Group("/organisations")
+	organisations.Use(middleware.AuthMiddleware())
+	{
+		organisations.POST("", organisationHandler.CreateOrganisation)
+		organisations.GET("", organisationHandler.ListOrganisations)
+		organisations.GET("/:id", organisationHandler.GetOrganisation)
+		organisations.PATCH("/:id", organisationHandler.UpdateOrganisation)
+		organisations.DELETE("/:id", organisationHandler.DeleteOrganisation)
+		organisations.POST("/:id/members", organisationHandler.AddOrganisationMember)
+		organisations.PATCH("/:id/members/:member_id", organisationHandler.UpdateMemberRole)
+		organisations.DELETE("/:id/members/:member_id", organisationHandler.RemoveOrganisationMember)
+		organisations.POST("/:id/leave", organisationHandler.LeaveOrganisation)
 	}
 
 	// Project routes (human)

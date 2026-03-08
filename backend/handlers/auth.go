@@ -72,7 +72,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	token, err := h.jwtService.GenerateToken(user.ID.String(), user.Email)
+	// New users don't have an organisation yet
+	token, err := h.jwtService.GenerateTokenWithOrg(user.ID.String(), user.Email, "")
 	if err != nil {
 		middleware.HandleError(c, apperrors.InternalServerError("Failed to generate token").WithInternal(err))
 		return
@@ -107,7 +108,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := h.jwtService.GenerateToken(user.ID.String(), user.Email)
+	// Get organisation ID for token (use current_org_id if set)
+	orgID := ""
+	if user.CurrentOrgID != nil {
+		orgID = user.CurrentOrgID.String()
+	}
+
+	token, err := h.jwtService.GenerateTokenWithOrg(user.ID.String(), user.Email, orgID)
 	if err != nil {
 		middleware.HandleError(c, apperrors.InternalServerError("Failed to generate token").WithInternal(err))
 		return
@@ -142,4 +149,73 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
+}
+
+// SwitchOrganisationRequest represents the request to switch organisation
+type SwitchOrganisationRequest struct {
+	OrganisationID string `json:"organisation_id" binding:"required,uuid"`
+}
+
+// SwitchOrganisationResponse represents the response after switching organisation
+type SwitchOrganisationResponse struct {
+	Token string      `json:"token"`
+	User  models.User `json:"user"`
+}
+
+// SwitchOrganisation godoc
+// @Summary Switch current organisation
+// @Description Switch the user's current organisation context
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param request body SwitchOrganisationRequest true "Organisation ID"
+// @Success 200 {object} SwitchOrganisationResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Router /auth/switch-organisation [post]
+func (h *AuthHandler) SwitchOrganisation(c *gin.Context) {
+	userID, err := middleware.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	var req SwitchOrganisationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	// Verify user is a member of the organisation
+	orgService := services.NewOrganisationService()
+	isMember, err := orgService.IsMember(req.OrganisationID, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify membership"})
+		return
+	}
+	if !isMember {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not a member of this organisation"})
+		return
+	}
+
+	// Update user's current organisation
+	user, err := h.userService.SetCurrentOrganisation(userID, req.OrganisationID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update current organisation"})
+		return
+	}
+
+	// Generate new token with updated organisation
+	token, err := h.jwtService.GenerateTokenWithOrg(user.ID.String(), user.Email, req.OrganisationID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, SwitchOrganisationResponse{
+		Token: token,
+		User:  *user,
+	})
 }

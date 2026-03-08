@@ -30,6 +30,8 @@ func Connect(databaseURL string) error {
 	err = DB.AutoMigrate(
 		&models.User{},
 		&models.Agent{},
+		&models.Organisation{},
+		&models.OrganisationMember{},
 		&models.Project{},
 		&models.Task{},
 		&models.TaskEvent{},

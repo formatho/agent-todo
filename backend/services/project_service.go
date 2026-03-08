@@ -22,6 +22,7 @@ type ProjectFilter struct {
 	Status          models.ProjectStatus `json:"status"`
 	CreatedByUserID string               `json:"created_by_user_id"`
 	SearchTerm      string               `json:"search_term"`
+	OrganisationID  string               `json:"organisation_id"` // Optional: filter by organisation
 }
 
 // Create creates a new project
@@ -31,6 +32,24 @@ func (s *ProjectService) Create(name, description string, createdByUserID string
 		Description:     description,
 		Status:          models.ProjectStatusActive,
 		CreatedByUserID: uuid.MustParse(createdByUserID),
+	}
+
+	if err := s.db.Create(project).Error; err != nil {
+		return nil, err
+	}
+
+	return project, nil
+}
+
+// CreateWithOrganisation creates a new project with organisation context
+func (s *ProjectService) CreateWithOrganisation(name, description, createdByUserID, organisationID string) (*models.Project, error) {
+	orgUUID := uuid.MustParse(organisationID)
+	project := &models.Project{
+		Name:            name,
+		Description:     description,
+		Status:          models.ProjectStatusActive,
+		CreatedByUserID: uuid.MustParse(createdByUserID),
+		OrganisationID:  &orgUUID,
 	}
 
 	if err := s.db.Create(project).Error; err != nil {
@@ -66,6 +85,11 @@ func (s *ProjectService) List(filter ProjectFilter) ([]models.Project, error) {
 	if filter.SearchTerm != "" {
 		query = query.Where("name ILIKE ? OR description ILIKE ?",
 			"%"+filter.SearchTerm+"%", "%"+filter.SearchTerm+"%")
+	}
+
+	// Filter by organisation if provided
+	if filter.OrganisationID != "" {
+		query = query.Where("organisation_id = ?", filter.OrganisationID)
 	}
 
 	err := query.Order("created_at DESC").Find(&projects).Error
