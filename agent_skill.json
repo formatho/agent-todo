@@ -1,0 +1,231 @@
+{
+  "name": "TodoAgentSkill",
+  "version": "1.0.0",
+  "description": "Allows AI agents to manage tasks in the Agent Todo Platform",
+  "author": "Agent Todo Platform",
+  "auth": {
+    "type": "api_key",
+    "header": "X-API-KEY",
+    "description": "Authenticate using an API key generated in the platform"
+  },
+  "base_url": "http://localhost:8080",
+  "actions": [
+    {
+      "name": "create_task",
+      "description": "Create a new task",
+      "method": "POST",
+      "path": "/agent/tasks",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-API-KEY": "{API_KEY}"
+      },
+      "body": {
+        "title": "string (required)",
+        "description": "string (optional)",
+        "priority": "low|medium|high|critical (default: medium)",
+        "due_date": "ISO 8601 datetime (optional)"
+      },
+      "response": {
+        "id": "uuid",
+        "title": "string",
+        "description": "string",
+        "status": "pending",
+        "priority": "low|medium|high|critical",
+        "assigned_agent_id": "uuid",
+        "created_at": "timestamp"
+      }
+    },
+    {
+      "name": "list_tasks",
+      "description": "List tasks assigned to the agent",
+      "method": "GET",
+      "path": "/agent/tasks",
+      "headers": {
+        "X-API-KEY": "{API_KEY}"
+      },
+      "query_parameters": {
+        "status": "pending|in_progress|completed|failed (optional)"
+      },
+      "response": {
+        "tasks": [
+          {
+            "id": "uuid",
+            "title": "string",
+            "description": "string",
+            "status": "string",
+            "priority": "string",
+            "due_date": "timestamp",
+            "created_at": "timestamp"
+          }
+        ]
+      }
+    },
+    {
+      "name": "get_task",
+      "description": "Get details of a specific task",
+      "method": "GET",
+      "path": "/agent/tasks/{id}",
+      "headers": {
+        "X-API-KEY": "{API_KEY}"
+      },
+      "path_parameters": {
+        "id": "uuid (task ID)"
+      },
+      "response": {
+        "id": "uuid",
+        "title": "string",
+        "description": "string",
+        "status": "string",
+        "priority": "string",
+        "due_date": "timestamp",
+        "comments": [],
+        "events": []
+      }
+    },
+    {
+      "name": "update_status",
+      "description": "Update the status of a task",
+      "method": "PATCH",
+      "path": "/agent/tasks/{id}/status",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-API-KEY": "{API_KEY}"
+      },
+      "path_parameters": {
+        "id": "uuid (task ID)"
+      },
+      "body": {
+        "status": "pending|in_progress|completed|failed (required)"
+      },
+      "response": {
+        "id": "uuid",
+        "status": "string",
+        "updated_at": "timestamp"
+      }
+    },
+    {
+      "name": "add_comment",
+      "description": "Add a comment to a task",
+      "method": "POST",
+      "path": "/agent/tasks/{id}/comments",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-API-KEY": "{API_KEY}"
+      },
+      "path_parameters": {
+        "id": "uuid (task ID)"
+      },
+      "body": {
+        "content": "string (required)"
+      },
+      "response": {
+        "id": "uuid",
+        "content": "string",
+        "author_name": "string",
+        "created_at": "timestamp"
+      }
+    },
+    {
+      "name": "get_comments",
+      "description": "Get all comments for a task",
+      "method": "GET",
+      "path": "/agent/tasks/{id}/comments",
+      "headers": {
+        "X-API-KEY": "{API_KEY}"
+      },
+      "path_parameters": {
+        "id": "uuid (task ID)"
+      },
+      "response": {
+        "comments": [
+          {
+            "id": "uuid",
+            "content": "string",
+            "author_name": "string",
+            "author_type": "user|agent",
+            "created_at": "timestamp"
+          }
+        ]
+      }
+    }
+  ],
+  "tool_endpoints": {
+    "description": "OpenClaw-compatible tool endpoints",
+    "base_path": "/tools",
+    "endpoints": [
+      {
+        "name": "tool_create_task",
+        "description": "Create a task (OpenClaw format)",
+        "method": "POST",
+        "path": "/tools/tasks/create",
+        "body": {
+          "title": "string (required)",
+          "description": "string (optional)",
+          "priority": "low|medium|high|critical"
+        },
+        "response": {
+          "success": "boolean",
+          "data": "task object",
+          "error": "string (if failed)"
+        }
+      },
+      {
+        "name": "tool_update_task",
+        "description": "Update task status (OpenClaw format)",
+        "method": "POST",
+        "path": "/tools/tasks/update",
+        "body": {
+          "task_id": "uuid (required)",
+          "status": "pending|in_progress|completed|failed (required)",
+          "comment": "string (optional)"
+        },
+        "response": {
+          "success": "boolean",
+          "data": "updated task object",
+          "error": "string (if failed)"
+        }
+      },
+      {
+        "name": "tool_list_tasks",
+        "description": "List tasks (OpenClaw format)",
+        "method": "POST",
+        "path": "/tools/tasks/list",
+        "body": {
+          "status": "string (optional)",
+          "limit": "number (default: 50)"
+        },
+        "response": {
+          "success": "boolean",
+          "data": "array of tasks",
+          "error": "string (if failed)"
+        }
+      },
+      {
+        "name": "tool_get_status",
+        "description": "Get task status (OpenClaw format)",
+        "method": "GET",
+        "path": "/tools/tasks/status/{id}",
+        "response": {
+          "success": "boolean",
+          "data": {
+            "task_id": "uuid",
+            "status": "string",
+            "title": "string"
+          },
+          "error": "string (if failed)"
+        }
+      }
+    ]
+  },
+  "example_usage": {
+    "create_task": {
+      "curl": "curl -X POST http://localhost:8080/agent/tasks -H 'Content-Type: application/json' -H 'X-API-KEY: sk_agent_example_key_12345' -d '{\"title\":\"Process data\",\"description\":\"Analyze CSV files\",\"priority\":\"high\"}'"
+    },
+    "update_status": {
+      "curl": "curl -X PATCH http://localhost:8080/agent/tasks/TASK_ID/status -H 'Content-Type: application/json' -H 'X-API-KEY: sk_agent_example_key_12345' -d '{\"status\":\"completed\"}'"
+    },
+    "list_tasks": {
+      "curl": "curl -X GET http://localhost:8080/agent/tasks -H 'X-API-KEY: sk_agent_example_key_12345'"
+    }
+  }
+}
