@@ -97,7 +97,7 @@ type Task struct {
 	Priority         TaskPriority  `gorm:"not null;default:'medium'" json:"priority"`
 	DueDate          *time.Time    `json:"due_date"`
 	ProjectID        *uuid.UUID    `gorm:"type:uuid" json:"project_id"`
-	CreatedByUserID  *uuid.UUID    `gorm:"type:uuid" json:"created_by_user_id"` // Nullable for agent-created tasks
+	CreatedByUserID  *uuid.UUID    `gorm:"type:uuid" json:"created_by_user_id"`  // Nullable for agent-created tasks
 	CreatedByAgentID *uuid.UUID    `gorm:"type:uuid" json:"created_by_agent_id"` // Nullable for user-created tasks
 	AssignedAgentID  *uuid.UUID    `gorm:"type:uuid" json:"assigned_agent_id"`
 	Project          *Project      `gorm:"foreignKey:ProjectID" json:"project,omitempty"`

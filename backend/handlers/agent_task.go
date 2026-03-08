@@ -66,7 +66,7 @@ func (h *AgentTaskHandler) CreateTask(c *gin.Context) {
 		req.Priority,
 		req.DueDate,
 		req.ProjectID,
-		agentID, // Agent ID as creator
+		agentID,  // Agent ID as creator
 		&agentID, // Auto-assign to self
 	)
 
