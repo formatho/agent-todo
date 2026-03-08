@@ -159,7 +159,7 @@ func (h *AgentHandler) DeleteAgent(c *gin.Context) {
 		// Check if it's a foreign key constraint violation
 		errMsg := err.Error()
 		if strings.Contains(errMsg, "violates foreign key constraint") ||
-		   strings.Contains(errMsg, "still referenced") {
+			strings.Contains(errMsg, "still referenced") {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Cannot delete agent: tasks are still assigned to this agent. Please reassign or unassign tasks first.",
 			})
