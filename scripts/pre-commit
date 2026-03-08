@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Pre-commit hook for agent-todo backend
+# Runs the same checks as .github/workflows/backend.yml
+
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+# Check if we're in the backend directory
+if [ ! -f "go.mod" ]; then
+    echo "❌ Error: go.mod not found. Please run this hook from the repository root."
+    exit 1
+fi
+
+# Change to backend directory
+cd backend
+
+echo ""
+echo "📝 Step 1/4: Running go mod tidy..."
+go mod tidy
+if ! git diff --exit-code go.mod go.sum > /dev/null 2>&1; then
+    echo "❌ go.mod or go.sum was modified. Please run 'go mod tidy' and commit the changes."
+    exit 1
+fi
+echo "✅ go mod tidy check passed"
+
+echo ""
+echo "🔍 Step 2/4: Running go vet..."
+go vet ./...
+echo "✅ go vet passed"
+
+echo ""
+echo "🎨 Step 3/4: Running golangci-lint..."
+if command -v golangci-lint > /dev/null 2>&1; then
+    golangci-lint run --timeout=10m
+    echo "✅ golangci-lint passed"
+else
+    echo "⚠️  golangci-lint not installed. Skipping..."
+    echo "   Install with: brew install golangci-lint"
+fi
+
+echo ""
+echo "🏗️  Step 4/4: Running go build..."
+go build -v ./...
+echo "✅ go build passed"
+
+echo ""
+echo "✅ All pre-commit checks passed!"
+exit 0
