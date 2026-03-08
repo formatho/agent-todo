@@ -100,6 +100,7 @@ type Task struct {
 	CreatedByUserID  *uuid.UUID    `gorm:"type:uuid" json:"created_by_user_id"`  // Nullable for agent-created tasks
 	CreatedByAgentID *uuid.UUID    `gorm:"type:uuid" json:"created_by_agent_id"` // Nullable for user-created tasks
 	AssignedAgentID  *uuid.UUID    `gorm:"type:uuid" json:"assigned_agent_id"`
+	DeletedAt        gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 	Project          *Project      `gorm:"foreignKey:ProjectID" json:"project,omitempty"`
 	CreatedBy        *User         `gorm:"foreignKey:CreatedByUserID" json:"created_by,omitempty"`
 	CreatedByAgent   *Agent        `gorm:"foreignKey:CreatedByAgentID" json:"created_by_agent,omitempty"`
