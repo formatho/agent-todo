@@ -243,6 +243,125 @@ var deleteAgentCmd = &cobra.Command{
 	},
 }
 
+var agentListTasksCmd = &cobra.Command{
+	Use:   "tasks",
+	Short: "List tasks assigned to the authenticated agent",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		status, _ := cmd.Flags().GetString("status")
+
+		path := "/agent/tasks"
+		if status != "" {
+			path += "?status=" + status
+		}
+
+		c := client.New()
+		resp, err := c.Get(path, true)
+		if err != nil {
+			return fmt.Errorf("error making request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("failed to list tasks: %s", string(body))
+		}
+
+		var tasks []Task
+		if err := json.NewDecoder(resp.Body).Decode(&tasks); err != nil {
+			return fmt.Errorf("error decoding response: %w", err)
+		}
+
+		if len(tasks) == 0 {
+			fmt.Println("No tasks found")
+			return nil
+		}
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+		fmt.Fprintln(w, "ID\tTITLE\tSTATUS\tPRIORITY")
+		for _, t := range tasks {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", t.ID, t.Title, t.Status, t.Priority)
+		}
+		w.Flush()
+
+		fmt.Printf("\nTotal: %d task(s)\n", len(tasks))
+		return nil
+	},
+}
+
+var agentGetTaskCmd = &cobra.Command{
+	Use:   "get-task <id>",
+	Short: "Get details of a task assigned to the agent",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id := args[0]
+
+		c := client.New()
+		resp, err := c.Get("/agent/tasks/"+id, true)
+		if err != nil {
+			return fmt.Errorf("error making request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("failed to get task: %s", string(body))
+		}
+
+		var task Task
+		if err := json.NewDecoder(resp.Body).Decode(&task); err != nil {
+			return fmt.Errorf("error decoding response: %w", err)
+		}
+
+		fmt.Printf("ID:          %s\n", task.ID)
+		fmt.Printf("Title:       %s\n", task.Title)
+		fmt.Printf("Description: %s\n", task.Description)
+		fmt.Printf("Status:      %s\n", task.Status)
+		fmt.Printf("Priority:    %s\n", task.Priority)
+		fmt.Printf("Created:     %s\n", task.CreatedAt)
+		fmt.Printf("Updated:     %s\n", task.UpdatedAt)
+		return nil
+	},
+}
+
+var agentUpdateTaskStatusCmd = &cobra.Command{
+	Use:   "update-status <id> <status>",
+	Short: "Update the status of a task assigned to the agent",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id := args[0]
+		status := args[1]
+
+		// Validate status
+		if status != "pending" && status != "in_progress" && status != "completed" && status != "failed" {
+			return fmt.Errorf("invalid status: %s (must be pending, in_progress, completed, or failed)", status)
+		}
+
+		c := client.New()
+		req := map[string]string{
+			"status": status,
+		}
+
+		resp, err := c.Patch("/agent/tasks/"+id+"/status", req, true)
+		if err != nil {
+			return fmt.Errorf("error making request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("failed to update task status: %s", string(body))
+		}
+
+		var task Task
+		if err := json.NewDecoder(resp.Body).Decode(&task); err != nil {
+			return fmt.Errorf("error decoding response: %w", err)
+		}
+
+		fmt.Printf("✓ Task status updated: %s -> %s\n", task.Title, task.Status)
+		return nil
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(agentCmd)
 
@@ -256,9 +375,15 @@ func init() {
 	updateAgentCmd.Flags().StringP("role", "r", "", "Agent role (regular, supervisor, admin)")
 	updateAgentCmd.Flags().BoolVarP(&agentEnabled, "enabled", "e", false, "Enable/disable agent")
 
+	// Agent tasks
+	agentListTasksCmd.Flags().StringP("status", "s", "", "Filter by status")
+
 	agentCmd.AddCommand(createAgentCmd)
 	agentCmd.AddCommand(listAgentsCmd)
 	agentCmd.AddCommand(getAgentCmd)
 	agentCmd.AddCommand(updateAgentCmd)
 	agentCmd.AddCommand(deleteAgentCmd)
+	agentCmd.AddCommand(agentListTasksCmd)
+	agentCmd.AddCommand(agentGetTaskCmd)
+	agentCmd.AddCommand(agentUpdateTaskStatusCmd)
 }

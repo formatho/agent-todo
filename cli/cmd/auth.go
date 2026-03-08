@@ -175,10 +175,29 @@ var whoamiCmd = &cobra.Command{
 	},
 }
 
+var agentLoginCmd = &cobra.Command{
+	Use:   "agent-login <api-key>",
+	Short: "Login as an agent using API key",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		apiKey := args[0]
+
+		// Save API key to config
+		config.SetAPIKey(apiKey)
+		if err := config.Save(); err != nil {
+			return fmt.Errorf("error saving config: %w", err)
+		}
+
+		fmt.Println("✓ Agent API key saved successfully")
+		return nil
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(authCmd)
 	authCmd.AddCommand(loginCmd)
 	authCmd.AddCommand(registerCmd)
 	authCmd.AddCommand(logoutCmd)
 	authCmd.AddCommand(whoamiCmd)
+	authCmd.AddCommand(agentLoginCmd)
 }

@@ -47,7 +47,7 @@ func (c *Client) doRequest(method, path string, body interface{}, token string, 
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
 	if apiKey != "" {
-		req.Header.Set("X-API-Key", apiKey)
+		req.Header.Set("X-API-KEY", apiKey)
 	}
 
 	return c.HTTPClient.Do(req)
