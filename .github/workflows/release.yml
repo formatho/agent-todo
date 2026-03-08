@@ -1,20 +1,19 @@
-name: Release
+name: Release CLI
 
 on:
   push:
     tags:
-      - 'v*.*.*'
-  workflow_dispatch:
+      - 'v*'
 
 permissions:
   contents: write
-  id-token: write
 
 jobs:
-  goreleaser:
+  build:
+    name: Build and Release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -23,21 +22,48 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
-          cache: true
 
-      - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6
-        id: import_gpg
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.PASSPHRASE }}
+      - name: Get version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+      - name: Build binaries
+        run: |
+          make release VERSION=${{ steps.get_version.outputs.VERSION }}
+          cd bin
+          for binary in agent-todo-*; do
+            shasum -a 256 "$binary" > "${binary}.sha256"
+          done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          distribution: goreleaser
-          version: latest
-          args: release --clean
+          files: bin/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+
+      - name: Update Homebrew formula
+        run: |
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          
+          # Download sha256 sums
+          DARWIN_AMD64_SHA=$(curl -sL https://github.com/formatho/agent-todo/releases/download/${VERSION}/agent-todo-darwin-amd64.sha256 | cut -d' ' -f1)
+          DARWIN_ARM64_SHA=$(curl -sL https://github.com/formatho/agent-todo/releases/download/${VERSION}/agent-todo-darwin-arm64.sha256 | cut -d' ' -f1)
+          LINUX_AMD64_SHA=$(curl -sL https://github.com/formatho/agent-todo/releases/download/${VERSION}/agent-todo-linux-amd64.sha256 | cut -d' ' -f1)
+          LINUX_ARM64_SHA=$(curl -sL https://github.com/formatho/agent-todo/releases/download/${VERSION}/agent-todo-linux-arm64.sha256 | cut -d' ' -f1)
+          
+          # Update formula file
+          sed -i "s/version \".*\"/version \"${VERSION#v}\"/" homebrew-tap/agent-todo.rb
+          sed -i "0,/sha256 \"PLACEHOLDER\"/s//sha256 \"${DARWIN_AMD64_SHA}\"/" homebrew-tap/agent-todo.rb
+          sed -i "0,/sha256 \"PLACEHOLDER\"/s//sha256 \"${DARWIN_ARM64_SHA}\"/" homebrew-tap/agent-todo.rb
+          sed -i "0,/sha256 \"PLACEHOLDER\"/s//sha256 \"${LINUX_AMD64_SHA}\"/" homebrew-tap/agent-todo.rb
+          sed -i "0,/sha256 \"PLACEHOLDER\"/s//sha256 \"${LINUX_ARM64_SHA}\"/" homebrew-tap/agent-todo.rb
+          
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add homebrew-tap/agent-todo.rb
+          git commit -m "Update Homebrew formula to ${VERSION}"
+          git push

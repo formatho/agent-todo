@@ -54,3 +54,6 @@ lerna-debug.log*
 
 # Docker
 *.tar
+
+# CLI build artifacts
+bin/

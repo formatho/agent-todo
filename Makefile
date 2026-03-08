@@ -1,84 +1,88 @@
-# Agent Todo Platform - Docker Commands
-# Usage: make <command>
+# Makefile for agent-todo CLI
 
-.PHONY: help build up down logs clean rebuild ps
+# Variables
+BINARY_NAME=agent-todo
+CLI_PATH=./cli
+BUILD_DIR=./bin
+VERSION?=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+COMMIT?=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+BUILT_BY=$(shell whoami)
+LDFLAGS=-ldflags "-X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.Date=$(DATE) -X main.BuiltBy=$(BUILTBy)"
 
-help:
-	@echo "Agent Todo Platform - Docker Commands"
-	@echo ""
-	@echo "  make build     - Build all Docker images"
-	@echo "  make up        - Start all services"
-	@echo "  make down      - Stop all services"
-	@echo "  make logs      - Show logs from all services"
-	@echo "  make logs-b    - Show backend logs"
-	@echo "  make logs-f    - Show frontend logs"
-	@echo "  make logs-db   - Show database logs"
-	@echo "  make rebuild   - Rebuild all images (no cache)"
-	@echo "  make clean     - Remove all containers, images, and volumes"
-	@echo "  make ps        - Show running containers"
-	@echo "  make shell-b   - Open shell in backend container"
-	@echo "  make shell-db  - Open psql in database container"
-	@echo ""
+# Platforms for cross-compilation
+PLATFORMS=darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64
 
+.PHONY: all build clean test install release
+
+all: build
+
+# Build for current platform
 build:
-	docker compose build
+	@echo "Building $(BINARY_NAME)..."
+	@mkdir -p $(BUILD_DIR)
+	@cd $(CLI_PATH) && go build $(LDFLAGS) -o ../$(BUILD_DIR)/$(BINARY_NAME) .
+	@echo "Built: $(BUILD_DIR)/$(BINARY_NAME)"
 
-up:
-	docker compose up -d
-	@echo ""
-	@echo "Services starting..."
-	@echo "Frontend: http://localhost:3000"
-	@echo "Backend:  http://localhost:8080"
-	@echo "Swagger:  http://localhost:8080/docs"
-	@echo ""
+# Build for all platforms
+release:
+	@echo "Building release binaries..."
+	@mkdir -p $(BUILD_DIR)
+	@for platform in $(PLATFORMS); do \
+		OS=$${platform%/*}; \
+		ARCH=$${platform#*/}; \
+		echo "Building for $$OS/$$ARCH..."; \
+		cd $(CLI_PATH) && GOOS=$$OS GOARCH=$$ARCH go build $(LDFLAGS) -o ../$(BUILD_DIR)/$(BINARY_NAME)-$$OS-$$ARCH .; \
+		cd ..; \
+	done
+	@echo "Release binaries built in $(BUILD_DIR)/"
 
-up-logs:
-	docker compose up
+# Install locally
+install:
+	@echo "Installing $(BINARY_NAME)..."
+	@cd $(CLI_PATH) && go install $(LDFLAGS) .
+	@echo "Installed to $(GOPATH)/bin/$(BINARY_NAME)"
 
-down:
-	docker compose down
-
-logs:
-	docker compose logs -f
-
-logs-b:
-	docker compose logs -f backend
-
-logs-f:
-	docker compose logs -f frontend
-
-logs-db:
-	docker compose logs -f postgres
-
-rebuild:
-	docker compose down
-	docker compose build --no-cache
-	docker compose up -d
-
+# Clean build artifacts
 clean:
-	docker compose down -v --rmi local
-	@echo "Cleaned up all containers, volumes, and local images"
+	@echo "Cleaning..."
+	@rm -rf $(BUILD_DIR)
+	@cd $(CLI_PATH) && go clean
+	@echo "Cleaned"
 
-ps:
-	docker compose ps
+# Run tests
+test:
+	@echo "Running tests..."
+	@cd $(CLI_PATH) && go test -v ./...
 
-shell-b:
-	docker compose exec backend sh
+# Format code
+fmt:
+	@echo "Formatting code..."
+	@cd $(CLI_PATH) && go fmt ./...
+	@echo "Formatted"
 
-shell-db:
-	docker compose exec postgres psql -U agent_todo -d agent_todo
+# Run linter
+lint:
+	@echo "Running linter..."
+	@cd $(CLI_PATH) && golangci-lint run ./...
+	@echo "Linting complete"
 
-# Production commands
-prod-up:
-	docker compose -f docker-compose.prod.yml up -d
+# Build with version info
+version:
+	@echo "Version: $(VERSION)"
+	@echo "Commit: $(COMMIT)"
+	@echo "Date: $(DATE)"
+	@echo "Built by: $(BUILT_BY)"
 
-prod-down:
-	docker compose -f docker-compose.prod.yml down
-
-prod-logs:
-	docker compose -f docker-compose.prod.yml logs -f
-
-prod-rebuild:
-	docker compose -f docker-compose.prod.yml down
-	docker compose -f docker-compose.prod.yml build --no-cache
-	docker compose -f docker-compose.prod.yml up -d
+# Show help
+help:
+	@echo "Available targets:"
+	@echo "  build    - Build for current platform"
+	@echo "  release  - Build for all platforms"
+	@echo "  install  - Install locally"
+	@echo "  clean    - Clean build artifacts"
+	@echo "  test     - Run tests"
+	@echo "  fmt      - Format code"
+	@echo "  lint     - Run linter"
+	@echo "  version  - Show version info"
+	@echo "  help     - Show this help message"
