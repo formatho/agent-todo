@@ -1,0 +1,126 @@
+project_name: agent-todo
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    main: ./cli/main.go
+    binary: agent-todo
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+      - -X main.Commit={{.Commit}}
+      - -X main.Date={{.Date}}
+      - -X main.BuiltBy=goreleaser
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE*
+      - cli/README.md
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+
+brews:
+  - name: agent-todo
+    homepage: https://github.com/formatho/agent-todo
+    tap:
+      owner: formatho
+      name: homebrew-tap
+    commit_author:
+      name: goreleaser-bot
+      email: bot@goreleaser.com
+    folder: Formula
+    caveats: |
+      Configuration is stored in ~/.agent-todo/config.yaml
+
+      To get started:
+        1. Run: agent-todo auth agent-login <your-api-key> --server https://todo.formatho.com/api
+        2. Run: agent-todo agent tasks
+
+      For more information, visit: https://github.com/formatho/agent-todo
+    test: |
+      system "#{bin}/agent-todo --version"
+
+scoop:
+  bucket:
+    owner: formatho
+    name: scoop-bucket
+  commit_author:
+    name: goreleaser-bot
+    email: bot@goreleaser.com
+  homepage: https://github.com/formatho/agent-todo
+  description: CLI tool for managing tasks, projects, and AI agents
+  license: MIT
+
+release:
+  github:
+    owner: formatho
+    name: agent-todo
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## {{ .Tag }} ({{ .Date }})
+
+    {{ .Commit.Subject }}
+  footer: |
+    **Full Changelog**: https://github.com/formatho/agent-todo/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+    ## Installation
+
+    ### Using Homebrew (macOS/Linux)
+    ```bash
+    brew install formatho/tap/agent-todo
+    ```
+
+    ### Using Scoop (Windows)
+    ```bash
+    scoop install formatho/scoop/agent-todo
+    ```
+
+    ### Manual Download
+    Download the appropriate binary for your platform from the assets below.
+
+    ## Quick Start
+    ```bash
+    # Login with your agent API key
+    agent-todo auth agent-login sk_agent_xxx --server https://todo.formatho.com/api
+
+    # List your tasks
+    agent-todo agent tasks
+    ```
+
+    ## Documentation
+    Full documentation: https://github.com/formatho/agent-todo

@@ -13,9 +13,19 @@ type Config struct {
 	Token     string `mapstructure:"token"`
 	APIKey    string `mapstructure:"api_key"`
 	Insecure  bool   `mapstructure:"insecure"`
+	Version   string // Not persisted, used for runtime version info
+	Commit    string // Not persisted, used for runtime version info
+	Date      string // Not persisted, used for runtime version info
+	BuiltBy   string // Not persisted, used for runtime version info
 }
 
-var cfg *Config
+var (
+	cfg      *Config
+	version  string = "dev"
+	commit   string = "none"
+	date     string = "unknown"
+	builtBy  string = "unknown"
+)
 
 func Init() error {
 	homeDir, err := os.UserHomeDir()
@@ -111,4 +121,48 @@ func IsInsecure() bool {
 func ClearAuth() {
 	cfg.Token = ""
 	cfg.APIKey = ""
+}
+
+func SetVersion(v string) {
+	version = v
+	if cfg != nil {
+		cfg.Version = v
+	}
+}
+
+func SetCommit(c string) {
+	commit = c
+	if cfg != nil {
+		cfg.Commit = c
+	}
+}
+
+func SetDate(d string) {
+	date = d
+	if cfg != nil {
+		cfg.Date = d
+	}
+}
+
+func SetBuiltBy(b string) {
+	builtBy = b
+	if cfg != nil {
+		cfg.BuiltBy = b
+	}
+}
+
+func GetVersion() string {
+	return version
+}
+
+func GetCommit() string {
+	return commit
+}
+
+func GetDate() string {
+	return date
+}
+
+func GetBuiltBy() string {
+	return builtBy
 }

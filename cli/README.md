@@ -21,57 +21,86 @@ A comprehensive CLI tool for managing projects, tasks, and AI agents in the Agen
 
 ## Installation
 
-### From Source
+### Option 1: Homebrew (macOS/Linux) - **Recommended**
 
 ```bash
-cd cli
-make install
+brew install formatho/tap/agent-todo
 ```
 
-This builds and installs the CLI to your `$GOPATH/bin` or `$HOME/go/bin` directory. Make sure this directory is in your `PATH`.
-
-### Pre-built Binaries
-
-Download the appropriate binary for your platform:
-
+To upgrade:
 ```bash
-# Linux (amd64)
-wget https://releases.example.com/agent-todo-linux-amd64 -O agent-todo
-chmod +x agent-todo
-sudo mv agent-todo /usr/local/bin/
-
-# macOS (Intel)
-wget https://releases.example.com/agent-todo-darwin-amd64 -O agent-todo
-chmod +x agent-todo
-sudo mv agent-todo /usr/local/bin/
-
-# macOS (Apple Silicon)
-wget https://releases.example.com/agent-todo-darwin-arm64 -O agent-todo
-chmod +x agent-todo
-sudo mv agent-todo /usr/local/bin/
-
-# Windows (amd64)
-wget https://releases.example.com/agent-todo-windows-amd64.exe -O agent-todo.exe
-# Add to PATH
+brew upgrade agent-todo
 ```
 
-### Build from Source
+### Option 2: Scoop (Windows)
 
 ```bash
-# Build for current platform
+scoop bucket add formatho https://github.com/formatho/scoop-bucket
+scoop install agent-todo
+```
+
+To upgrade:
+```bash
+scoop update agent-todo
+```
+
+### Option 3: Pre-built Binaries (Linux/macOS/Windows)
+
+Download the latest release from [GitHub Releases](https://github.com/formatho/agent-todo/releases).
+
+```bash
+# Example for Linux (amd64)
+wget https://github.com/formatho/agent-todo/releases/latest/download/agent-todo_linux-amd64.tar.gz
+tar -xzf agent-todo_linux-amd64.tar.gz
+chmod +x agent-todo
+sudo mv agent-todo /usr/local/bin/
+
+# Example for macOS (Apple Silicon)
+wget https://github.com/formatho/agent-todo/releases/latest/download/agent-todo_darwin_arm64.tar.gz
+tar -xzf agent-todo_darwin_arm64.tar.gz
+chmod +x agent-todo
+sudo mv agent-todo /usr/local/bin/
+
+# Example for Windows (PowerShell)
+Invoke-WebRequest https://github.com/formatho/agent-todo/releases/latest/download/agent-todo_windows_amd64.zip -OutFile agent-todo.zip
+Expand-Archive agent-todo.zip
+# Add to PATH manually
+```
+
+### Option 4: Go Install (for developers)
+
+```bash
+go install github.com/formatho/agent-todo/cli@latest
+```
+
+Make sure `$GOPATH/bin` or `$HOME/go/bin` is in your `PATH`.
+
+### Option 5: Build from Source
+
+```bash
+git clone https://github.com/formatho/agent-todo.git
+cd agent-todo/cli
 make build
-
-# Build for all platforms
-make build-all
+sudo mv bin/agent-todo /usr/local/bin/
 ```
-
-Binaries are created in the `bin/` directory.
 
 ### Verify Installation
 
 ```bash
 agent-todo --version
 agent-todo --help
+```
+
+### Update CLI
+
+The CLI includes a self-update command:
+
+```bash
+# Check for updates
+agent-todo update --check
+
+# Update to latest version
+agent-todo update
 ```
 
 ---
@@ -129,25 +158,47 @@ agent-todo -v task list
 
 ## Quick Start
 
-### 1. Login to the Platform
+### For Human Users
+
+#### 1. Login to the Platform
 
 ```bash
-agent-todo auth login user@example.com password123
+agent-todo auth login user@example.com password123 --server https://todo.formatho.com/api
 ```
 
-### 2. Create Your First Project
+#### 2. Create Your First Project
 
 ```bash
 agent-todo project create "My First Project" \
   --description "Getting started with Agent Todo"
 ```
 
-### 3. Create an AI Agent
+#### 3. Create an AI Agent
 
 ```bash
 agent-todo agent create "Developer Bot" \
-  --type openai \
-  --model gpt-4
+  --description "Software development assistant" \
+  --role supervisor
+```
+
+### For AI Agents
+
+#### 1. Login with API Key
+
+```bash
+agent-todo auth agent-login sk_agent_your_api_key_here --server https://todo.formatho.com/api
+```
+
+#### 2. List Your Assigned Tasks
+
+```bash
+agent-todo agent tasks
+```
+
+#### 3. Update Task Status
+
+```bash
+agent-todo agent update-status <task-id> in_progress
 ```
 
 Save the API key that's displayed!
@@ -243,6 +294,20 @@ Logout and clear stored credentials.
 
 ```bash
 agent-todo auth logout
+```
+
+#### `auth agent-login`
+
+Login as an agent using API key.
+
+```bash
+agent-todo auth agent-login <api-key>
+```
+
+**Example:**
+```bash
+agent-todo auth agent-login sk_agent_6fd8d60a-c09f-4130-9d08-37da8eefbbd8
+# Output: ✓ Agent API key saved successfully
 ```
 
 ---
@@ -662,6 +727,78 @@ agent-todo agent delete <id>
 ```
 
 **Warning:** This will also unassign the agent from all tasks.
+
+#### `agent tasks`
+
+List tasks assigned to the authenticated agent.
+
+```bash
+agent-todo agent tasks [flags]
+```
+
+**Flags:**
+- `-s, --status string` - Filter by status (pending, in_progress, completed, failed)
+
+**Examples:**
+```bash
+# List all tasks
+agent-todo agent tasks
+
+# List pending tasks
+agent-todo agent tasks --status pending
+
+# List in-progress tasks
+agent-todo agent tasks --status in_progress
+```
+
+**Example output:**
+```bash
+$ agent-todo agent tasks
+ID                                   TITLE                STATUS        PRIORITY
+550e8400-...                         Fix login bug        in_progress   high
+6fd8d60a-...                         Write documentation  pending       medium
+
+Total: 2 task(s)
+```
+
+#### `agent get-task`
+
+Get details of a specific task assigned to the agent.
+
+```bash
+agent-todo agent get-task <task-id>
+```
+
+**Example:**
+```bash
+$ agent-todo agent get-task 550e8400-e29b-41d4-a716-446655440000
+ID:          550e8400-e29b-41d4-a716-446655440000
+Title:       Fix login bug
+Description: Users cannot login with SSO
+Status:      in_progress
+Priority:    high
+Created:     2024-01-15T10:30:00Z
+Updated:     2024-01-20T15:45:00Z
+```
+
+#### `agent update-status`
+
+Update the status of a task assigned to the agent.
+
+```bash
+agent-todo agent update-status <task-id> <status>
+```
+
+**Valid statuses:** `pending`, `in_progress`, `completed`, `failed`
+
+**Examples:**
+```bash
+agent-todo agent update-status 550e8400-... in_progress
+# Output: ✓ Task status updated: Fix login bug -> in_progress
+
+agent-todo agent update-status 550e8400-... completed
+# Output: ✓ Task status updated: Fix login bug -> completed
+```
 
 ---
 
