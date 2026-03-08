@@ -20,16 +20,16 @@ func NewActivityService() *ActivityService {
 
 // ActivityEvent represents a formatted activity event for the feed
 type ActivityEvent struct {
-	ID           string    `json:"id"`
-	TaskID       string    `json:"task_id"`
-	TaskTitle    string    `json:"task_title"`
-	EventType    string    `json:"event_type"`
-	Description  string    `json:"description"`
-	ActorName    string    `json:"actor_name"`
-	ActorType    string    `json:"actor_type"` // "user" or "agent"
-	PreviousState string   `json:"previous_state,omitempty"`
-	NewState     string    `json:"new_state,omitempty"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID            string    `json:"id"`
+	TaskID        string    `json:"task_id"`
+	TaskTitle     string    `json:"task_title"`
+	EventType     string    `json:"event_type"`
+	Description   string    `json:"description"`
+	ActorName     string    `json:"actor_name"`
+	ActorType     string    `json:"actor_type"` // "user" or "agent"
+	PreviousState string    `json:"previous_state,omitempty"`
+	NewState      string    `json:"new_state,omitempty"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 // GetRecentActivity fetches recent activity events across all tasks
@@ -115,14 +115,14 @@ func generateDescription(eventType, taskTitle, actorName, previousState, newStat
 // CreateEvent creates a new task event
 func (s *ActivityService) CreateEvent(taskID uuid.UUID, eventType, previousState, newState, changedBy string) error {
 	event := struct {
-		ID            uuid.UUID  `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-		TaskID        uuid.UUID  `gorm:"type:uuid;not null"`
-		EventType     string     `gorm:"not null"`
+		ID            uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+		TaskID        uuid.UUID `gorm:"type:uuid;not null"`
+		EventType     string    `gorm:"not null"`
 		PreviousState string
 		NewState      string
 		ChangedBy     string
-		CreatedAt     time.Time  `gorm:"default:CURRENT_TIMESTAMP"`
-		UpdatedAt     time.Time  `gorm:"default:CURRENT_TIMESTAMP"`
+		CreatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+		UpdatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	}{
 		TaskID:        taskID,
 		EventType:     eventType,

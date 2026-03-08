@@ -44,4 +44,3 @@ func (h *ActivityHandler) GetActivityFeed(c *gin.Context) {
 
 	c.JSON(http.StatusOK, events)
 }
-
