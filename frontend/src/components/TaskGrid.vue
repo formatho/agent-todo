@@ -14,6 +14,13 @@
           </span>
           <button @click="clearProjectFilter" class="btn-clear-filter">×</button>
         </div>
+        <div v-if="filters.agent_id" class="project-filter-indicator agent-filter">
+          <span class="filter-icon">🤖</span>
+          <span class="filter-text">
+            Filtering by: {{ getAgentName(filters.agent_id) }}
+          </span>
+          <button @click="clearAgentFilter" class="btn-clear-filter">×</button>
+        </div>
       </div>
 
       <ViewToggle v-model="viewMode" :options="viewOptions" @change="handleViewChange" />
@@ -288,23 +295,39 @@ onMounted(async () => {
   await projectStore.fetchProjects({ status: 'active' })
   await agentStore.fetchAgents()
 
-  // Check for project_id in query parameters
+  // Check for query parameters
   const projectIdFromUrl = route.query.project_id
+  const agentIdFromUrl = route.query.agent_id
+
   if (projectIdFromUrl) {
     filters.value.project_id = projectIdFromUrl
-    await taskStore.fetchTasks({ project_id: projectIdFromUrl })
+  }
+  if (agentIdFromUrl) {
+    filters.value.agent_id = agentIdFromUrl
+  }
+
+  if (projectIdFromUrl || agentIdFromUrl) {
+    const params = {}
+    if (projectIdFromUrl) params.project_id = projectIdFromUrl
+    if (agentIdFromUrl) params.agent_id = agentIdFromUrl
+    await taskStore.fetchTasks(params)
   } else {
     await taskStore.fetchTasks()
   }
 })
 
 // Watch for route query changes
-watch(() => route.query.project_id, async (newProjectId) => {
-  if (newProjectId) {
-    filters.value.project_id = newProjectId
-    await taskStore.fetchTasks({ project_id: newProjectId })
+watch([() => route.query.project_id, () => route.query.agent_id], async ([newProjectId, newAgentId]) => {
+  filters.value.project_id = newProjectId || ''
+  filters.value.agent_id = newAgentId || ''
+
+  const params = {}
+  if (newProjectId) params.project_id = newProjectId
+  if (newAgentId) params.agent_id = newAgentId
+
+  if (Object.keys(params).length > 0) {
+    await taskStore.fetchTasks(params)
   } else {
-    filters.value.project_id = ''
     await taskStore.fetchTasks()
   }
 })
@@ -328,10 +351,26 @@ const getProjectName = (projectId) => {
   return project ? project.name : 'Unknown Project'
 }
 
+const getAgentName = (agentId) => {
+  const agent = agents.value.find(a => a.id === agentId)
+  return agent ? agent.name : 'Unknown Agent'
+}
+
 const clearProjectFilter = async () => {
   filters.value.project_id = ''
-  // Update URL to remove the query parameter
-  await router.push({ path: route.path, query: {} })
+  // Update URL to remove only the project_id query parameter
+  const query = { ...route.query }
+  delete query.project_id
+  await router.push({ path: route.path, query })
+  await taskStore.fetchTasks()
+}
+
+const clearAgentFilter = async () => {
+  filters.value.agent_id = ''
+  // Update URL to remove only the agent_id query parameter
+  const query = { ...route.query }
+  delete query.agent_id
+  await router.push({ path: route.path, query })
   await taskStore.fetchTasks()
 }
 
@@ -423,6 +462,12 @@ const truncatedDesc = (desc) => {
   font-size: 13px;
   color: #3730A3;
   margin-top: 8px;
+}
+
+.project-filter-indicator.agent-filter {
+  background: #DBEAFE;
+  border-color: #BFDBFE;
+  color: #1E40AF;
 }
 
 .filter-icon {

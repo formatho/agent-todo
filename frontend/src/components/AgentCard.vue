@@ -71,6 +71,15 @@
         {{ completedCount }} of {{ taskCount }} tasks completed
       </div>
     </div>
+
+    <!-- View Tasks Button -->
+    <div class="view-tasks-section">
+      <router-link :to="`/tasks?agent_id=${agent.id}`" class="btn-view-tasks">
+        <span class="btn-icon-left">📋</span>
+        <span>View Tasks</span>
+        <span class="btn-icon-right">→</span>
+      </router-link>
+    </div>
   </div>
 </template>
 
@@ -363,5 +372,52 @@ const handleCopyKey = async () => {
   font-size: 12px;
   color: #6B7280;
   text-align: center;
+}
+
+/* View Tasks Section */
+.view-tasks-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #E5E7EB;
+}
+
+.btn-view-tasks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-view-tasks:hover {
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.btn-icon-left {
+  font-size: 16px;
+}
+
+.btn-icon-right {
+  font-size: 16px;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all 0.2s ease;
+}
+
+.btn-view-tasks:hover .btn-icon-right {
+  opacity: 1;
+  transform: translateX(0);
 }
 </style>
