@@ -91,3 +91,23 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-and-push
+
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.TODO_DEPLOY_HOST }}
+          username: ${{ secrets.TODO_DEPLOY_USER }}
+          key: ${{ secrets.TODO_DEPLOY_KEY }}
+          script: |
+            cd /home/deploy/todo
+            echo "${{ secrets.TODO_GHCR_TOKEN }}" | docker login ghcr.io -u Ritavidhata --password-stdin
+            docker compose -f docker-compose.prod.yml pull frontend
+            docker compose -f docker-compose.prod.yml up -d frontend
+            echo "Frontend deployed successfully!"

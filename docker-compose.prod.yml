@@ -29,7 +29,7 @@ services:
       PORT: 8080
       GIN_MODE: release
       JWT_SECRET: ${JWT_SECRET:?JWT secret required}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-https://todo.formatho.com}
     depends_on:
       postgres:
         condition: service_healthy
