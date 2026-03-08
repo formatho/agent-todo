@@ -63,7 +63,7 @@ var createTaskCmd = &cobra.Command{
 			req["priority"] = priority
 		}
 
-		resp, err := c.Post("/tasks", req, true)
+		resp, err := c.Post("/agent/tasks", req, true)
 		if err != nil {
 			return fmt.Errorf("error making request: %w", err)
 		}
@@ -94,7 +94,7 @@ var listTasksCmd = &cobra.Command{
 		agentID, _ := cmd.Flags().GetString("agent")
 		search, _ := cmd.Flags().GetString("search")
 
-		path := "/tasks"
+		path := "/agent/tasks"
 		params := []string{}
 		if status != "" {
 			params = append(params, "status="+status)
@@ -162,7 +162,7 @@ var getTaskCmd = &cobra.Command{
 		id := args[0]
 
 		c := client.New()
-		resp, err := c.Get("/tasks/"+id, true)
+		resp, err := c.Get("/agent/tasks/"+id, true)
 		if err != nil {
 			return fmt.Errorf("error making request: %w", err)
 		}
@@ -223,7 +223,7 @@ var updateTaskCmd = &cobra.Command{
 		}
 
 		c := client.New()
-		resp, err := c.Patch("/tasks/"+id, req, true)
+		resp, err := c.Patch("/agent/tasks/"+id, req, true)
 		if err != nil {
 			return fmt.Errorf("error making request: %w", err)
 		}
@@ -252,7 +252,7 @@ var deleteTaskCmd = &cobra.Command{
 		id := args[0]
 
 		c := client.New()
-		resp, err := c.Delete("/tasks/"+id, true)
+		resp, err := c.Delete("/agent/tasks/"+id, true)
 		if err != nil {
 			return fmt.Errorf("error making request: %w", err)
 		}
@@ -329,7 +329,7 @@ var listCommentsCmd = &cobra.Command{
 		taskID := args[0]
 
 		c := client.New()
-		resp, err := c.Get("/tasks/"+taskID+"/comments", true)
+		resp, err := c.Get("/agent/tasks/"+taskID+"/comments", true)
 		if err != nil {
 			return fmt.Errorf("error making request: %w", err)
 		}
@@ -372,7 +372,7 @@ var addCommentCmd = &cobra.Command{
 			"content": content,
 		}
 
-		resp, err := c.Post("/tasks/"+taskID+"/comments", req, true)
+		resp, err := c.Post("/agent/tasks/"+taskID+"/comments", req, true)
 		if err != nil {
 			return fmt.Errorf("error making request: %w", err)
 		}
@@ -402,7 +402,7 @@ var completeTaskCmd = &cobra.Command{
 			"status": "completed",
 		}
 
-		resp, err := c.Patch("/tasks/"+id, req, true)
+		resp, err := c.Patch("/agent/tasks/"+id+"/status", req, true)
 		if err != nil {
 			return fmt.Errorf("error making request: %w", err)
 		}
@@ -416,7 +416,7 @@ var completeTaskCmd = &cobra.Command{
 		// Add comment if provided
 		if comment != "" {
 			commentReq := map[string]string{"content": comment}
-			c.Post("/tasks/"+id+"/comments", commentReq, false)
+			c.Post("/agent/tasks/"+id+"/comments", commentReq, false)
 		}
 
 		fmt.Printf("✓ Task %s marked as completed\n", id)
@@ -437,7 +437,7 @@ var startTaskCmd = &cobra.Command{
 			"status": "in_progress",
 		}
 
-		resp, err := c.Patch("/tasks/"+id, req, true)
+		resp, err := c.Patch("/agent/tasks/"+id+"/status", req, true)
 		if err != nil {
 			return fmt.Errorf("error making request: %w", err)
 		}
@@ -451,7 +451,7 @@ var startTaskCmd = &cobra.Command{
 		// Add comment if provided
 		if comment != "" {
 			commentReq := map[string]string{"content": comment}
-			c.Post("/tasks/"+id+"/comments", commentReq, false)
+			c.Post("/agent/tasks/"+id+"/comments", commentReq, false)
 		}
 
 		fmt.Printf("✓ Task %s marked as in progress\n", id)
@@ -472,7 +472,7 @@ var blockTaskCmd = &cobra.Command{
 			"status": "blocked",
 		}
 
-		resp, err := c.Patch("/tasks/"+id, req, true)
+		resp, err := c.Patch("/agent/tasks/"+id+"/status", req, true)
 		if err != nil {
 			return fmt.Errorf("error making request: %w", err)
 		}
@@ -486,7 +486,7 @@ var blockTaskCmd = &cobra.Command{
 		// Add blocker reason as comment
 		if reason != "" {
 			commentReq := map[string]string{"content": "Blocked: " + reason}
-			c.Post("/tasks/"+id+"/comments", commentReq, false)
+			c.Post("/agent/tasks/"+id+"/comments", commentReq, false)
 		}
 
 		fmt.Printf("✓ Task %s marked as blocked\n", id)
