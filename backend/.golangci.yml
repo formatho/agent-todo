@@ -12,7 +12,6 @@ linters:
     - gosimple
     - ineffassign
     - unused
-    - goimports
     - misspell
 
 linters-settings:
@@ -22,18 +21,7 @@ linters-settings:
       - shadow
       - fieldalignment
 
-  goimports:
-    local-prefixes: github.com/formatho/agent-todo
-
 issues:
   exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
-  exclude-rules:
-    # Exclude comments requirements
-    - linters:
-        - revive
-      text: "exported:"
-    - linters:
-        - revive
-      text: "package-comments"
