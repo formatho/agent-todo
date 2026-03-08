@@ -59,6 +59,12 @@ func (h *AgentTaskHandler) CreateTask(c *gin.Context) {
 		return
 	}
 
+	agentName, err := middleware.GetAgentName(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
 	// Agent creates task for itself
 	task, err := h.taskService.CreateByAgent(
 		req.Title,
@@ -66,8 +72,9 @@ func (h *AgentTaskHandler) CreateTask(c *gin.Context) {
 		req.Priority,
 		req.DueDate,
 		req.ProjectID,
-		agentID,  // Agent ID as creator
-		&agentID, // Auto-assign to self
+		agentID,     // Agent ID as creator
+		agentName,   // Agent name for activity feed
+		&agentID,    // Auto-assign to self
 	)
 
 	if err != nil {

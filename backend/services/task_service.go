@@ -76,7 +76,8 @@ func (s *TaskService) Create(title, description string, priority models.TaskPrio
 }
 
 // CreateByAgent creates a new task on behalf of an agent
-func (s *TaskService) CreateByAgent(title, description string, priority models.TaskPriority, dueDate *time.Time, projectID, createdByAgentID string, assignedAgentID *string) (*models.Task, error) {
+// createdByAgentName is used for activity feed attribution
+func (s *TaskService) CreateByAgent(title, description string, priority models.TaskPriority, dueDate *time.Time, projectID, createdByAgentID, createdByAgentName string, assignedAgentID *string) (*models.Task, error) {
 	task := &models.Task{
 		Title:       title,
 		Description: description,
@@ -105,8 +106,12 @@ func (s *TaskService) CreateByAgent(title, description string, priority models.T
 		return nil, err
 	}
 
-	// Create creation event
-	s.createEvent(task.ID, models.TaskEventCreated, "", string(task.Status), "system")
+	// Create creation event with agent name for proper attribution
+	actorName := createdByAgentName
+	if actorName == "" {
+		actorName = "system"
+	}
+	s.createEvent(task.ID, models.TaskEventCreated, "", string(task.Status), actorName)
 
 	return task, nil
 }

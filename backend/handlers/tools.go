@@ -69,6 +69,15 @@ func (h *ToolsHandler) CreateTask(c *gin.Context) {
 		return
 	}
 
+	agentName, err := middleware.GetAgentName(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ToolResponse{
+			Success: false,
+			Error:   "Unauthorized",
+		})
+		return
+	}
+
 	var req ToolCreateTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ToolResponse{
@@ -86,6 +95,7 @@ func (h *ToolsHandler) CreateTask(c *gin.Context) {
 		nil,
 		req.ProjectID,
 		agentID,
+		agentName,
 		&agentID,
 	)
 
