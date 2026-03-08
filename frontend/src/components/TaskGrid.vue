@@ -42,6 +42,11 @@
         />
       </div>
 
+      <label class="toggle-completed">
+        <input type="checkbox" v-model="showCompleted" />
+        <span>Show completed tasks</span>
+      </label>
+
       <button @click="showFilters = !showFilters" class="btn-filters">
         <span>⚙️</span>
         <span>Filters</span>
@@ -205,6 +210,7 @@ const projectStore = useProjectStore()
 
 const viewMode = ref('grid')
 const searchQuery = ref('')
+const showCompleted = ref(true) // Show completed tasks by default
 
 const viewOptions = [
   { value: 'grid', label: 'Grid View', icon: '⊞' },
@@ -223,7 +229,14 @@ const filters = ref({
 })
 
 const filteredTasks = computed(() => {
-  return Array.isArray(taskStore.tasks) ? taskStore.tasks : []
+  let tasks = Array.isArray(taskStore.tasks) ? taskStore.tasks : []
+  
+  // Filter out completed tasks if toggle is off
+  if (!showCompleted.value) {
+    tasks = tasks.filter(task => task.status !== 'completed')
+  }
+  
+  return tasks
 })
 
 const agents = computed(() => Array.isArray(agentStore.agents) ? agentStore.agents : [])
@@ -288,6 +301,11 @@ watch(searchQuery, (newVal) => {
 
 const handleViewChange = (newView) => {
   viewMode.value = newView
+}
+
+const handleToggleCompleted = () => {
+  // No need to fetch, just update local filter
+  // The computed property will automatically update
 }
 
 const getProjectName = (projectId) => {
@@ -480,6 +498,33 @@ const truncatedDesc = (desc) => {
   gap: 12px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.toggle-completed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.toggle-completed:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+
+.toggle-completed input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
 }
 
 .search-box {
