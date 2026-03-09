@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/formatho/agent-todo/db"
 	"github.com/formatho/agent-todo/handlers"
 	"github.com/formatho/agent-todo/middleware"
 	"github.com/gin-gonic/gin"
@@ -22,7 +23,7 @@ func TestOrganisationCRUD(t *testing.T) {
 	}
 
 	router := setupOrganisationRouter()
-	testDB := getTestDB()
+	testDB := db.GetDB()
 
 	// Clean up test data
 	testDB.Exec("DELETE FROM task_events")
