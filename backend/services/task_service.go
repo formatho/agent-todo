@@ -248,6 +248,50 @@ func (s *TaskService) Update(id string, title, description *string, priority *mo
 	return s.GetByID(id)
 }
 
+// UpdateByOrganisation updates a task, verifying it belongs to the organisation
+func (s *TaskService) UpdateByOrganisation(id, organisationID string, title, description *string, priority *models.TaskPriority, dueDate **time.Time, assignedAgentID *string) (*models.Task, error) {
+	var task models.Task
+	if err := s.db.Where("id = ? AND organisation_id = ?", id, organisationID).First(&task).Error; err != nil {
+		return nil, err
+	}
+
+	updates := make(map[string]interface{})
+
+	if title != nil {
+		updates["title"] = *title
+	}
+	if description != nil {
+		updates["description"] = *description
+	}
+	if priority != nil {
+		updates["priority"] = *priority
+	}
+	if dueDate != nil {
+		if *dueDate == nil {
+			updates["due_date"] = nil
+		} else {
+			updates["due_date"] = **dueDate
+		}
+	}
+	if assignedAgentID != nil {
+		if *assignedAgentID == "" {
+			updates["assigned_agent_id"] = nil
+		} else {
+			parsedID := uuid.MustParse(*assignedAgentID)
+			updates["assigned_agent_id"] = parsedID
+		}
+	}
+
+	if err := s.db.Model(&task).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+
+	// Create update event
+	s.createEvent(task.ID, models.TaskEventUpdated, "", "", "system")
+
+	return s.GetByID(id)
+}
+
 // UpdateStatus updates the status of a task
 func (s *TaskService) UpdateStatus(id string, status models.TaskStatus, changedBy string) (*models.Task, error) {
 	var task models.Task
@@ -293,6 +337,31 @@ func (s *TaskService) AssignAgent(taskID, agentID string) (*models.Task, error) 
 	return s.GetByID(taskID)
 }
 
+// AssignAgentByOrganisation assigns an agent to a task, verifying both belong to the organisation
+func (s *TaskService) AssignAgentByOrganisation(taskID, agentID, organisationID string) (*models.Task, error) {
+	var task models.Task
+	if err := s.db.Where("id = ? AND organisation_id = ?", taskID, organisationID).First(&task).Error; err != nil {
+		return nil, err
+	}
+
+	var agent models.Agent
+	if err := s.db.Where("id = ? AND organisation_id = ?", agentID, organisationID).First(&agent).Error; err != nil {
+		return nil, gorm.ErrRecordNotFound // Agent not found in this organisation
+	}
+
+	parsedAgentID := uuid.MustParse(agentID)
+	task.AssignedAgentID = &parsedAgentID
+
+	if err := s.db.Save(&task).Error; err != nil {
+		return nil, err
+	}
+
+	// Create assignment event
+	s.createEvent(task.ID, models.TaskEventAssigned, "", agent.Name, "system")
+
+	return s.GetByID(taskID)
+}
+
 // UnassignAgent removes agent assignment from a task
 func (s *TaskService) UnassignAgent(taskID string) (*models.Task, error) {
 	var task models.Task
@@ -317,9 +386,45 @@ func (s *TaskService) UnassignAgent(taskID string) (*models.Task, error) {
 	return s.GetByID(taskID)
 }
 
+// UnassignAgentByOrganisation removes agent assignment, verifying task belongs to organisation
+func (s *TaskService) UnassignAgentByOrganisation(taskID, organisationID string) (*models.Task, error) {
+	var task models.Task
+	if err := s.db.Where("id = ? AND organisation_id = ?", taskID, organisationID).First(&task).Error; err != nil {
+		return nil, err
+	}
+
+	oldAgentName := ""
+	if task.AssignedAgent != nil {
+		oldAgentName = task.AssignedAgent.Name
+	}
+
+	task.AssignedAgentID = nil
+
+	if err := s.db.Save(&task).Error; err != nil {
+		return nil, err
+	}
+
+	// Create unassignment event
+	s.createEvent(task.ID, models.TaskEventUnassigned, oldAgentName, "", "system")
+
+	return s.GetByID(taskID)
+}
+
 // Delete deletes a task
 func (s *TaskService) Delete(id string) error {
 	return s.db.Where("id = ?", id).Delete(&models.Task{}).Error
+}
+
+// DeleteByOrganisation deletes a task, verifying it belongs to the organisation
+func (s *TaskService) DeleteByOrganisation(id, organisationID string) error {
+	result := s.db.Where("id = ? AND organisation_id = ?", id, organisationID).Delete(&models.Task{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 // AddComment adds a comment to a task
@@ -384,12 +489,56 @@ func (s *TaskService) GetUpcomingDueTasks(within time.Duration) ([]models.Task, 
 	return tasks, nil
 }
 
+// GetUpcomingDueTasksByOrganisation retrieves upcoming due tasks for a specific organisation
+func (s *TaskService) GetUpcomingDueTasksByOrganisation(within time.Duration, organisationID string) ([]models.Task, error) {
+	var tasks []models.Task
+	now := time.Now()
+	dueBefore := now.Add(within)
+
+	err := s.db.Preload("Project").Preload("CreatedByAgent").Preload("AssignedAgent").
+		Where("organisation_id = ?", organisationID).
+		Where("due_date IS NOT NULL").
+		Where("due_date > ?", now).
+		Where("due_date <= ?", dueBefore).
+		Where("status != ?", models.TaskStatusCompleted).
+		Where("status != ?", models.TaskStatusFailed).
+		Order("due_date ASC").
+		Find(&tasks).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
 // GetOverdueTasks retrieves tasks that are past their due date and not completed
 func (s *TaskService) GetOverdueTasks() ([]models.Task, error) {
 	var tasks []models.Task
 	now := time.Now()
 
 	err := s.db.Preload("Project").Preload("CreatedByAgent").Preload("AssignedAgent").
+		Where("due_date IS NOT NULL").
+		Where("due_date < ?", now).
+		Where("status != ?", models.TaskStatusCompleted).
+		Where("status != ?", models.TaskStatusFailed).
+		Order("due_date ASC").
+		Find(&tasks).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
+// GetOverdueTasksByOrganisation retrieves overdue tasks for a specific organisation
+func (s *TaskService) GetOverdueTasksByOrganisation(organisationID string) ([]models.Task, error) {
+	var tasks []models.Task
+	now := time.Now()
+
+	err := s.db.Preload("Project").Preload("CreatedByAgent").Preload("AssignedAgent").
+		Where("organisation_id = ?", organisationID).
 		Where("due_date IS NOT NULL").
 		Where("due_date < ?", now).
 		Where("status != ?", models.TaskStatusCompleted).

@@ -195,14 +195,35 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 		return
 	}
 
-	task, err := h.taskService.Update(
-		id,
-		req.Title,
-		req.Description,
-		req.Priority,
-		req.DueDate,
-		req.AssignedAgentID,
-	)
+	var task *models.Task
+	var err error
+
+	// Use organisation context if available
+	if orgID, exists := c.Get("organisation_id"); exists {
+		if orgIDStr, ok := orgID.(string); ok && orgIDStr != "" {
+			task, err = h.taskService.UpdateByOrganisation(
+				id,
+				orgIDStr,
+				req.Title,
+				req.Description,
+				req.Priority,
+				req.DueDate,
+				req.AssignedAgentID,
+			)
+		}
+	}
+
+	// Fallback to non-organisation-aware update if no org context
+	if task == nil {
+		task, err = h.taskService.Update(
+			id,
+			req.Title,
+			req.Description,
+			req.Priority,
+			req.DueDate,
+			req.AssignedAgentID,
+		)
+	}
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -226,7 +247,21 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 func (h *TaskHandler) DeleteTask(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := h.taskService.Delete(id); err != nil {
+	var err error
+
+	// Use organisation context if available
+	if orgID, exists := c.Get("organisation_id"); exists {
+		if orgIDStr, ok := orgID.(string); ok && orgIDStr != "" {
+			err = h.taskService.DeleteByOrganisation(id, orgIDStr)
+		}
+	}
+
+	// Fallback to non-organisation-aware delete if no org context
+	if err == nil && !c.IsAborted() {
+		err = h.taskService.Delete(id)
+	}
+
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
 		return
 	}

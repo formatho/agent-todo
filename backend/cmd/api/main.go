@@ -124,6 +124,7 @@ func main() {
 	// Project routes (human)
 	projects := router.Group("/projects")
 	projects.Use(middleware.AuthMiddleware())
+	projects.Use(middleware.OrganisationMiddleware())
 	{
 		projects.POST("", projectHandler.CreateProject)
 		projects.GET("", projectHandler.ListProjects)
@@ -136,6 +137,7 @@ func main() {
 	// Agent management routes (human only)
 	agents := router.Group("/agents")
 	agents.Use(middleware.AuthMiddleware())
+	agents.Use(middleware.OrganisationMiddleware())
 	{
 		agents.POST("", agentHandler.CreateAgent)
 		agents.GET("", agentHandler.ListAgents)
@@ -149,6 +151,7 @@ func main() {
 	// Task routes (human)
 	tasks := router.Group("/tasks")
 	tasks.Use(middleware.AuthMiddleware())
+	tasks.Use(middleware.OrganisationMiddleware())
 	{
 		tasks.POST("", taskHandler.CreateTask)
 		tasks.GET("", taskHandler.ListTasks)
@@ -164,6 +167,7 @@ func main() {
 	// Activity feed routes
 	activity := router.Group("/activity")
 	activity.Use(middleware.AuthMiddleware())
+	activity.Use(middleware.OrganisationMiddleware())
 	{
 		activity.GET("", activityHandler.GetActivityFeed)
 	}
@@ -171,6 +175,7 @@ func main() {
 	// Agent task routes (agent only)
 	agentTasks := router.Group("/agent")
 	agentTasks.Use(middleware.AgentAuthMiddleware())
+	agentTasks.Use(middleware.AgentOrganisationMiddleware())
 	agentTasks.Use(middleware.RateLimitByAPIKey(60)) // 60 requests per minute per agent
 	{
 		agentTasks.POST("/tasks", agentTaskHandler.CreateTask)
@@ -189,6 +194,7 @@ func main() {
 	// OpenClaw tool endpoints (agent only)
 	tools := router.Group("/tools")
 	tools.Use(middleware.AgentAuthMiddleware())
+	tools.Use(middleware.AgentOrganisationMiddleware())
 	tools.Use(middleware.RateLimitByAPIKey(60)) // 60 requests per minute per agent
 	{
 		tools.POST("/tasks/create", toolsHandler.CreateTask)
@@ -200,6 +206,7 @@ func main() {
 	// Supervisor endpoints (supervisor/admin agents only)
 	supervisor := router.Group("/supervisor")
 	supervisor.Use(middleware.AgentAuthMiddleware())
+	supervisor.Use(middleware.AgentOrganisationMiddleware())
 	supervisor.Use(middleware.RequireSupervisor())
 	{
 		// Agent management

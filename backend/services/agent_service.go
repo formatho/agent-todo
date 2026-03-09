@@ -91,6 +91,16 @@ func (s *AgentService) GetByID(id string) (*models.Agent, error) {
 	return &agent, nil
 }
 
+// GetByIDAndOrganisation retrieves an agent by ID, ensuring it belongs to the organisation
+func (s *AgentService) GetByIDAndOrganisation(id, organisationID string) (*models.Agent, error) {
+	var agent models.Agent
+	err := s.db.Where("id = ? AND organisation_id = ?", id, organisationID).First(&agent).Error
+	if err != nil {
+		return nil, err
+	}
+	return &agent, nil
+}
+
 // GetByAPIKey retrieves an agent by API key
 func (s *AgentService) GetByAPIKey(apiKey string) (*models.Agent, error) {
 	var agent models.Agent
@@ -129,10 +139,56 @@ func (s *AgentService) Delete(id string) error {
 	return s.db.Where("id = ?", id).Delete(&models.Agent{}).Error
 }
 
+// DeleteByOrganisation deletes an agent, verifying it belongs to the organisation
+func (s *AgentService) DeleteByOrganisation(id, organisationID string) error {
+	result := s.db.Where("id = ? AND organisation_id = ?", id, organisationID).Delete(&models.Agent{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("agent not found in organisation")
+	}
+	return nil
+}
+
 // Update updates an agent's details
 func (s *AgentService) Update(id, name, description string, role models.AgentRole, enabled *bool) (*models.Agent, error) {
 	var agent models.Agent
 	if err := s.db.Where("id = ?", id).First(&agent).Error; err != nil {
+		return nil, err
+	}
+
+	updates := make(map[string]interface{})
+
+	if name != "" {
+		updates["name"] = name
+	}
+	if description != "" {
+		updates["description"] = description
+	}
+	if role != "" {
+		updates["role"] = role
+	}
+	if enabled != nil {
+		updates["enabled"] = *enabled
+	}
+
+	if err := s.db.Model(&agent).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+
+	// Reload to get updated data
+	if err := s.db.Where("id = ?", id).First(&agent).Error; err != nil {
+		return nil, err
+	}
+
+	return &agent, nil
+}
+
+// UpdateByOrganisation updates an agent, verifying it belongs to the organisation
+func (s *AgentService) UpdateByOrganisation(id, organisationID, name, description string, role models.AgentRole, enabled *bool) (*models.Agent, error) {
+	var agent models.Agent
+	if err := s.db.Where("id = ? AND organisation_id = ?", id, organisationID).First(&agent).Error; err != nil {
 		return nil, err
 	}
 

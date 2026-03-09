@@ -21,15 +21,23 @@ func NewProjectHandler() *ProjectHandler {
 
 // CreateProjectRequest represents the request body for creating a project
 type CreateProjectRequest struct {
-	Name        string `json:"name" binding:"required" example:"Website Redesign"`
-	Description string `json:"description" example:"Redesign the company website with new branding"`
+	Name            string `json:"name" binding:"required" example:"Website Redesign"`
+	Description     string `json:"description" example:"Redesign the company website with new branding"`
+	RepositoryURL   string `json:"repository_url" example:"https://github.com/org/repo"`
+	DeployedURL     string `json:"deployed_url" example:"https://app.example.com"`
+	DocumentationURL string `json:"documentation_url" example:"https://docs.example.com"`
+	LLMContext      string `json:"llm_context" example:"Build a REST API with Go and PostgreSQL..."`
 }
 
 // UpdateProjectRequest represents the request body for updating a project
 type UpdateProjectRequest struct {
-	Name        *string               `json:"name" example:"Updated project name"`
-	Description *string               `json:"description" example:"Updated description"`
-	Status      *models.ProjectStatus `json:"status" example:"active"`
+	Name            *string               `json:"name" example:"Updated project name"`
+	Description     *string               `json:"description" example:"Updated description"`
+	Status          *models.ProjectStatus `json:"status" example:"active"`
+	RepositoryURL   *string               `json:"repository_url" example:"https://github.com/org/repo"`
+	DeployedURL     *string               `json:"deployed_url" example:"https://app.example.com"`
+	DocumentationURL *string              `json:"documentation_url" example:"https://docs.example.com"`
+	LLMContext      *string               `json:"llm_context" example:"Updated LLM instructions..."`
 }
 
 // CreateProject godoc
@@ -57,26 +65,27 @@ func (h *ProjectHandler) CreateProject(c *gin.Context) {
 		return
 	}
 
+	// Build project input
+	input := services.ProjectInput{
+		Name:             &req.Name,
+		Description:      &req.Description,
+		RepositoryURL:    stringPtr(req.RepositoryURL),
+		DeployedURL:      stringPtr(req.DeployedURL),
+		DocumentationURL: stringPtr(req.DocumentationURL),
+		LLMContext:       stringPtr(req.LLMContext),
+	}
+
 	var project *models.Project
 
 	// Use organisation context if available
 	if orgID, exists := c.Get("organisation_id"); exists {
 		if orgIDStr, ok := orgID.(string); ok && orgIDStr != "" {
-			project, err = h.projectService.CreateWithOrganisation(
-				req.Name,
-				req.Description,
-				userID,
-				orgIDStr,
-			)
+			project, err = h.projectService.CreateProject(input, userID, &orgIDStr)
 		}
 	}
 
 	if project == nil {
-		project, err = h.projectService.Create(
-			req.Name,
-			req.Description,
-			userID,
-		)
+		project, err = h.projectService.CreateProject(input, userID, nil)
 	}
 
 	if err != nil {
@@ -85,6 +94,14 @@ func (h *ProjectHandler) CreateProject(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, project)
+}
+
+// Helper function to convert empty string to nil
+func stringPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
 
 // ListProjects godoc
@@ -166,12 +183,30 @@ func (h *ProjectHandler) UpdateProject(c *gin.Context) {
 		return
 	}
 
-	project, err := h.projectService.Update(
-		id,
-		req.Name,
-		req.Description,
-		req.Status,
-	)
+	// Build project input
+	input := services.ProjectInput{
+		Name:             req.Name,
+		Description:      req.Description,
+		Status:           req.Status,
+		RepositoryURL:    req.RepositoryURL,
+		DeployedURL:      req.DeployedURL,
+		DocumentationURL: req.DocumentationURL,
+		LLMContext:       req.LLMContext,
+	}
+
+	var project *models.Project
+	var err error
+
+	// Use organisation context if available
+	if orgID, exists := c.Get("organisation_id"); exists {
+		if orgIDStr, ok := orgID.(string); ok && orgIDStr != "" {
+			project, err = h.projectService.UpdateProjectByOrganisation(id, orgIDStr, input)
+		}
+	}
+
+	if project == nil {
+		project, err = h.projectService.UpdateProject(id, input)
+	}
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

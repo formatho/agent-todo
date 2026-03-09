@@ -67,6 +67,10 @@ type Project struct {
 	Name            string        `gorm:"not null" json:"name"`
 	Description     string        `json:"description"`
 	Status          ProjectStatus `gorm:"not null;default:'active'" json:"status"`
+	RepositoryURL   string        `json:"repository_url"`   // GitHub/GitLab URL
+	DeployedURL     string        `json:"deployed_url"`     // Production/staging URL
+	DocumentationURL string       `json:"documentation_url"` // Docs URL
+	LLMContext      string        `json:"llm_context"`      // Instructions, guidelines, goals for AI agents
 	CreatedByUserID uuid.UUID     `gorm:"type:uuid;not null" json:"created_by_user_id"`
 	CreatedBy       *User         `gorm:"foreignKey:CreatedByUserID" json:"created_by,omitempty"`
 	OrganisationID  *uuid.UUID    `gorm:"type:uuid;index" json:"organisation_id"`
