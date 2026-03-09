@@ -65,8 +65,7 @@ func TestOrganisationCRUD(t *testing.T) {
 
 	t.Run("Create organisation with duplicate slug fails", func(t *testing.T) {
 		// Create first org
-		user1 := registerTestUser(t, router, "org-dup1@example.com")
-		token1 := user1["token"].(string)
+		_ = registerTestUser(t, router, "org-dup1@example.com")
 		createTestOrganisationWithUser(t, router, "dup-slug", "Org 1", "org-dup1@example.com")
 
 		// Try to create second org with same slug
