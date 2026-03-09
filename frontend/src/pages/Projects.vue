@@ -105,6 +105,29 @@
           <h3 class="project-name">{{ project.name }}</h3>
           <p class="project-description">{{ project.description || 'No description' }}</p>
           
+          <!-- Project Links -->
+          <div class="project-links" v-if="project.repository_url || project.deployed_url || project.documentation_url">
+            <a v-if="project.repository_url" :href="project.repository_url" target="_blank" class="project-link" @click.stop>
+              <span class="link-icon">📦</span>
+              <span>Repository</span>
+            </a>
+            <a v-if="project.deployed_url" :href="project.deployed_url" target="_blank" class="project-link" @click.stop>
+              <span class="link-icon">🚀</span>
+              <span>Live App</span>
+            </a>
+            <a v-if="project.documentation_url" :href="project.documentation_url" target="_blank" class="project-link" @click.stop>
+              <span class="link-icon">📚</span>
+              <span>Docs</span>
+            </a>
+          </div>
+          
+          <!-- LLM Context Preview -->
+          <div class="llm-context-preview" v-if="project.llm_context" @click="showLLMContext(project)">
+            <span class="context-icon">🤖</span>
+            <span class="context-text">LLM Context Available</span>
+            <span class="view-context">View →</span>
+          </div>
+          
           <div class="project-stats">
             <div class="stat">
               <span class="stat-value">{{ project.taskCount || 0 }}</span>
@@ -207,6 +230,47 @@
             </select>
           </div>
 
+          <div class="form-group">
+            <label class="form-label">Repository URL</label>
+            <input
+              v-model="form.repository_url"
+              type="url"
+              class="form-input"
+              placeholder="https://github.com/org/repo"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Deployed URL</label>
+            <input
+              v-model="form.deployed_url"
+              type="url"
+              class="form-input"
+              placeholder="https://app.example.com"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Documentation URL</label>
+            <input
+              v-model="form.documentation_url"
+              type="url"
+              class="form-input"
+              placeholder="https://docs.example.com"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">LLM Context</label>
+            <textarea
+              v-model="form.llm_context"
+              rows="6"
+              class="form-input font-mono"
+              placeholder="Instructions, guidelines, and goals for AI agents working on this project..."
+            ></textarea>
+            <p class="form-hint">Markdown supported. This context will be available to AI agents working on project tasks.</p>
+          </div>
+
           <div class="modal-actions">
             <button type="button" @click="closeModals" class="btn-cancel">
               Cancel
@@ -242,7 +306,11 @@ const statusFilter = ref('')
 const form = ref({
   name: '',
   description: '',
-  status: 'active'
+  status: 'active',
+  repository_url: '',
+  deployed_url: '',
+  documentation_url: '',
+  llm_context: ''
 })
 
 const filteredProjects = computed(() => {
@@ -284,7 +352,7 @@ const closeModals = () => {
   showCreateModal.value = false
   showEditModal.value = false
   editingProject.value = null
-  form.value = { name: '', description: '', status: 'active' }
+  form.value = { name: '', description: '', status: 'active', repository_url: '', deployed_url: '', documentation_url: '', llm_context: '' }
 }
 
 const editProject = (project) => {
@@ -292,7 +360,11 @@ const editProject = (project) => {
   form.value = {
     name: project.name,
     description: project.description || '',
-    status: project.status
+    status: project.status,
+    repository_url: project.repository_url || '',
+    deployed_url: project.deployed_url || '',
+    documentation_url: project.documentation_url || '',
+    llm_context: project.llm_context || ''
   }
   showEditModal.value = true
 }
@@ -332,6 +404,10 @@ const activateProject = async (project) => {
   } catch (error) {
     alert('Failed to activate project')
   }
+}
+
+const showLLMContext = (project) => {
+  alert(`LLM Context for ${project.name}:\n\n${project.llm_context}`)
 }
 
 const deleteProject = async (project) => {
@@ -461,6 +537,70 @@ const formatDate = (dateStr) => {
   color: #6B7280;
   margin: 0 0 16px 0;
   line-height: 1.5;
+}
+
+.project-links {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.project-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #F3F4F6;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #374151;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.project-link:hover {
+  background: #E5E7EB;
+  color: #111827;
+}
+
+.link-icon {
+  font-size: 14px;
+}
+
+.llm-context-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  border: 1px solid #BFDBFE;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.llm-context-preview:hover {
+  background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+  border-color: #93C5FD;
+}
+
+.context-icon {
+  font-size: 18px;
+}
+
+.context-text {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1E40AF;
+}
+
+.view-context {
+  font-size: 12px;
+  color: #3B82F6;
+  font-weight: 600;
 }
 
 .project-stats {
@@ -673,6 +813,16 @@ const formatDate = (dateStr) => {
   outline: none;
   border-color: #3B82F6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.form-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #6B7280;
 }
 
 .modal-actions {
