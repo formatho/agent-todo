@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/formatho/agent-todo/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -13,8 +14,7 @@ import (
 func OrganisationMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get user ID from context (set by AuthMiddleware)
-		// Note: userID is used for logging/audit but not needed for org validation
-		_, err := GetUserID(c)
+		userID, err := GetUserID(c)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 			c.Abort()
@@ -23,10 +23,23 @@ func OrganisationMiddleware() gin.HandlerFunc {
 
 		// Get organisation ID from JWT claims (if present)
 		orgID, exists := c.Get("organisation_id")
-		if !exists {
-			// If no organisation_id in token, try to get user's current organisation
-			// This is a fallback for users who haven't selected an organisation yet
-			// In production, we should require organisation context
+		if exists {
+			c.Set("current_organisation_id", orgID)
+			c.Next()
+			return
+		}
+
+		// If no organisation_id in token, try to get user's current organisation from DB
+		// This handles users who logged in before organisation support was added
+		userService := services.NewUserService()
+		user, err := userService.GetByID(userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load user"})
+			c.Abort()
+			return
+		}
+
+		if user.CurrentOrgID == nil {
 			c.JSON(http.StatusForbidden, gin.H{
 				"error": "No organisation context. Please select an organisation.",
 			})
@@ -34,11 +47,8 @@ func OrganisationMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Validate that the user belongs to this organisation
-		// This check is done in AuthMiddleware when we load the user
-		// Here we just ensure the organisation_id is set in context
-
-		c.Set("current_organisation_id", orgID)
+		// Set organisation ID from user's current organisation
+		c.Set("current_organisation_id", user.CurrentOrgID.String())
 		c.Next()
 	}
 }
