@@ -2,6 +2,7 @@
   <div
     class="agent-card"
     :style="cardStyle"
+    @click="handleCardClick"
   >
     <!-- Card Header with Avatar -->
     <div class="card-header">
@@ -17,7 +18,7 @@
         <p class="agent-description">{{ descriptionText }}</p>
       </div>
 
-      <div class="card-actions">
+      <div class="card-actions" @click.stop>
         <button @click="handleEdit" class="btn-icon" title="Edit">
           ✏️
         </button>
@@ -52,7 +53,7 @@
     </div>
 
     <!-- API Key Section -->
-    <div class="api-key-section">
+    <div class="api-key-section" @click.stop>
       <div class="api-key-label">API Key</div>
       <div class="api-key-container">
         <code class="api-key">{{ maskedApiKey }}</code>
@@ -73,7 +74,7 @@
     </div>
 
     <!-- View Tasks Button -->
-    <div class="view-tasks-section">
+    <div class="view-tasks-section" @click.stop>
       <router-link :to="`/tasks?agent_id=${agent.id}`" class="btn-view-tasks">
         <span class="btn-icon-left">📋</span>
         <span>View Tasks</span>
@@ -142,6 +143,11 @@ const cardStyle = computed(() => {
   }
 })
 
+const handleCardClick = () => {
+  // Emit edit event when card is clicked
+  emit('edit', props.agent)
+}
+
 const handleEdit = () => {
   emit('edit', props.agent)
 }
@@ -173,6 +179,7 @@ const handleCopyKey = async () => {
   padding: 20px;
   transition: all 0.3s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
 
 .agent-card:hover {
