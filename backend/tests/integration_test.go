@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/formatho/agent-todo/db"
@@ -14,10 +15,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupTestDB() {
-	// Use test database
-	databaseURL := "postgres://agent_todo:agent_todo_pass@localhost:5432/agent_todo_test?sslmode=disable"
-	db.Connect(databaseURL)
+func TestMain(m *testing.M) {
+	// Setup test database
+	databaseURL := os.Getenv("TEST_DATABASE_URL")
+	if databaseURL == "" {
+		databaseURL = "postgres://agent_todo:agent_todo_pass@localhost:5432/agent_todo_test?sslmode=disable"
+	}
+	
+	// Only connect if not already connected
+	if db.GetDB() == nil {
+		db.Connect(databaseURL)
+	}
+	
+	os.Exit(m.Run())
 }
 
 func setupRouter() *gin.Engine {
