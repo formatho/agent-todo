@@ -164,9 +164,9 @@ func main() {
 		tasks.GET("/:id/comments", commentHandler.GetComments)
 		tasks.POST("/:id/comments", commentHandler.CreateComment)
 		// Subtask routes
-		tasks.GET("/:task_id/subtasks", subtaskHandler.ListSubtasks)
-		tasks.POST("/:task_id/subtasks", subtaskHandler.CreateSubtask)
-		tasks.POST("/:task_id/subtasks/reorder", subtaskHandler.ReorderSubtasks)
+		tasks.GET("/:id/subtasks", subtaskHandler.ListSubtasks)
+		tasks.POST("/:id/subtasks", subtaskHandler.CreateSubtask)
+		tasks.POST("/:id/subtasks/reorder", subtaskHandler.ReorderSubtasks)
 	}
 
 	// Subtask routes (human - individual subtask operations)
@@ -201,8 +201,8 @@ func main() {
 		agentTasks.POST("/tasks/:id/comments", commentHandler.AgentCreateComment)
 		agentTasks.GET("/statistics", agentHandler.GetMyStatistics)
 		// Agent subtask routes
-		agentTasks.GET("/tasks/:task_id/subtasks", subtaskHandler.AgentListSubtasks)
-		agentTasks.POST("/tasks/:task_id/subtasks", subtaskHandler.AgentCreateSubtask)
+		agentTasks.GET("/tasks/:id/subtasks", subtaskHandler.AgentListSubtasks)
+		agentTasks.POST("/tasks/:id/subtasks", subtaskHandler.AgentCreateSubtask)
 		agentTasks.PATCH("/subtasks/:id", subtaskHandler.AgentUpdateSubtask)
 		agentTasks.DELETE("/subtasks/:id", subtaskHandler.AgentDeleteSubtask)
 

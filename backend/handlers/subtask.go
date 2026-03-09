@@ -54,7 +54,7 @@ type ReorderSubtasksRequest struct {
 // @Failure 404 {object} map[string]string
 // @Router /tasks/{task_id}/subtasks [post]
 func (h *SubtaskHandler) CreateSubtask(c *gin.Context) {
-	taskID := c.Param("task_id")
+	taskID := c.Param("id")
 
 	var req CreateSubtaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -163,7 +163,7 @@ func (h *SubtaskHandler) DeleteSubtask(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /tasks/{task_id}/subtasks [get]
 func (h *SubtaskHandler) ListSubtasks(c *gin.Context) {
-	taskID := c.Param("task_id")
+	taskID := c.Param("id")
 
 	subtasks, err := h.subtaskService.ListByTask(taskID)
 	if err != nil {
@@ -189,7 +189,7 @@ func (h *SubtaskHandler) ListSubtasks(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /tasks/{task_id}/subtasks/reorder [post]
 func (h *SubtaskHandler) ReorderSubtasks(c *gin.Context) {
-	taskID := c.Param("task_id")
+	taskID := c.Param("id")
 
 	var req ReorderSubtasksRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -223,7 +223,7 @@ func (h *SubtaskHandler) ReorderSubtasks(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /agent/tasks/{task_id}/subtasks [post]
 func (h *SubtaskHandler) AgentCreateSubtask(c *gin.Context) {
-	taskID := c.Param("task_id")
+	taskID := c.Param("id")
 
 	// Verify task is assigned to this agent
 	agentID, err := middleware.GetAgentID(c)
@@ -379,7 +379,7 @@ func (h *SubtaskHandler) AgentDeleteSubtask(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Router /agent/tasks/{task_id}/subtasks [get]
 func (h *SubtaskHandler) AgentListSubtasks(c *gin.Context) {
-	taskID := c.Param("task_id")
+	taskID := c.Param("id")
 
 	// Verify task is assigned to this agent
 	agentID, err := middleware.GetAgentID(c)
