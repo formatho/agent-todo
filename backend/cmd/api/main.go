@@ -66,7 +66,7 @@ func main() {
 
 	// Apply middleware
 	router.Use(middleware.CORSMiddleware())
-	router.Use(middleware.RateLimitMiddleware(100)) // 100 requests per minute per IP
+	// router.Use(middleware.RateLimitMiddleware(100)) // 100 requests per minute per IP - TEMPORARILY DISABLED
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler()
@@ -99,7 +99,7 @@ func main() {
 
 	// Auth routes (stricter rate limiting)
 	auth := router.Group("/auth")
-	auth.Use(middleware.RateLimitMiddleware(20)) // 20 requests per minute for auth
+	// auth.Use(middleware.RateLimitMiddleware(20)) // 20 requests per minute for auth - TEMPORARILY DISABLED
 	{
 		auth.POST("/register", authHandler.Register)
 		auth.POST("/login", authHandler.Login)
@@ -191,7 +191,7 @@ func main() {
 	agentTasks := router.Group("/agent")
 	agentTasks.Use(middleware.AgentAuthMiddleware())
 	agentTasks.Use(middleware.AgentOrganisationMiddleware())
-	agentTasks.Use(middleware.RateLimitByAPIKey(60)) // 60 requests per minute per agent
+	// agentTasks.Use(middleware.RateLimitByAPIKey(60)) // 60 requests per minute per agent - TEMPORARILY DISABLED
 	{
 		agentTasks.POST("/tasks", agentTaskHandler.CreateTask)
 		agentTasks.GET("/tasks", agentTaskHandler.ListTasks)
@@ -215,7 +215,7 @@ func main() {
 	tools := router.Group("/tools")
 	tools.Use(middleware.AgentAuthMiddleware())
 	tools.Use(middleware.AgentOrganisationMiddleware())
-	tools.Use(middleware.RateLimitByAPIKey(60)) // 60 requests per minute per agent
+	// tools.Use(middleware.RateLimitByAPIKey(60)) // 60 requests per minute per agent - TEMPORARILY DISABLED
 	{
 		tools.POST("/tasks/create", toolsHandler.CreateTask)
 		tools.POST("/tasks/update", toolsHandler.UpdateTask)
