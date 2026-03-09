@@ -29,9 +29,9 @@ type CreateSubtaskRequest struct {
 
 // UpdateSubtaskRequest represents the request body for updating a subtask
 type UpdateSubtaskRequest struct {
-	Title    string              `json:"title" example:"Updated title"`
+	Title    string               `json:"title" example:"Updated title"`
 	Status   models.SubtaskStatus `json:"status" example:"completed"`
-	Position *int                `json:"position" example:"1"`
+	Position *int                 `json:"position" example:"1"`
 }
 
 // ReorderSubtasksRequest represents the request body for reordering subtasks

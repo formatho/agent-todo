@@ -167,11 +167,11 @@ const (
 // Subtask represents a subtask within a task
 type Subtask struct {
 	Base
-	Title    string        `gorm:"not null" json:"title"`
-	Status   SubtaskStatus `gorm:"not null;default:'pending'" json:"status"`
-	TaskID   uuid.UUID     `gorm:"type:uuid;not null" json:"task_id"`
-	Task     *Task         `gorm:"foreignKey:TaskID" json:"task,omitempty"`
-	Position int           `gorm:"not null;default:0" json:"position"`
+	Title     string         `gorm:"not null" json:"title"`
+	Status    SubtaskStatus  `gorm:"not null;default:'pending'" json:"status"`
+	TaskID    uuid.UUID      `gorm:"type:uuid;not null" json:"task_id"`
+	Task      *Task          `gorm:"foreignKey:TaskID" json:"task,omitempty"`
+	Position  int            `gorm:"not null;default:0" json:"position"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
 
