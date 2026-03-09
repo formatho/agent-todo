@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/formatho/agent-todo/db"
-	"github.com/formatho/agent-todo/middleware"
-	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
