@@ -9,7 +9,13 @@
     </div>
 
     <div v-else class="activity-list">
-      <div v-for="activity in activities" :key="activity.id" class="activity-item">
+      <div
+        v-for="activity in activities"
+        :key="activity.id"
+        class="activity-item"
+        @click="navigateToTask(activity.task_id)"
+        :class="{ clickable: activity.task_id }"
+      >
         <div class="activity-icon">
           {{ getActivityIcon(activity.event_type) }}
         </div>
@@ -18,7 +24,12 @@
           <p class="activity-description">{{ activity.description }}</p>
           <div class="activity-meta">
             <span class="activity-time">{{ formatTime(activity.created_at) }}</span>
+            <span v-if="activity.actor_name" class="activity-actor">by {{ activity.actor_name }}</span>
           </div>
+        </div>
+
+        <div v-if="activity.task_id" class="activity-arrow">
+          →
         </div>
       </div>
     </div>
@@ -27,8 +38,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useActivityStore } from '../stores/activity'
 
+const router = useRouter()
 const activityStore = useActivityStore()
 const activities = ref([])
 const loading = ref(true)
@@ -43,6 +56,12 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+const navigateToTask = (taskId) => {
+  if (taskId) {
+    router.push({ name: 'TaskDetails', params: { id: taskId } })
+  }
+}
 
 const getActivityIcon = (eventType) => {
   const icons = {
@@ -107,11 +126,21 @@ const formatTime = (timestamp) => {
   padding: 12px;
   background: #F9FAFB;
   border-radius: 8px;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
-.activity-item:hover {
+.activity-item.clickable {
+  cursor: pointer;
+}
+
+.activity-item.clickable:hover {
   background: #F3F4F6;
+  transform: translateX(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.activity-item.clickable:active {
+  transform: translateX(2px);
 }
 
 .activity-icon {
@@ -139,5 +168,23 @@ const formatTime = (timestamp) => {
 
 .activity-time {
   font-weight: 500;
+}
+
+.activity-actor {
+  font-style: italic;
+}
+
+.activity-arrow {
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  color: #9CA3AF;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.activity-item.clickable:hover .activity-arrow {
+  opacity: 1;
+  transform: translateX(4px);
 }
 </style>
