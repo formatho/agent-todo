@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: agent-todo-db-test
+    environment:
+      POSTGRES_USER: agent_todo
+      POSTGRES_PASSWORD: agent_todo_pass
+      POSTGRES_DB: agent_todo_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+      - ./backend/migrations/test/production_backup.sql:/docker-entrypoint-initdb.d/01-backup.sql
+      - ./backend/db/migrations/006_add_organisations.sql:/docker-entrypoint-initdb.d/02-organisation-migration.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent_todo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_test_data:

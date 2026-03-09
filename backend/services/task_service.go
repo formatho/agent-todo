@@ -37,13 +37,14 @@ type TaskFilter struct {
 // createdByAgentID: UUID of the agent creating the task (for agent-created tasks)
 // Exactly one of createdByUserID or createdByAgentID must be provided
 // organisationID: Optional UUID of the organisation the task belongs to
-func (s *TaskService) Create(title, description string, priority models.TaskPriority, dueDate *time.Time, projectID string, createdByUserID *string, assignedAgentID *string, organisationID *string) (*models.Task, error) {
+func (s *TaskService) Create(title, description string, priority models.TaskPriority, dueDate *time.Time, commitURL, projectID string, createdByUserID *string, assignedAgentID *string, organisationID *string) (*models.Task, error) {
 	task := &models.Task{
 		Title:       title,
 		Description: description,
 		Status:      models.TaskStatusPending,
 		Priority:    priority,
 		DueDate:     dueDate,
+		CommitURL:   commitURL,
 	}
 
 	// Set creator - exactly one must be provided
@@ -86,13 +87,14 @@ func (s *TaskService) Create(title, description string, priority models.TaskPrio
 // CreateByAgent creates a new task on behalf of an agent
 // createdByAgentName is used for activity feed attribution
 // organisationID: Optional UUID of the organisation the task belongs to
-func (s *TaskService) CreateByAgent(title, description string, priority models.TaskPriority, dueDate *time.Time, projectID, createdByAgentID, createdByAgentName string, assignedAgentID *string, organisationID *string) (*models.Task, error) {
+func (s *TaskService) CreateByAgent(title, description string, priority models.TaskPriority, dueDate *time.Time, commitURL, projectID, createdByAgentID, createdByAgentName string, assignedAgentID *string, organisationID *string) (*models.Task, error) {
 	task := &models.Task{
 		Title:       title,
 		Description: description,
 		Status:      models.TaskStatusPending,
 		Priority:    priority,
 		DueDate:     dueDate,
+		CommitURL:   commitURL,
 	}
 
 	// Set agent as creator
@@ -205,7 +207,7 @@ func (s *TaskService) List(filter TaskFilter) ([]models.Task, error) {
 }
 
 // Update updates a task
-func (s *TaskService) Update(id string, title, description *string, priority *models.TaskPriority, dueDate **time.Time, assignedAgentID *string) (*models.Task, error) {
+func (s *TaskService) Update(id string, title, description *string, priority *models.TaskPriority, dueDate **time.Time, commitURL *string, assignedAgentID *string) (*models.Task, error) {
 	var task models.Task
 	if err := s.db.Where("id = ?", id).First(&task).Error; err != nil {
 		return nil, err
@@ -229,6 +231,9 @@ func (s *TaskService) Update(id string, title, description *string, priority *mo
 			updates["due_date"] = **dueDate
 		}
 	}
+	if commitURL != nil {
+		updates["commit_url"] = *commitURL
+	}
 	if assignedAgentID != nil {
 		if *assignedAgentID == "" {
 			updates["assigned_agent_id"] = nil
@@ -249,7 +254,7 @@ func (s *TaskService) Update(id string, title, description *string, priority *mo
 }
 
 // UpdateByOrganisation updates a task, verifying it belongs to the organisation
-func (s *TaskService) UpdateByOrganisation(id, organisationID string, title, description *string, priority *models.TaskPriority, dueDate **time.Time, assignedAgentID *string) (*models.Task, error) {
+func (s *TaskService) UpdateByOrganisation(id, organisationID string, title, description *string, priority *models.TaskPriority, dueDate **time.Time, commitURL *string, assignedAgentID *string) (*models.Task, error) {
 	var task models.Task
 	if err := s.db.Where("id = ? AND organisation_id = ?", id, organisationID).First(&task).Error; err != nil {
 		return nil, err
@@ -273,6 +278,9 @@ func (s *TaskService) UpdateByOrganisation(id, organisationID string, title, des
 			updates["due_date"] = **dueDate
 		}
 	}
+	if commitURL != nil {
+		updates["commit_url"] = *commitURL
+	}
 	if assignedAgentID != nil {
 		if *assignedAgentID == "" {
 			updates["assigned_agent_id"] = nil
@@ -289,7 +297,7 @@ func (s *TaskService) UpdateByOrganisation(id, organisationID string, title, des
 	// Create update event
 	s.createEvent(task.ID, models.TaskEventUpdated, "", "", "system")
 
-	return s.GetByID(id)
+	return s.GetByIDAndOrganisation(id, organisationID)
 }
 
 // UpdateStatus updates the status of a task

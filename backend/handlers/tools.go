@@ -101,6 +101,7 @@ func (h *ToolsHandler) CreateTask(c *gin.Context) {
 		req.Description,
 		req.Priority,
 		nil,
+		"", // commit_url not supported in tools endpoint
 		req.ProjectID,
 		agentID,
 		agentName,

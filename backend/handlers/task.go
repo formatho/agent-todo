@@ -26,6 +26,7 @@ type CreateTaskRequest struct {
 	Description     string              `json:"description" example:"Write comprehensive documentation for the project"`
 	Priority        models.TaskPriority `json:"priority" binding:"required" example:"high"`
 	DueDate         *time.Time          `json:"due_date" example:"2024-12-31T23:59:59Z"`
+	CommitURL       string              `json:"commit_url" example:"https://github.com/org/repo/commit/abc123"`
 	ProjectID       string              `json:"project_id" example:"550e8400-e29b-41d4-a716-446655440000"`
 	AssignedAgentID *string             `json:"assigned_agent_id" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
@@ -36,6 +37,7 @@ type UpdateTaskRequest struct {
 	Description     *string              `json:"description" example:"Updated description"`
 	Priority        *models.TaskPriority `json:"priority" example:"medium"`
 	DueDate         **time.Time          `json:"due_date"`
+	CommitURL       *string              `json:"commit_url" example:"https://github.com/org/repo/commit/abc123"`
 	AssignedAgentID *string              `json:"assigned_agent_id" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 
@@ -82,6 +84,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		req.Description,
 		req.Priority,
 		req.DueDate,
+		req.CommitURL,
 		req.ProjectID,
 		&userID, // Pass as pointer
 		req.AssignedAgentID,
@@ -208,6 +211,7 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 				req.Description,
 				req.Priority,
 				req.DueDate,
+				req.CommitURL,
 				req.AssignedAgentID,
 			)
 		}
@@ -221,6 +225,7 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 			req.Description,
 			req.Priority,
 			req.DueDate,
+			req.CommitURL,
 			req.AssignedAgentID,
 		)
 	}

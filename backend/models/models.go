@@ -106,6 +106,7 @@ type Task struct {
 	Status           TaskStatus     `gorm:"not null;default:'pending'" json:"status"`
 	Priority         TaskPriority   `gorm:"not null;default:'medium'" json:"priority"`
 	DueDate          *time.Time     `json:"due_date"`
+	CommitURL        string         `json:"commit_url"`
 	ProjectID        *uuid.UUID     `gorm:"type:uuid" json:"project_id"`
 	OrganisationID   *uuid.UUID     `gorm:"type:uuid;index" json:"organisation_id"`
 	CreatedByUserID  *uuid.UUID     `gorm:"type:uuid" json:"created_by_user_id"`  // Nullable for agent-created tasks

@@ -89,6 +89,26 @@
             </div>
           </div>
 
+          <!-- Commit URL -->
+          <div v-if="task.commit_url" class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:px-6">
+              <h3 class="text-lg leading-6 font-medium text-gray-900">Commit</h3>
+            </div>
+            <div class="px-4 py-5 sm:px-6">
+              <a
+                :href="task.commit_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center text-indigo-600 hover:text-indigo-900 font-medium"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                </svg>
+                {{ task.commit_url }}
+              </a>
+            </div>
+          </div>
+
           <!-- Subtasks -->
           <div class="bg-white shadow rounded-lg">
             <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
