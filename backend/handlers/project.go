@@ -21,23 +21,23 @@ func NewProjectHandler() *ProjectHandler {
 
 // CreateProjectRequest represents the request body for creating a project
 type CreateProjectRequest struct {
-	Name            string `json:"name" binding:"required" example:"Website Redesign"`
-	Description     string `json:"description" example:"Redesign the company website with new branding"`
-	RepositoryURL   string `json:"repository_url" example:"https://github.com/org/repo"`
-	DeployedURL     string `json:"deployed_url" example:"https://app.example.com"`
+	Name             string `json:"name" binding:"required" example:"Website Redesign"`
+	Description      string `json:"description" example:"Redesign the company website with new branding"`
+	RepositoryURL    string `json:"repository_url" example:"https://github.com/org/repo"`
+	DeployedURL      string `json:"deployed_url" example:"https://app.example.com"`
 	DocumentationURL string `json:"documentation_url" example:"https://docs.example.com"`
-	LLMContext      string `json:"llm_context" example:"Build a REST API with Go and PostgreSQL..."`
+	LLMContext       string `json:"llm_context" example:"Build a REST API with Go and PostgreSQL..."`
 }
 
 // UpdateProjectRequest represents the request body for updating a project
 type UpdateProjectRequest struct {
-	Name            *string               `json:"name" example:"Updated project name"`
-	Description     *string               `json:"description" example:"Updated description"`
-	Status          *models.ProjectStatus `json:"status" example:"active"`
-	RepositoryURL   *string               `json:"repository_url" example:"https://github.com/org/repo"`
-	DeployedURL     *string               `json:"deployed_url" example:"https://app.example.com"`
-	DocumentationURL *string              `json:"documentation_url" example:"https://docs.example.com"`
-	LLMContext      *string               `json:"llm_context" example:"Updated LLM instructions..."`
+	Name             *string               `json:"name" example:"Updated project name"`
+	Description      *string               `json:"description" example:"Updated description"`
+	Status           *models.ProjectStatus `json:"status" example:"active"`
+	RepositoryURL    *string               `json:"repository_url" example:"https://github.com/org/repo"`
+	DeployedURL      *string               `json:"deployed_url" example:"https://app.example.com"`
+	DocumentationURL *string               `json:"documentation_url" example:"https://docs.example.com"`
+	LLMContext       *string               `json:"llm_context" example:"Updated LLM instructions..."`
 }
 
 // CreateProject godoc
