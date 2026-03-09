@@ -25,33 +25,7 @@
       </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <!-- Loading State -->
-      <div v-if="loading" class="flex justify-center items-center py-12">
-        <div class="text-gray-500">Loading task...</div>
-      </div>
-
-      <!-- Error State -->
-      <div v-else-if="error" class="bg-white shadow rounded-lg p-6">
-        <div class="text-center">
-          <div class="text-red-600 mb-4">
-            <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">Unable to Load Task</h3>
-          <p class="text-gray-500 mb-4">{{ error }}</p>
-          <router-link
-            to="/tasks"
-            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            &larr; Back to Tasks
-          </router-link>
-        </div>
-      </div>
-
-      <!-- Task Content -->
-      <div v-else-if="task">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8" v-if="task">
       <!-- Task Header -->
       <div class="bg-white shadow rounded-lg mb-6">
         <div class="px-4 py-5 sm:px-6">
@@ -315,42 +289,19 @@ const comments = ref([])
 const newComment = ref('')
 const showEditModal = ref(false)
 const showAssignModal = ref(false)
-const loading = ref(true)
-const error = ref(null)
 
 onMounted(async () => {
   await loadTask()
-  if (task.value) {
-    await loadComments()
-    await agentStore.fetchAgents()
-  }
+  await loadComments()
+  await agentStore.fetchAgents()
 })
 
 const loadTask = async () => {
-  loading.value = true
-  error.value = null
-  
-  try {
-    task.value = await taskService.getTask(route.params.id)
-  } catch (err) {
-    console.error('Error loading task:', err)
-    if (err.response?.status === 404) {
-      error.value = 'Task not found. It may have been deleted or does not exist.'
-    } else {
-      error.value = err.response?.data?.error || 'Failed to load task'
-    }
-  } finally {
-    loading.value = false
-  }
+  task.value = await taskService.getTask(route.params.id)
 }
 
 const loadComments = async () => {
-  try {
-    comments.value = await taskService.getComments(route.params.id)
-  } catch (err) {
-    console.error('Error loading comments:', err)
-    // Don't show error for comments, just log it
-  }
+  comments.value = await taskService.getComments(route.params.id)
 }
 
 const handleLogout = () => {
