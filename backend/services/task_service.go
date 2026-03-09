@@ -134,7 +134,7 @@ func (s *TaskService) CreateByAgent(title, description string, priority models.T
 // GetByID retrieves a task with relationships
 func (s *TaskService) GetByID(id string) (*models.Task, error) {
 	var task models.Task
-	err := s.db.Preload("Project").Preload("CreatedBy").Preload("CreatedByAgent").Preload("AssignedAgent").Preload("Comments").Preload("Events").
+	err := s.db.Preload("Project").Preload("CreatedBy").Preload("CreatedByAgent").Preload("AssignedAgent").Preload("Comments").Preload("Events").Preload("Subtasks").
 		Where("id = ?", id).First(&task).Error
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ func (s *TaskService) GetByID(id string) (*models.Task, error) {
 // GetByIDAndOrganisation retrieves a task by ID, ensuring it belongs to the specified organisation
 func (s *TaskService) GetByIDAndOrganisation(id, organisationID string) (*models.Task, error) {
 	var task models.Task
-	err := s.db.Preload("Project").Preload("CreatedBy").Preload("CreatedByAgent").Preload("AssignedAgent").Preload("Comments").Preload("Events").
+	err := s.db.Preload("Project").Preload("CreatedBy").Preload("CreatedByAgent").Preload("AssignedAgent").Preload("Comments").Preload("Events").Preload("Subtasks").
 		Where("id = ? AND organisation_id = ?", id, organisationID).First(&task).Error
 	if err != nil {
 		return nil, err
@@ -156,7 +156,7 @@ func (s *TaskService) GetByIDAndOrganisation(id, organisationID string) (*models
 // List retrieves tasks with filters
 func (s *TaskService) List(filter TaskFilter) ([]models.Task, error) {
 	var tasks []models.Task
-	query := s.db.Preload("Project").Preload("CreatedBy").Preload("CreatedByAgent").Preload("AssignedAgent")
+	query := s.db.Preload("Project").Preload("CreatedBy").Preload("CreatedByAgent").Preload("AssignedAgent").Preload("Subtasks")
 
 	if filter.Status != "" {
 		query = query.Where("status = ?", filter.Status)
@@ -473,7 +473,7 @@ func (s *TaskService) GetUpcomingDueTasks(within time.Duration) ([]models.Task, 
 	now := time.Now()
 	dueBefore := now.Add(within)
 
-	err := s.db.Preload("Project").Preload("CreatedByAgent").Preload("AssignedAgent").
+	err := s.db.Preload("Project").Preload("CreatedByAgent").Preload("AssignedAgent").Preload("Subtasks").
 		Where("due_date IS NOT NULL").
 		Where("due_date > ?", now).
 		Where("due_date <= ?", dueBefore).
@@ -495,7 +495,7 @@ func (s *TaskService) GetUpcomingDueTasksByOrganisation(within time.Duration, or
 	now := time.Now()
 	dueBefore := now.Add(within)
 
-	err := s.db.Preload("Project").Preload("CreatedByAgent").Preload("AssignedAgent").
+	err := s.db.Preload("Project").Preload("CreatedByAgent").Preload("AssignedAgent").Preload("Subtasks").
 		Where("organisation_id = ?", organisationID).
 		Where("due_date IS NOT NULL").
 		Where("due_date > ?", now).
@@ -517,7 +517,7 @@ func (s *TaskService) GetOverdueTasks() ([]models.Task, error) {
 	var tasks []models.Task
 	now := time.Now()
 
-	err := s.db.Preload("Project").Preload("CreatedByAgent").Preload("AssignedAgent").
+	err := s.db.Preload("Project").Preload("CreatedByAgent").Preload("AssignedAgent").Preload("Subtasks").
 		Where("due_date IS NOT NULL").
 		Where("due_date < ?", now).
 		Where("status != ?", models.TaskStatusCompleted).
@@ -537,7 +537,7 @@ func (s *TaskService) GetOverdueTasksByOrganisation(organisationID string) ([]mo
 	var tasks []models.Task
 	now := time.Now()
 
-	err := s.db.Preload("Project").Preload("CreatedByAgent").Preload("AssignedAgent").
+	err := s.db.Preload("Project").Preload("CreatedByAgent").Preload("AssignedAgent").Preload("Subtasks").
 		Where("organisation_id = ?", organisationID).
 		Where("due_date IS NOT NULL").
 		Where("due_date < ?", now).

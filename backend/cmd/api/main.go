@@ -80,6 +80,7 @@ func main() {
 	activityHandler := handlers.NewActivityHandler()
 	reminderHandler := handlers.NewReminderHandler()
 	organisationHandler := handlers.NewOrganisationHandler()
+	subtaskHandler := handlers.NewSubtaskHandler()
 
 	// Health check
 	router.GET("/health", func(c *gin.Context) {
@@ -162,6 +163,20 @@ func main() {
 		tasks.PATCH("/:id/unassign", taskHandler.UnassignAgent)
 		tasks.GET("/:id/comments", commentHandler.GetComments)
 		tasks.POST("/:id/comments", commentHandler.CreateComment)
+		// Subtask routes
+		tasks.GET("/:task_id/subtasks", subtaskHandler.ListSubtasks)
+		tasks.POST("/:task_id/subtasks", subtaskHandler.CreateSubtask)
+		tasks.POST("/:task_id/subtasks/reorder", subtaskHandler.ReorderSubtasks)
+	}
+
+	// Subtask routes (human - individual subtask operations)
+	subtasks := router.Group("/subtasks")
+	subtasks.Use(middleware.AuthMiddleware())
+	subtasks.Use(middleware.OrganisationMiddleware())
+	{
+		subtasks.GET("/:id", subtaskHandler.GetSubtask)
+		subtasks.PATCH("/:id", subtaskHandler.UpdateSubtask)
+		subtasks.DELETE("/:id", subtaskHandler.DeleteSubtask)
 	}
 
 	// Activity feed routes
@@ -185,6 +200,11 @@ func main() {
 		agentTasks.GET("/tasks/:id/comments", commentHandler.AgentGetComments)
 		agentTasks.POST("/tasks/:id/comments", commentHandler.AgentCreateComment)
 		agentTasks.GET("/statistics", agentHandler.GetMyStatistics)
+		// Agent subtask routes
+		agentTasks.GET("/tasks/:task_id/subtasks", subtaskHandler.AgentListSubtasks)
+		agentTasks.POST("/tasks/:task_id/subtasks", subtaskHandler.AgentCreateSubtask)
+		agentTasks.PATCH("/subtasks/:id", subtaskHandler.AgentUpdateSubtask)
+		agentTasks.DELETE("/subtasks/:id", subtaskHandler.AgentDeleteSubtask)
 
 		// Project routes (read-only for agents)
 		agentTasks.GET("/projects", projectHandler.ListProjectsForAgent)

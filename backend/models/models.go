@@ -119,6 +119,7 @@ type Task struct {
 	AssignedAgent    *Agent         `gorm:"foreignKey:AssignedAgentID" json:"assigned_agent,omitempty"`
 	Comments         []TaskComment  `gorm:"foreignKey:TaskID" json:"comments,omitempty"`
 	Events           []TaskEvent    `gorm:"foreignKey:TaskID" json:"events,omitempty"`
+	Subtasks         []Subtask      `gorm:"foreignKey:TaskID" json:"subtasks,omitempty"`
 }
 
 // TaskEventType represents the type of event
@@ -152,6 +153,25 @@ type TaskComment struct {
 	AuthorID   uuid.UUID `gorm:"type:uuid;not null" json:"author_id"`
 	AuthorType string    `gorm:"not null" json:"author_type"` // "user" or "agent"
 	AuthorName string    `gorm:"not null" json:"author_name"`
+}
+
+// SubtaskStatus represents the status of a subtask
+type SubtaskStatus string
+
+const (
+	SubtaskStatusPending   SubtaskStatus = "pending"
+	SubtaskStatusCompleted SubtaskStatus = "completed"
+)
+
+// Subtask represents a subtask within a task
+type Subtask struct {
+	Base
+	Title    string        `gorm:"not null" json:"title"`
+	Status   SubtaskStatus `gorm:"not null;default:'pending'" json:"status"`
+	TaskID   uuid.UUID     `gorm:"type:uuid;not null" json:"task_id"`
+	Task     *Task         `gorm:"foreignKey:TaskID" json:"task,omitempty"`
+	Position int           `gorm:"not null;default:0" json:"position"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 // OrganisationStatus represents the status of an organisation
