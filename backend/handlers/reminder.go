@@ -27,14 +27,14 @@ type UpcomingTasksResponse struct {
 
 // TaskReminder represents a task with reminder info
 type TaskReminder struct {
-	ID          string  `json:"id"`
-	Title       string  `json:"title"`
-	Priority    string  `json:"priority"`
-	Status      string  `json:"status"`
-	DueDate     string  `json:"due_date"`
+	ID           string `json:"id"`
+	Title        string `json:"title"`
+	Priority     string `json:"priority"`
+	Status       string `json:"status"`
+	DueDate      string `json:"due_date"`
 	TimeUntilDue string `json:"time_until_due"`
-	ProjectName string  `json:"project_name,omitempty"`
-	AgentName   string  `json:"agent_name,omitempty"`
+	ProjectName  string `json:"project_name,omitempty"`
+	AgentName    string `json:"agent_name,omitempty"`
 }
 
 // GetUpcomingDueTasks returns tasks with due dates within a specified time window
@@ -67,11 +67,11 @@ func (h *ReminderHandler) GetUpcomingDueTasks(c *gin.Context) {
 	reminders := make([]TaskReminder, len(tasks))
 	for i, task := range tasks {
 		reminder := TaskReminder{
-			ID:          task.ID.String(),
-			Title:       task.Title,
-			Priority:    string(task.Priority),
-			Status:      string(task.Status),
-			DueDate:     task.DueDate.Format(time.RFC3339),
+			ID:           task.ID.String(),
+			Title:        task.Title,
+			Priority:     string(task.Priority),
+			Status:       string(task.Status),
+			DueDate:      task.DueDate.Format(time.RFC3339),
 			TimeUntilDue: formatDuration(time.Until(*task.DueDate)),
 		}
 		if task.Project != nil {
@@ -108,11 +108,11 @@ func (h *ReminderHandler) GetOverdueTasks(c *gin.Context) {
 	reminders := make([]TaskReminder, len(tasks))
 	for i, task := range tasks {
 		reminder := TaskReminder{
-			ID:          task.ID.String(),
-			Title:       task.Title,
-			Priority:    string(task.Priority),
-			Status:      string(task.Status),
-			DueDate:     task.DueDate.Format(time.RFC3339),
+			ID:           task.ID.String(),
+			Title:        task.Title,
+			Priority:     string(task.Priority),
+			Status:       string(task.Status),
+			DueDate:      task.DueDate.Format(time.RFC3339),
 			TimeUntilDue: formatDuration(time.Until(*task.DueDate)) + " overdue",
 		}
 		if task.Project != nil {

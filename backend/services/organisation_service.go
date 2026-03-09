@@ -38,14 +38,14 @@ type CreateOrganisationInput struct {
 
 // UpdateOrganisationInput represents the input for updating an organisation
 type UpdateOrganisationInput struct {
-	Name        *string                  `json:"name"`
-	Description *string                  `json:"description"`
+	Name        *string                    `json:"name"`
+	Description *string                    `json:"description"`
 	Status      *models.OrganisationStatus `json:"status"`
 }
 
 // AddMemberInput represents the input for adding a member
 type AddMemberInput struct {
-	UserEmail string                       `json:"user_email" binding:"required,email"`
+	UserEmail string                        `json:"user_email" binding:"required,email"`
 	Role      models.OrganisationMemberRole `json:"role" binding:"required"`
 }
 

@@ -25,10 +25,10 @@ func (b *Base) BeforeCreate(tx *gorm.DB) error {
 // User represents a human user
 type User struct {
 	Base
-	Email          string     `gorm:"uniqueIndex;not null" json:"email"`
-	PasswordHash   string     `gorm:"not null" json:"-"`
-	CurrentOrgID   *uuid.UUID `gorm:"type:uuid;index" json:"current_org_id"`
-	CurrentOrg     *Organisation `gorm:"foreignKey:CurrentOrgID" json:"current_org,omitempty"`
+	Email        string        `gorm:"uniqueIndex;not null" json:"email"`
+	PasswordHash string        `gorm:"not null" json:"-"`
+	CurrentOrgID *uuid.UUID    `gorm:"type:uuid;index" json:"current_org_id"`
+	CurrentOrg   *Organisation `gorm:"foreignKey:CurrentOrgID" json:"current_org,omitempty"`
 }
 
 // AgentRole represents the permission level of an agent
@@ -43,13 +43,13 @@ const (
 // Agent represents an AI agent
 type Agent struct {
 	Base
-	Name            string    `gorm:"not null" json:"name"`
-	APIKey          string    `gorm:"uniqueIndex;not null" json:"api_key"`
-	Description     string    `json:"description"`
-	Role            AgentRole `gorm:"not null;default:'regular'" json:"role"`
-	Enabled         bool      `gorm:"not null;default:true" json:"enabled"`
-	OrganisationID  *uuid.UUID    `gorm:"type:uuid;index" json:"organisation_id"`
-	Organisation    *Organisation `gorm:"foreignKey:OrganisationID" json:"organisation,omitempty"`
+	Name           string        `gorm:"not null" json:"name"`
+	APIKey         string        `gorm:"uniqueIndex;not null" json:"api_key"`
+	Description    string        `json:"description"`
+	Role           AgentRole     `gorm:"not null;default:'regular'" json:"role"`
+	Enabled        bool          `gorm:"not null;default:true" json:"enabled"`
+	OrganisationID *uuid.UUID    `gorm:"type:uuid;index" json:"organisation_id"`
+	Organisation   *Organisation `gorm:"foreignKey:OrganisationID" json:"organisation,omitempty"`
 }
 
 // ProjectStatus represents the status of a project
@@ -185,10 +185,10 @@ const (
 // OrganisationMember represents a user's membership in an organisation
 type OrganisationMember struct {
 	Base
-	OrganisationID uuid.UUID             `gorm:"type:uuid;not null" json:"organisation_id"`
-	Organisation   *Organisation         `gorm:"foreignKey:OrganisationID" json:"organisation,omitempty"`
-	UserID         uuid.UUID             `gorm:"type:uuid;not null" json:"user_id"`
-	User           *User                 `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	OrganisationID uuid.UUID              `gorm:"type:uuid;not null" json:"organisation_id"`
+	Organisation   *Organisation          `gorm:"foreignKey:OrganisationID" json:"organisation,omitempty"`
+	UserID         uuid.UUID              `gorm:"type:uuid;not null" json:"user_id"`
+	User           *User                  `gorm:"foreignKey:UserID" json:"user,omitempty"`
 	Role           OrganisationMemberRole `gorm:"not null;default:'member'" json:"role"`
-	JoinedAt       time.Time             `json:"joined_at"`
+	JoinedAt       time.Time              `json:"joined_at"`
 }
