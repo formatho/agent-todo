@@ -89,6 +89,101 @@
             </div>
           </div>
 
+          <!-- Subtasks -->
+          <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+              <div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Subtasks</h3>
+                <p class="mt-1 text-sm text-gray-500" v-if="subtasks.length > 0">
+                  {{ completedSubtasksCount }} of {{ subtasks.length }} completed
+                </p>
+              </div>
+              <div class="flex items-center space-x-2">
+                <div v-if="subtasks.length > 0" class="w-32 bg-gray-200 rounded-full h-2.5">
+                  <div
+                    class="bg-green-500 h-2.5 rounded-full transition-all"
+                    :style="{ width: subtaskProgress + '%' }"
+                  ></div>
+                </div>
+                <button
+                  @click="showAddSubtask = true"
+                  class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                  Add
+                </button>
+              </div>
+            </div>
+            <div class="px-4 py-5 sm:px-6">
+              <div v-if="subtasks.length === 0" class="text-gray-500 text-center py-4">
+                No subtasks yet. Add subtasks to break down this task into smaller steps.
+              </div>
+
+              <div v-else class="space-y-2">
+                <div
+                  v-for="subtask in subtasks"
+                  :key="subtask.id"
+                  class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div class="flex items-center flex-1">
+                    <button
+                      @click="toggleSubtask(subtask)"
+                      class="flex-shrink-0 w-5 h-5 rounded border-2 mr-3 flex items-center justify-center transition-colors"
+                      :class="subtask.status === 'completed' ? 'bg-green-500 border-green-500' : 'border-gray-300 hover:border-indigo-500'"
+                    >
+                      <svg v-if="subtask.status === 'completed'" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                    </button>
+                    <span
+                      class="text-sm"
+                      :class="subtask.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-900'"
+                    >
+                      {{ subtask.title }}
+                    </span>
+                  </div>
+                  <button
+                    @click="deleteSubtask(subtask.id)"
+                    class="ml-2 text-gray-400 hover:text-red-500 transition-colors"
+                    title="Delete subtask"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Add Subtask Inline Form -->
+              <div v-if="showAddSubtask" class="mt-4 flex items-center space-x-2">
+                <input
+                  v-model="newSubtaskTitle"
+                  @keyup.enter="addSubtask"
+                  @keyup.escape="showAddSubtask = false; newSubtaskTitle = ''"
+                  placeholder="Enter subtask title..."
+                  class="flex-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2"
+                  ref="subtaskInput"
+                  autofocus
+                />
+                <button
+                  @click="addSubtask"
+                  :disabled="!newSubtaskTitle.trim()"
+                  class="inline-flex items-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  Add
+                </button>
+                <button
+                  @click="showAddSubtask = false; newSubtaskTitle = ''"
+                  class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- Comments -->
           <div class="bg-white shadow rounded-lg">
             <div class="px-4 py-5 sm:px-6">
@@ -269,12 +364,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useTaskStore } from '../stores/tasks'
 import { useAgentStore } from '../stores/agents'
 import { taskService } from '../services/taskService'
+import { subtaskService } from '../services/subtaskService'
 import TaskModal from '../components/TaskModal.vue'
 import { marked } from 'marked'
 
@@ -286,13 +382,17 @@ const agentStore = useAgentStore()
 
 const task = ref(null)
 const comments = ref([])
+const subtasks = ref([])
 const newComment = ref('')
+const newSubtaskTitle = ref('')
 const showEditModal = ref(false)
 const showAssignModal = ref(false)
+const showAddSubtask = ref(false)
 
 onMounted(async () => {
   await loadTask()
   await loadComments()
+  await loadSubtasks()
   await agentStore.fetchAgents()
 })
 
@@ -303,6 +403,24 @@ const loadTask = async () => {
 const loadComments = async () => {
   comments.value = await taskService.getComments(route.params.id)
 }
+
+const loadSubtasks = async () => {
+  try {
+    subtasks.value = await subtaskService.getSubtasks(route.params.id)
+  } catch (error) {
+    console.error('Failed to load subtasks:', error)
+    subtasks.value = []
+  }
+}
+
+const completedSubtasksCount = computed(() => {
+  return subtasks.value.filter(s => s.status === 'completed').length
+})
+
+const subtaskProgress = computed(() => {
+  if (subtasks.value.length === 0) return 0
+  return Math.round((completedSubtasksCount.value / subtasks.value.length) * 100)
+})
 
 const handleLogout = () => {
   authStore.logout()
@@ -355,6 +473,39 @@ const handleAddComment = async () => {
     await loadComments()
   } catch (error) {
     alert(error.response?.data?.error || 'Failed to add comment')
+  }
+}
+
+const addSubtask = async () => {
+  if (!newSubtaskTitle.value.trim()) return
+
+  try {
+    await subtaskService.createSubtask(route.params.id, newSubtaskTitle.value)
+    newSubtaskTitle.value = ''
+    showAddSubtask.value = false
+    await loadSubtasks()
+  } catch (error) {
+    alert(error.response?.data?.error || 'Failed to add subtask')
+  }
+}
+
+const toggleSubtask = async (subtask) => {
+  try {
+    await subtaskService.toggleSubtask(subtask.id, subtask.status)
+    await loadSubtasks()
+  } catch (error) {
+    alert(error.response?.data?.error || 'Failed to update subtask')
+  }
+}
+
+const deleteSubtask = async (subtaskId) => {
+  if (!confirm('Are you sure you want to delete this subtask?')) return
+
+  try {
+    await subtaskService.deleteSubtask(subtaskId)
+    await loadSubtasks()
+  } catch (error) {
+    alert(error.response?.data?.error || 'Failed to delete subtask')
   }
 }
 
