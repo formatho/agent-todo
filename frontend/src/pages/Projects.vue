@@ -90,10 +90,11 @@
 
       <!-- Projects Grid -->
       <div v-if="filteredProjects.length > 0" class="projects-grid">
-        <div 
-          v-for="project in filteredProjects" 
-          :key="project.id" 
-          class="project-card"
+        <router-link
+          v-for="project in filteredProjects"
+          :key="project.id"
+          :to="`/projects/${project.id}`"
+          class="project-card cursor-pointer"
         >
           <div class="project-header">
             <div class="project-icon">📁</div>
@@ -152,15 +153,15 @@
           </div>
 
           <div class="project-actions">
-            <button @click="viewProjectTasks(project)" class="btn-action view">
+            <button @click.prevent="viewProjectTasks(project)" class="btn-action view">
               View Tasks
             </button>
-            <button @click="editProject(project)" class="btn-action edit">
+            <button @click.prevent="editProject(project)" class="btn-action edit">
               Edit
             </button>
             <button 
               v-if="project.status === 'active'" 
-              @click="archiveProject(project)" 
+              @click.prevent="archiveProject(project)" 
               class="btn-action archive"
             >
               Archive
@@ -180,7 +181,7 @@
           <div class="project-meta">
             Created {{ formatDate(project.created_at) }}
           </div>
-        </div>
+        </router-link>
       </div>
 
       <!-- Empty State -->

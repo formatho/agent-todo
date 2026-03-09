@@ -8,6 +8,7 @@ import Tasks from '../pages/Tasks.vue'
 import Agents from '../pages/Agents.vue'
 import Projects from '../pages/Projects.vue'
 import TaskDetails from '../pages/TaskDetails.vue'
+import ProjectDetails from '../pages/ProjectDetails.vue'
 
 const routes = [
   {
@@ -58,6 +59,12 @@ const routes = [
     path: '/tasks/:id',
     name: 'TaskDetails',
     component: TaskDetails,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/projects/:id',
+    name: 'ProjectDetails',
+    component: ProjectDetails,
     meta: { requiresAuth: true }
   }
 ]
