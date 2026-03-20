@@ -25,17 +25,17 @@ services:
     container_name: agent-todo-backend
     environment:
       DATABASE_URL: postgres://agent_todo:agent_todo_pass@postgres:5432/agent_todo?sslmode=disable
-      PORT: 8080
+      PORT: 18765
       GIN_MODE: release
       JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
       FRONTEND_URL: http://localhost:3000
     ports:
-      - "8080:8080"
+      - "18765:18765"
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:18765/health"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -82,6 +82,13 @@ func main() {
 	organisationHandler := handlers.NewOrganisationHandler()
 	subtaskHandler := handlers.NewSubtaskHandler()
 
+	// Initialize state sync service and handler for cloud synchronization
+	stateService := services.NewStateSerializationService(db)
+	if err := stateService.EnsureDatabaseTables(); err != nil {
+		log.Printf("Warning: Failed to ensure database tables for state sync: %v", err)
+	}
+	stateSyncHandler := handlers.NewStateSyncHandler(stateService)
+
 	// Health check
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
@@ -242,8 +249,38 @@ func main() {
 		supervisor.PATCH("/tasks/:id/assign", supervisorHandler.AssignTask)
 	}
 
+	// State Synchronization endpoints (for cloud sync and agent persistence)
+	stateSync := router.Group("/state/sync")
+	stateSync.Use(middleware.AgentAuthMiddleware())
+	{
+		// Agent state snapshots for cloud synchronization
+		stateSync.POST("/agents/:agent_id/snapshots", stateSyncHandler.SaveAgentSnapshot)
+		stateSync.GET("/agents/:agent_id/snapshot/current", stateSyncHandler.GetCurrentSnapshot)
+		stateSync.GET("/agents/:agent_id/snapshots", stateSyncHandler.GetSnapshotHistory)
+		stateSync.POST("/agents/:agent_id/snapshots/:snapshot_id/restore", stateSyncHandler.RestoreAgentState)
+
+		// Task execution history for analytics and export
+		stateSync.POST("/agents/:agent_id/executions", stateSyncHandler.StoreTaskExecution)
+		stateSync.GET("/agents/:agent_id/executions", stateSyncHandler.GetTaskExecutionHistory)
+		stateSync.GET("/agents/:agent_id/metrics/task-completion", stateSyncHandler.GetTaskCompletionMetrics)
+
+		// Structured response storage for export functionality
+		stateSync.POST("/agents/:agent_id/responses", stateSyncHandler.StoreStructuredResponse)
+
+		// Task history export (CSV/JSON format)
+		stateSync.GET("/agents/:agent_id/export", stateSyncHandler.ExportTaskHistory)
+
+		// Team collaboration endpoints (using agent_id as organisation reference for simplicity)
+		stateSync.POST("/organisations/:agent_id/members", stateSyncHandler.AddTeamMember)
+		stateSync.GET("/organisations/:agent_id/members", stateSyncHandler.GetTeamMembers)
+		stateSync.PATCH("/organisations/:agent_id/members/:user_id/status", stateSyncHandler.UpdateMemberStatus)
+	}
+
 	// Start server
-	port := "8080"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 	log.Printf("Server starting on port %s...", port)
 	log.Printf("Swagger documentation available at http://localhost:%s/docs/index.html", port)
 
