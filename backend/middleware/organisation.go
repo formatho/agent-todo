@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/formatho/agent-todo/models"
 	"github.com/formatho/agent-todo/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -101,16 +102,63 @@ func GetOrganisationUUID(c *gin.Context) (uuid.UUID, error) {
 }
 
 // RequireOrganisationRole checks if user has required role in organisation
+// Role hierarchy: owner > admin > member
 func RequireOrganisationRole(requiredRole string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// TODO: Implement role checking after organisation membership is loaded
-		// For now, just check that organisation context exists
-		_, err := GetOrganisationID(c)
+		// Get user ID from context
+		userID, err := GetUserID(c)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+			c.Abort()
+			return
+		}
+
+		// Get organisation ID from context
+		orgID, err := GetOrganisationID(c)
 		if err != nil {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Organisation context required"})
 			c.Abort()
 			return
 		}
+
+		// Get user's role in organisation
+		orgService := services.NewOrganisationService()
+		userRole, err := orgService.GetMemberRole(orgID, userID)
+		if err != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "User is not a member of this organisation"})
+			c.Abort()
+			return
+		}
+
+		// Check if user has required role (or higher)
+		if !hasRequiredRole(*userRole, requiredRole) {
+			c.JSON(http.StatusForbidden, gin.H{
+				"error":         "Insufficient permissions",
+				"required_role": requiredRole,
+				"current_role":  string(*userRole),
+			})
+			c.Abort()
+			return
+		}
+
 		c.Next()
 	}
+}
+
+// hasRequiredRole checks if the user's role meets the required role level
+func hasRequiredRole(userRole models.OrganisationMemberRole, requiredRole string) bool {
+	// Role hierarchy map (higher number = more permissions)
+	roleLevel := map[models.OrganisationMemberRole]int{
+		models.OrganisationMemberRoleMember: 1,
+		models.OrganisationMemberRoleAdmin:  2,
+		models.OrganisationMemberRoleOwner:  3,
+	}
+
+	requiredLevel, exists := roleLevel[models.OrganisationMemberRole(requiredRole)]
+	if !exists {
+		return false
+	}
+
+	userLevel := roleLevel[userRole]
+	return userLevel >= requiredLevel
 }
