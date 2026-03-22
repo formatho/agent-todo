@@ -81,9 +81,10 @@ func main() {
 	reminderHandler := handlers.NewReminderHandler()
 	organisationHandler := handlers.NewOrganisationHandler()
 	subtaskHandler := handlers.NewSubtaskHandler()
+	analyticsHandler := handlers.NewAnalyticsHandler()
 
 	// Initialize state sync service and handler for cloud synchronization
-	stateService := services.NewStateSerializationService(db)
+	stateService := services.NewStateSerializationService()
 	if err := stateService.EnsureDatabaseTables(); err != nil {
 		log.Printf("Warning: Failed to ensure database tables for state sync: %v", err)
 	}
@@ -99,6 +100,19 @@ func main() {
 	{
 		reminders.GET("/upcoming", reminderHandler.GetUpcomingDueTasks)
 		reminders.GET("/overdue", reminderHandler.GetOverdueTasks)
+	}
+
+	// Analytics endpoints (public for tracking, auth required for viewing)
+	analytics := router.Group("/analytics")
+	{
+		analytics.POST("/track", analyticsHandler.TrackEvent)
+	}
+	// Protected analytics endpoints
+	analyticsProtected := router.Group("/analytics")
+	analyticsProtected.Use(middleware.AuthMiddleware())
+	{
+		analyticsProtected.GET("/funnel", analyticsHandler.GetFunnelStats)
+		analyticsProtected.GET("/events", analyticsHandler.GetRecentEvents)
 	}
 
 	// Swagger documentation
