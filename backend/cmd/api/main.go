@@ -8,6 +8,8 @@ import (
 	_ "github.com/formatho/agent-todo/docs"
 	"github.com/formatho/agent-todo/handlers"
 	"github.com/formatho/agent-todo/middleware"
+	"github.com/formatho/agent-todo/models"
+	"github.com/formatho/agent-todo/services"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
@@ -82,6 +84,8 @@ func main() {
 	organisationHandler := handlers.NewOrganisationHandler()
 	subtaskHandler := handlers.NewSubtaskHandler()
 	analyticsHandler := handlers.NewAnalyticsHandler()
+	subscriptionHandler := handlers.NewSubscriptionHandler()
+	emailHandler := handlers.NewEmailHandler()
 
 	// Initialize state sync service and handler for cloud synchronization
 	stateService := services.NewStateSerializationService()
@@ -89,6 +93,20 @@ func main() {
 		log.Printf("Warning: Failed to ensure database tables for state sync: %v", err)
 	}
 	stateSyncHandler := handlers.NewStateSyncHandler(stateService)
+
+	// Initialize email sequence service and seed default sequences
+	emailSequenceService := services.NewEmailSequenceService(db.DB)
+	if err := emailSequenceService.EnsureSequenceTables(); err != nil {
+		log.Printf("Warning: Failed to ensure email sequence tables: %v", err)
+	}
+	if err := emailSequenceService.SeedTrialConversionSequence(); err != nil {
+		log.Printf("Warning: Failed to seed trial conversion sequence: %v", err)
+	}
+
+	// Auto-migrate subscription models
+	if err := db.DB.AutoMigrate(&models.Subscription{}, &models.EmailTemplate{}, &models.EmailSequence{}, &models.EmailSequenceStep{}, &models.EmailQueue{}, &models.EmailLog{}); err != nil {
+		log.Printf("Warning: Failed to migrate email/subscription models: %v", err)
+	}
 
 	// Health check
 	router.GET("/health", func(c *gin.Context) {
@@ -288,6 +306,30 @@ func main() {
 		stateSync.POST("/organisations/:agent_id/members", stateSyncHandler.AddTeamMember)
 		stateSync.GET("/organisations/:agent_id/members", stateSyncHandler.GetTeamMembers)
 		stateSync.PATCH("/organisations/:agent_id/members/:user_id/status", stateSyncHandler.UpdateMemberStatus)
+	}
+
+	// Subscription routes
+	subscriptions := router.Group("/subscriptions")
+	subscriptions.Use(middleware.AuthMiddleware())
+	{
+		subscriptions.POST("/trial", subscriptionHandler.StartTrial)
+		subscriptions.GET("/:organisation_id", subscriptionHandler.GetSubscription)
+		subscriptions.POST("/:organisation_id/cancel", subscriptionHandler.CancelTrial)
+	}
+
+	// Email routes (for cron and admin)
+	emails := router.Group("/emails")
+	{
+		// Public endpoint for cron jobs (should be protected by API key in production)
+		emails.POST("/process", emailHandler.ProcessEmailQueue)
+	}
+	emailsProtected := router.Group("/emails")
+	emailsProtected.Use(middleware.AuthMiddleware())
+	{
+		emailsProtected.GET("/queue", emailHandler.GetEmailQueue)
+		emailsProtected.GET("/logs", emailHandler.GetEmailLogs)
+		emailsProtected.GET("/sequences", emailHandler.GetEmailSequences)
+		emailsProtected.POST("/seed", emailHandler.SeedSequences)
 	}
 
 	// Start server

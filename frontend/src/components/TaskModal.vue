@@ -66,6 +66,17 @@
                 ></textarea>
               </div>
 
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Commit URL</label>
+                <input
+                  v-model="form.commit_url"
+                  type="url"
+                  placeholder="https://github.com/org/repo/commit/abc123"
+                  class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md border p-2"
+                />
+                <p class="mt-1 text-xs text-gray-500">Link to the Git commit (GitHub/GitLab) for this task</p>
+              </div>
+
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700">
@@ -159,6 +170,7 @@ const form = ref({
   description: '',
   priority: 'medium',
   due_date: '',
+  commit_url: '',
   project_id: '',
   assigned_agent_id: ''
 })
@@ -173,6 +185,7 @@ onMounted(async () => {
       description: props.task.description,
       priority: props.task.priority,
       due_date: props.task.due_date ? props.task.due_date.split('T')[0] : '',
+      commit_url: props.task.commit_url || '',
       project_id: props.task.project_id || '',
       assigned_agent_id: props.task.assigned_agent_id || ''
     }
@@ -196,6 +209,7 @@ const handleSubmit = async () => {
       description: form.value.description,
       priority: form.value.priority,
       due_date: form.value.due_date ? new Date(form.value.due_date).toISOString() : null,
+      commit_url: form.value.commit_url || '',
       assigned_agent_id: form.value.assigned_agent_id || null
     }
 

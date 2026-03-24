@@ -37,6 +37,7 @@ func Connect(databaseURL string) error {
 		&models.TaskEvent{},
 		&models.TaskComment{},
 		&models.Subtask{},
+		&models.AnalyticsEvent{},
 	)
 
 	if err != nil {

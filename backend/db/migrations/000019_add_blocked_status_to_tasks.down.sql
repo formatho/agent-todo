@@ -1,0 +1,3 @@
+-- Down migration: Cannot remove enum values in PostgreSQL, so this is informational only
+-- To rollback, you would need to recreate the type without the blocked value
+-- This is a known PostgreSQL limitation

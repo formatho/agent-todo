@@ -36,7 +36,14 @@
             </div>
           </div>
           <div class="flex items-center">
-            <span class="text-gray-700 mr-4">{{ authStore.user?.email }}</span>
+            <span v-if="agentMode" class="text-blue-700 mr-4 font-medium flex items-center gap-1">
+              <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              {{ authInfo?.identifier }}
+            </span>
+            <span v-else class="text-gray-700 mr-4">{{ authStore.user?.email }}</span>
+            <ThemeToggle class="mr-2" />
             <button
               @click="handleLogout"
               class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -66,12 +73,16 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { isAgentMode, getAuthInfo } from '../utils/auth'
 import TaskGrid from '../components/TaskGrid.vue'
 import ActivityFeed from '../components/ActivityFeed.vue'
 import AgentsDashboard from '../components/AgentsDashboard.vue'
+import ThemeToggle from '../components/ThemeToggle.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const agentMode = isAgentMode()
+const authInfo = getAuthInfo()
 
 const handleLogout = () => {
   authStore.logout()

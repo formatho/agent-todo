@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <!-- Navigation -->
-    <nav class="bg-white shadow">
+    <nav class="bg-white dark:bg-gray-800 shadow transition-colors duration-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
@@ -13,10 +13,11 @@
             </router-link>
           </div>
           <div class="flex items-center">
-            <span class="text-gray-700 mr-4">{{ authStore.user?.email }}</span>
+            <span class="text-gray-700 dark:text-gray-300 mr-4">{{ authStore.user?.email }}</span>
+            <ThemeToggle class="mr-2" />
             <button
               @click="handleLogout"
-              class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+              class="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
             >
               Logout
             </button>
@@ -27,11 +28,11 @@
 
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8" v-if="task">
       <!-- Task Header -->
-      <div class="bg-white shadow rounded-lg mb-6">
+      <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6 transition-colors duration-200">
         <div class="px-4 py-5 sm:px-6">
           <div class="md:flex md:items-center md:justify-between">
             <div class="flex-1 min-w-0">
-              <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+              <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">
                 {{ task.title }}
               </h2>
               <div class="mt-2 flex items-center space-x-4">
@@ -109,59 +110,89 @@
             </div>
           </div>
 
-          <!-- Subtasks -->
+          <!-- Subtasks - Inline List View -->
           <div class="bg-white shadow rounded-lg">
-            <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+            <div class="px-4 py-5 sm:px-6 flex justify-between items-center border-b border-gray-200">
               <div>
                 <h3 class="text-lg leading-6 font-medium text-gray-900">Subtasks</h3>
                 <p class="mt-1 text-sm text-gray-500" v-if="subtasks.length > 0">
-                  {{ completedSubtasksCount }} of {{ subtasks.length }} completed
+                  {{ completedSubtasksCount }} of {{ subtasks.length }} completed ({{ subtaskProgress }}%)
                 </p>
               </div>
-              <div class="flex items-center space-x-2">
-                <div v-if="subtasks.length > 0" class="w-32 bg-gray-200 rounded-full h-2.5">
-                  <div
-                    class="bg-green-500 h-2.5 rounded-full transition-all"
-                    :style="{ width: subtaskProgress + '%' }"
-                  ></div>
-                </div>
-                <button
-                  @click="showAddSubtask = true"
-                  class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                  </svg>
-                  Add
-                </button>
-              </div>
+              <button
+                @click="showAddSubtask = true"
+                class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Subtask
+              </button>
             </div>
             <div class="px-4 py-5 sm:px-6">
-              <div v-if="subtasks.length === 0" class="text-gray-500 text-center py-4">
-                No subtasks yet. Add subtasks to break down this task into smaller steps.
+              <div v-if="subtasks.length === 0" class="text-gray-500 text-center py-4 italic">
+                No subtasks yet. Click "Add Subtask" to break down this task into smaller steps.
               </div>
 
-              <div v-else class="space-y-2">
+              <div v-else class="space-y-2 max-h-96 overflow-y-auto">
                 <div
-                  v-for="subtask in subtasks"
+                  v-for="(subtask, index) in subtasks"
                   :key="subtask.id"
-                  class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border-l-4"
+                  :class="subtask.status === 'completed' ? 'border-green-500 opacity-75' : 'border-indigo-500'"
                 >
-                  <div class="flex items-center flex-1">
+                  <div class="flex items-center flex-1 min-w-0">
+                    <!-- Step Number -->
+                    <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 rounded-full text-xs font-medium mr-3"
+                          :class="subtask.status === 'completed' ? 'text-green-700' : 'text-gray-600'">
+                      {{ index + 1 }}
+                    </span>
+                    
+                    <!-- Checkbox for completion -->
                     <button
                       @click="toggleSubtask(subtask)"
-                      class="flex-shrink-0 w-5 h-5 rounded border-2 mr-3 flex items-center justify-center transition-colors"
-                      :class="subtask.status === 'completed' ? 'bg-green-500 border-green-500' : 'border-gray-300 hover:border-indigo-500'"
+                      class="flex-shrink-0 w-5 h-5 rounded border-2 mr-3 flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      :class="subtask.status === 'completed' ? 'bg-green-500 border-green-500' : 'border-gray-400 hover:border-indigo-500'"
                     >
                       <svg v-if="subtask.status === 'completed'" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                       </svg>
                     </button>
+                    
+                    <!-- Subtask Title -->
                     <span
-                      class="text-sm"
-                      :class="subtask.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-900'"
+                      class="text-sm font-medium truncate flex-1"
+                      :class="subtask.status === 'completed' ? 'text-gray-500 line-through' : 'text-gray-900'"
                     >
                       {{ subtask.title }}
+                    </span>
+                  </div>
+                  
+                  <!-- Status Badge -->
+                  <span 
+                    class="flex-shrink-0 ml-3 px-2 py-1 text-xs rounded-full"
+                    :class="{
+                      'bg-green-100 text-green-800': subtask.status === 'completed',
+                      'bg-blue-100 text-blue-800': subtask.status === 'in_progress',
+                      'bg-yellow-100 text-yellow-800': subtask.status === 'pending'
+                    }"
+                  >
+                    {{ formatSubtaskStatus(subtask.status) }}
+                  </span>
+                  
+                  <!-- Progress Bar -->
+                  <div class="flex-shrink-0 ml-3 w-24">
+                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                      <div 
+                        :class="'h-1.5 rounded-full transition-all duration-300'"
+                        :style="{ width: getProgress(subtask) + '%', backgroundColor: subtask.status === 'completed' ? '#22c55e' : (subtask.status === 'in_progress' ? '#3b82f6' : '#eab308') }"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
                     </span>
                   </div>
                   <button
@@ -392,6 +423,7 @@ import { useAgentStore } from '../stores/agents'
 import { taskService } from '../services/taskService'
 import { subtaskService } from '../services/subtaskService'
 import TaskModal from '../components/TaskModal.vue'
+import ThemeToggle from '../components/ThemeToggle.vue'
 import { marked } from 'marked'
 
 const route = useRoute()
@@ -545,6 +577,15 @@ const formatStatus = (status) => {
   return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
 }
 
+const formatSubtaskStatus = (status) => {
+  const labels = {
+    pending: 'Pending',
+    in_progress: 'In Progress',
+    completed: 'Completed'
+  }
+  return labels[status] || status.replace('_', ' ')
+}
+
 const getStatusClass = (status) => {
   const classes = {
     pending: 'bg-yellow-100 text-yellow-800',
@@ -563,6 +604,13 @@ const getPriorityClass = (priority) => {
     critical: 'bg-red-100 text-red-800'
   }
   return classes[priority] || 'bg-gray-100 text-gray-800'
+}
+
+const getProgress = (subtask) => {
+  // Simple progress calculation based on completion status
+  if (subtask.status === 'completed') return 100
+  if (subtask.status === 'in_progress') return 50
+  return 0
 }
 
 const formatEvent = (event) => {

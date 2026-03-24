@@ -79,6 +79,7 @@
           <option value="">All Statuses</option>
           <option value="pending">Pending</option>
           <option value="in_progress">In Progress</option>
+          <option value="blocked">Blocked</option>
           <option value="completed">Completed</option>
           <option value="failed">Failed</option>
         </select>
@@ -835,6 +836,11 @@ const truncatedDesc = (desc) => {
 .status-badge.in_progress {
   background: #DBEAFE;
   color: #1E40AF;
+}
+
+.status-badge.blocked {
+  background: #EDE9FE;
+  color: #5B21B6;
 }
 
 .status-badge.completed {

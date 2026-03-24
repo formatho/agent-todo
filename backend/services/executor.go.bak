@@ -1,0 +1,186 @@
+package services
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"sync"
+
+	"github.com/Protocol-Lattice/go-agent/adk"
+	"github.com/Protocol-Lattice/go-agent/adk/memory"
+	"github.com/Protocol-Lattice/go-agent/adk/model"
+	"github.com/formatho/agent-todo/models"
+)
+
+// AgentExecutor handles agent execution using go-agent library
+type AgentExecutor struct {
+	mu          sync.RWMutex
+	agents      map[string]*adk.Agent // agentID -> agent instance
+	modelsCache map[string]model.Model
+}
+
+func NewAgentExecutor() *AgentExecutor {
+	return &AgentExecutor{
+		agents:      make(map[string]*adk.Agent),
+		modelsCache: make(map[string]model.Model),
+	}
+}
+
+// LLMConfig contains configuration for LLM models
+type LLMConfig struct {
+	Type       string // "openai", "anthropic", "ollama", "gemini"
+	ModelName  string
+	APIKey     string
+	BaseURL    string // Optional, for custom endpoints like Ollama
+}
+
+// CreateAgent creates a new agent instance using go-agent
+func (e *AgentExecutor) CreateAgent(agentID string, name string, description string, config LLMConfig) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	// Get or create the model adapter
+	modelAdapter, err := e.getOrCreateModel(config)
+	if err != nil {
+		return fmt.Errorf("failed to get model: %w", err)
+	}
+
+	// Create memory backend (using in-memory for now, can be extended to PostgreSQL/pgvector)
+	memBackend := memory.NewInMemoryMemory()
+
+	// Configure the agent
+	agentConfig := adk.AgentConfig{
+		Name:        name,
+		Description: description,
+		Model:       modelAdapter,
+		Memory:      memBackend,
+	}
+
+	// Create the agent
+	agent, err := adk.NewAgent(agentConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create agent: %w", err)
+	}
+
+	e.agents[agentID] = agent
+	log.Printf("Created agent '%s' (ID: %s)", name, agentID)
+	return nil
+}
+
+// getOrCreateModel returns a cached model adapter or creates a new one
+func (e *AgentExecutor) getOrCreateModel(config LLMConfig) (model.Model, error) {
+	e.mu.RLock()
+	if cached, exists := e.modelsCache[config.Type+config.ModelName]; exists {
+		e.mu.RUnlock()
+		return cached, nil
+	}
+	e.mu.RUnlock()
+
+	var modelAdapter model.Model
+	var err error
+
+	switch config.Type {
+	case "openai":
+		modelAdapter, err = model.NewOpenAI(config.ModelName, config.APIKey)
+	case "anthropic":
+		modelAdapter, err = model.NewAnthropic(config.ModelName, config.APIKey)
+	case "ollama":
+		modelAdapter, err = model.NewOllama(config.ModelName, config.BaseURL)
+	case "gemini":
+		modelAdapter, err = model.NewGemini(config.ModelName, config.APIKey)
+	default:
+		return nil, fmt.Errorf("unsupported LLM type: %s", config.Type)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	e.mu.Lock()
+	e.modelsCache[config.Type+config.ModelName] = modelAdapter
+	e.mu.Unlock()
+
+	return modelAdapter, nil
+}
+
+// ExecuteTask executes a task using the agent's LLM capabilities
+func (e *AgentExecutor) ExecuteTask(agentID string, taskTitle string, taskDescription string, context string) (*models.AgentResponse, error) {
+	return e.ExecuteTaskWithCustomLLM(agentID, LLMConfig{}, taskTitle, taskDescription, context)
+}
+
+// ExecuteTaskWithCustomLLM executes a task with custom LLM configuration
+func (e *AgentExecutor) ExecuteTaskWithCustomLLM(agentID string, config LLMConfig, taskTitle string, taskDescription string, context string) (*models.AgentResponse, error) {
+	e.mu.RLock()
+	agent, exists := e.agents[agentID]
+	e.mu.RUnlock()
+
+	if !exists {
+		return nil, fmt.Errorf("agent not found: %s", agentID)
+	}
+
+	ctx := context.Background()
+
+	// Build the prompt with context
+	prompt := fmt.Sprintf(
+		"Task: %s\n\nDescription: %s\n\nContext: %s\n\nPlease analyze and provide a response.",
+		taskTitle, taskDescription, context,
+	)
+
+	// Execute the agent
+	response, err := agent.Execute(ctx, prompt)
+	if err != nil {
+		return nil, fmt.Errorf("agent execution failed: %w", err)
+	}
+
+	return &models.AgentResponse{
+		AgentID:   agentID,
+		Title:     taskTitle,
+		Response:  response.Text,
+		Metadata:  response.Metadata,
+		CreatedAt: models.Now(),
+	}, nil
+}
+
+// AddTool adds a tool to an agent
+func (e *AgentExecutor) AddTool(agentID string, toolName string, toolFunc func(args map[string]interface{}) (interface{}, error)) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	agent, exists := e.agents[agentID]
+	if !exists {
+		return fmt.Errorf("agent not found: %s", agentID)
+	}
+
+	// Create a tool definition
+	toolDef := adk.ToolDefinition{
+		Name:        toolName,
+		Description: fmt.Sprintf("Tool for %s", toolName),
+		Parameters:  map[string]string{}, // Can be extended with schema
+		Function:    toolFunc,
+	}
+
+	if err := agent.AddTool(toolDef); err != nil {
+		return fmt.Errorf("failed to add tool: %w", err)
+	}
+
+	log.Printf("Added tool '%s' to agent '%s'", toolName, agentID)
+	return nil
+}
+
+// GetAgentStatus returns the status of an agent
+func (e *AgentExecutor) GetAgentStatus(agentID string) (*models.AgentStatus, error) {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	agent, exists := e.agents[agentID]
+	if !exists {
+		return nil, fmt.Errorf("agent not found: %s", agentID)
+	}
+
+	return &models.AgentStatus{
+		ID:       agentID,
+		Exists:   true,
+		Active:   agent != nil,
+		Metadata: map[string]interface{}{}, // Can be extended with more details
+	}, nil
+}

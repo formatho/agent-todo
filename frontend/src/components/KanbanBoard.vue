@@ -105,6 +105,13 @@ const columns = reactive([
     tasks: []
   },
   {
+    id: 'blocked',
+    name: 'Blocked',
+    icon: '🚧',
+    color: '#8B5CF6',
+    tasks: []
+  },
+  {
     id: 'completed',
     name: 'Done',
     icon: '✅',
@@ -143,8 +150,9 @@ const loadTasks = () => {
   const tasks = Array.isArray(taskStore.tasks) ? taskStore.tasks : []
   columns[0].tasks = sortByPriority(tasks.filter(task => task.status === 'pending'))
   columns[1].tasks = sortByPriority(tasks.filter(task => task.status === 'in_progress'))
-  columns[2].tasks = sortByPriority(tasks.filter(task => task.status === 'completed'))
-  columns[3].tasks = sortByPriority(tasks.filter(task => task.status === 'failed'))
+  columns[2].tasks = sortByPriority(tasks.filter(task => task.status === 'blocked'))
+  columns[3].tasks = sortByPriority(tasks.filter(task => task.status === 'completed'))
+  columns[4].tasks = sortByPriority(tasks.filter(task => task.status === 'failed'))
 }
 
 // Watch for store changes and refresh columns
@@ -248,6 +256,7 @@ const updateTaskStatus = async (task, newStatus) => {
 
 .column-pending { border-top: 4px solid #F59E0B; }
 .column-in_progress { border-top: 4px solid #3B82F6; }
+.column-blocked { border-top: 4px solid #8B5CF6; }
 .column-completed { border-top: 4px solid #10B981; }
 .column-failed { border-top: 4px solid #EF4444; }
 

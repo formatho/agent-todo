@@ -86,6 +86,7 @@ const (
 	TaskStatusInProgress TaskStatus = "in_progress"
 	TaskStatusCompleted  TaskStatus = "completed"
 	TaskStatusFailed     TaskStatus = "failed"
+	TaskStatusBlocked    TaskStatus = "blocked"
 )
 
 // TaskPriority represents the priority of a task
@@ -216,4 +217,68 @@ type OrganisationMember struct {
 	User           *User                  `gorm:"foreignKey:UserID" json:"user,omitempty"`
 	Role           OrganisationMemberRole `gorm:"not null;default:'member'" json:"role"`
 	JoinedAt       time.Time              `json:"joined_at"`
+}
+
+// AgentResponse represents the response from an agent execution
+type AgentResponse struct {
+	ID        uuid.UUID   `gorm:"type:uuid;primary_key" json:"id"`
+	AgentID   string      `gorm:"not null" json:"agent_id"`
+	Title     string      `json:"title"`
+	Response  string      `json:"response"`
+	Metadata  interface{} `json:"metadata"`
+	CreatedAt time.Time   `json:"created_at"`
+}
+
+// AgentStatus represents the runtime status of an agent
+type AgentStatus struct {
+	ID       string                 `json:"id"`
+	Exists   bool                   `json:"exists"`
+	Active   bool                   `json:"active"`
+	Metadata map[string]interface{} `json:"metadata"`
+}
+
+// LLMConfigType represents supported LLM provider types
+type LLMConfigType string
+
+const (
+	LLMConfigTypeOpenAI    LLMConfigType = "openai"
+	LLMConfigTypeAnthropic LLMConfigType = "anthropic"
+	LLMConfigTypeOllama    LLMConfigType = "ollama"
+	LLMConfigTypeGemini    LLMConfigType = "gemini"
+)
+
+// LLMConfig represents configuration for an LLM provider
+type LLMConfig struct {
+	Type      LLMConfigType `json:"type"`
+	ModelName string        `json:"model_name"`
+	APIKey    string        `json:"api_key,omitempty"`
+	BaseURL   string        `json:"base_url,omitempty"`
+}
+
+// AnalyticsEventType represents the type of analytics event
+type AnalyticsEventType string
+
+const (
+	AnalyticsEventPageView      AnalyticsEventType = "page_view"
+	AnalyticsEventCheckoutStart AnalyticsEventType = "checkout_start"
+	AnalyticsEventCheckoutComplete AnalyticsEventType = "checkout_complete"
+)
+
+// AnalyticsEvent represents a tracked analytics event
+type AnalyticsEvent struct {
+	Base
+	EventType   AnalyticsEventType `gorm:"not null;index" json:"event_type"`
+	Page        string             `gorm:"not null;index" json:"page"`          // e.g., "pricing", "checkout"
+	Plan        string             `json:"plan"`                                // e.g., "starter", "pro", "enterprise"
+	UserID      *uuid.UUID         `gorm:"type:uuid;index" json:"user_id"`      // Nullable for anonymous visitors
+	SessionID   string             `gorm:"index" json:"session_id"`             // Browser session ID
+	Metadata    string             `json:"metadata"`                            // JSON string for additional data
+	UserAgent   string             `json:"user_agent"`
+	IPAddress   string             `json:"ip_address"`
+	Referrer    string             `json:"referrer"`
+}
+
+// Now returns current time with timezone
+func Now() time.Time {
+	return time.Now().UTC()
 }

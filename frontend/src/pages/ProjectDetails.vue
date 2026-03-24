@@ -14,6 +14,7 @@
           </div>
           <div class="flex items-center">
             <span class="text-gray-700 mr-4">{{ authStore.user?.email }}</span>
+            <ThemeToggle class="mr-2" />
             <button
               @click="handleLogout"
               class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -290,10 +291,15 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { projectService } from '../services/projectService'
+import { agentProjectService } from '../services/agentProjectService'
+import { isAgentMode, getAuthInfo } from '../utils/auth'
+import ThemeToggle from '../components/ThemeToggle.vue'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const agentMode = isAgentMode()
+const authInfo = getAuthInfo()
 
 const project = ref(null)
 const projectTasks = ref([])
@@ -314,13 +320,20 @@ onMounted(async () => {
 
 const loadProject = async () => {
   try {
-    const data = await projectService.getProject(route.params.id)
+    let data
+    if (agentMode) {
+      // Agents use agent-specific endpoint for read-only access
+      data = await agentProjectService.getProject(route.params.id)
+      isEditing.value = false // Agents can't edit projects
+    } else {
+      data = await projectService.getProject(route.params.id)
+    }
     project.value = data
     projectTasks.value = data.tasks || []
   } catch (error) {
     console.error('Failed to load project:', error)
-    alert('Failed to load project')
-    router.push('/projects')
+    if (!agentMode) alert('Failed to load project')
+    router.push(agentMode ? '/dashboard' : '/projects')
   }
 }
 

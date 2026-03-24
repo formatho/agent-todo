@@ -99,6 +99,13 @@ export const STATUS_COLORS = {
     gradient: 'linear-gradient(to right, #DBEAFE, white)',
     icon: '🔄'
   },
+  blocked: {
+    bg: '#EDE9FE',
+    text: '#5B21B6',
+    border: '#8B5CF6',
+    gradient: 'linear-gradient(to right, #EDE9FE, white)',
+    icon: '🚧'
+  },
   completed: {
     bg: '#D1FAE5',
     text: '#065F46',

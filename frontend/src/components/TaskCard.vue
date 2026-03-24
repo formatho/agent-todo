@@ -445,6 +445,10 @@ const handleEdit = () => {
   border-left-color: #3B82F6;
 }
 
+.task-card.status-blocked {
+  border-left-color: #8B5CF6;
+}
+
 .task-card.status-completed {
   border-left-color: #10B981;
   opacity: 0.85;
