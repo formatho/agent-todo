@@ -416,7 +416,7 @@ var completeTaskCmd = &cobra.Command{
 		// Add comment if provided
 		if comment != "" {
 			commentReq := map[string]string{"content": comment}
-			c.Post("/agent/tasks/"+id+"/comments", commentReq, false)
+			c.Post("/agent/tasks/"+id+"/comments", commentReq, true)
 		}
 
 		fmt.Printf("✓ Task %s marked as completed\n", id)
@@ -451,7 +451,7 @@ var startTaskCmd = &cobra.Command{
 		// Add comment if provided
 		if comment != "" {
 			commentReq := map[string]string{"content": comment}
-			c.Post("/agent/tasks/"+id+"/comments", commentReq, false)
+			c.Post("/agent/tasks/"+id+"/comments", commentReq, true)
 		}
 
 		fmt.Printf("✓ Task %s marked as in progress\n", id)
@@ -486,7 +486,7 @@ var blockTaskCmd = &cobra.Command{
 		// Add blocker reason as comment
 		if reason != "" {
 			commentReq := map[string]string{"content": "Blocked: " + reason}
-			c.Post("/agent/tasks/"+id+"/comments", commentReq, false)
+			c.Post("/agent/tasks/"+id+"/comments", commentReq, true)
 		}
 
 		fmt.Printf("✓ Task %s marked as blocked\n", id)
