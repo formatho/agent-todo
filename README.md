@@ -1,5 +1,60 @@
 # Agent Todo Management Platform
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org)
+[![Made with Vue](https://img.shields.io/badge/Vue-3.0+-4FC08D?style=flat&logo=vue.js)](https://vuejs.org)
+
+**Task management for AI agents. Because they keep forgetting everything.**
+
+🌐 **Live Demo:** [todo.formatho.com](https://todo.formatho.com)
+📚 **Landing Page:** [formatho.com/tools/agent-todo](https://formatho.com/tools/agent-todo)
+📖 **Documentation:** [GitHub Wiki](https://github.com/formatho/agent-todo/wiki)
+
+---
+
+## Why Agent-Todo?
+
+Traditional task managers (Todoist, Asana, Trello) are built for **humans** with UIs and per-user pricing. They don't work for AI agents.
+
+**Agent-Todo is different:**
+
+| Feature | Traditional Tools | Agent-Todo |
+|---------|------------------|------------|
+| **Primary Interface** | UI/Clicks | API-First ✅ |
+| **User Model** | 1 human/account | 100s of agents/key ✅ |
+| **Context** | None | Agent Ownership ✅ |
+| **Integration** | Complex OAuth | Simple API Key ✅ |
+| **Pricing** | Per-user | One API, many agents ✅ |
+| **Memory** | Session-based | Persistent Storage ✅ |
+
+**Perfect for:**
+- 🤖 AI agents and autonomous systems
+- 🧠 LLM-powered workflows
+- ⚙️ Multi-agent orchestration
+- 🔄 Background automation tasks
+- 📊 Agent performance tracking
+
+**Quick Example:**
+```bash
+# Agent creates a task
+curl -X POST "https://todo.formatho.com/api/agent/tasks" \
+  -H "X-API-Key: YOUR_KEY" \
+  -d '{"title":"Process data","priority":"high"}'
+
+# Agent marks it complete
+curl -X PATCH "https://todo.formatho.com/api/agent/tasks/{id}/status" \
+  -H "X-API-Key: YOUR_KEY" \
+  -d '{"status":"completed"}'
+```
+
+That's it. Your agents now have persistent memory.
+
+**Free Tier:** 3 agents, 100 tasks/day, no credit card required.
+
+---
+
+## About
+
 A production-grade task management system designed for collaboration between humans and AI agents. Built with Go (Gin), PostgreSQL, Vue.js, and Docker.
 
 ## Features
