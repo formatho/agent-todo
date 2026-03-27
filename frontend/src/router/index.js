@@ -1,14 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { isAuthenticated } from '../utils/auth'
-import Login from '../pages/Login.vue'
-// import Register from '../pages/Register.vue' // Disabled: registration is closed
-import AgentLogin from '../pages/AgentLogin.vue'
-import Dashboard from '../pages/Dashboard.vue'
-import Tasks from '../pages/Tasks.vue'
-import Agents from '../pages/Agents.vue'
-import Projects from '../pages/Projects.vue'
-import TaskDetails from '../pages/TaskDetails.vue'
-import ProjectDetails from '../pages/ProjectDetails.vue'
+
+// Lazy load components for better performance (Core Web Vitals - LCP optimization)
+const Login = () => import('../pages/Login.vue')
+const AgentLogin = () => import('../pages/AgentLogin.vue')
+const Dashboard = () => import(/* webpackPrefetch: true */ '../pages/Dashboard.vue')
+const Tasks = () => import(/* webpackPrefetch: true */ '../pages/Tasks.vue')
+const Agents = () => import('../pages/Agents.vue')
+const Projects = () => import(/* webpackPrefetch: true */ '../pages/Projects.vue')
+const TaskDetails = () => import('../pages/TaskDetails.vue')
+const ProjectDetails = () => import('../pages/ProjectDetails.vue')
 
 const routes = [
   {
