@@ -25,9 +25,39 @@
 
       <ViewToggle v-model="viewMode" :options="viewOptions" @change="handleViewChange" />
 
-      <button @click="handleCreateTask" class="btn-create" :disabled="projectStore.activeProjects.length === 0">
-        + Create Task
-      </button>
+      <div class="create-task-wrapper">
+        <button 
+          @click="handleCreateTask" 
+          class="btn-create" 
+          :disabled="projectStore.activeProjects.length === 0"
+          :class="{ 'has-tips': showTooltips }"
+        >
+          + Create Task
+        </button>
+        
+        <!-- Tooltip for new users -->
+        <div v-if="showTooltips && projectStore.activeProjects.length === 0" class="tooltip">
+          <div class="tooltip-content">
+            <div class="tooltip-header">
+              <span class="tooltip-icon">📝</span>
+              <span class="tooltip-title">Get Started</span>
+            </div>
+            <p class="tooltip-text">Create a project first to organize your tasks, then add tasks to it.</p>
+            <button @click="navigateToProjects" class="tooltip-action">Create Project</button>
+          </div>
+          <div class="tooltip-arrow"></div>
+        </div>
+        
+        <!-- Tips for creating tasks -->
+        <div v-if="showTooltips && projectStore.activeProjects.length > 0" class="tips">
+          <div class="tips-content">
+            <span class="tips-icon">💡</span>
+            <p class="tips-text">
+              Click here to create tasks. Assign them to AI agents for automatic completion!
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Warning if no projects -->
@@ -219,6 +249,7 @@ const projectStore = useProjectStore()
 const viewMode = ref('grid')
 const searchQuery = ref('')
 const showCompleted = ref(true) // Show completed tasks by default
+const showTooltips = ref(true) // Enable tooltips for new users
 
 const viewOptions = [
   { value: 'grid', label: 'Grid View', icon: '⊞' },
@@ -435,6 +466,10 @@ const handleCreateTask = () => {
     return
   }
   showCreateModal.value = true
+}
+
+const navigateToProjects = () => {
+  router.push('/projects')
 }
 
 const handleTaskCreated = () => {
@@ -925,5 +960,140 @@ const truncatedDesc = (desc) => {
 
 .btn-create-empty:hover {
   background: #2563EB;
+}
+
+/* Create Task Wrapper with Tooltips */
+.create-task-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.btn-create.has-tips {
+  position: relative;
+}
+
+/* Tooltip Styles */
+.tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  z-index: 10;
+}
+
+.tooltip-content {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  max-width: 280px;
+  min-width: 280px;
+}
+
+.tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tooltip-icon {
+  font-size: 18px;
+}
+
+.tooltip-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.tooltip-text {
+  font-size: 12px;
+  color: #6B7280;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.tooltip-action {
+  width: 100%;
+  padding: 8px 12px;
+  background: #3B82F6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tooltip-action:hover {
+  background: #2563EB;
+}
+
+.tooltip-arrow {
+  position: absolute;
+  top: -6px;
+  right: 20px;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-right: 1px solid #E5E7EB;
+  border-top: 1px solid #E5E7EB;
+  transform: rotate(45deg);
+}
+
+/* Tips Styles */
+.tips {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  z-index: 10;
+}
+
+.tips-content {
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  border: 1px solid #BFDBFE;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  max-width: 250px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tips-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.tips-text {
+  font-size: 11px;
+  color: #1E40AF;
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tooltip-content,
+  .tips-content {
+    max-width: 240px;
+  }
+  
+  .tooltip {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .tooltip-arrow {
+    right: 50%;
+    left: auto;
+    transform: translateX(50%) rotate(45deg);
+  }
 }
 </style>
