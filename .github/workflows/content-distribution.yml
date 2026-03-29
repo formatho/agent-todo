@@ -1,0 +1,415 @@
+name: Content Distribution
+
+on:
+  workflow_dispatch:
+    inputs:
+      content_type:
+        description: 'Type of content to distribute'
+        required: true
+        default: 'blog'
+        type: choice
+        options:
+          - blog
+          - case_study
+          - tutorial
+          - announcement
+      content_path:
+        description: 'Path to content file'
+        required: true
+        type: string
+      publish_date:
+        description: 'Date to publish (YYYY-MM-DD)'
+        required: true
+        type: string
+      platforms:
+        description: 'Platforms to publish to'
+        required: true
+        type: choice
+        options:
+          - all
+          - twitter
+          - linkedin
+          - dev_to
+          - github
+          - reddit
+        default: 'all'
+
+  push:
+    paths:
+      - 'blog/**'
+      - 'docs/**'
+    branches:
+      - main
+
+jobs:
+  validate-content:
+    name: Validate Content
+    runs-on: ubuntu-latest
+    
+    outputs:
+      content_file: ${{ steps.content-detector.outputs.content_file }}
+      content_type: ${{ steps.content-detector.outputs.content_type }}
+      title: ${{ steps.metadata.outputs.title }}
+      description: ${{ steps.metadata.outputs.description }}
+      platforms: ${{ steps.metadata.outputs.platforms }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect content changes
+        id: content-detector
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            CONTENT_PATH="${{ github.event.inputs.content_path }}"
+          else
+            # Find the most recently modified blog post
+            CONTENT_PATH=$(find blog/ -name "*.md" -type f -printf '%T@ %p\n' | sort -nr | head -1 | cut -d' ' -f2-)
+          fi
+          
+          if [ -z "$CONTENT_PATH" ]; then
+            echo "No content found to distribute"
+            exit 1
+          fi
+          
+          echo "content_file=$CONTENT_PATH" >> $GITHUB_OUTPUT
+          
+          # Determine content type
+          if [[ "$CONTENT_PATH" == *"case-study"* ]]; then
+            echo "content_type=case_study" >> $GITHUB_OUTPUT
+          elif [[ "$CONTENT_PATH" == *"tutorial"* ]] || [[ "$CONTENT_PATH" == *"getting-started"* ]]; then
+            echo "content_type=tutorial" >> $GITHUB_OUTPUT
+          elif [[ "$CONTENT_PATH" == *"announcement"* ]] || [[ "$CONTENT_PATH" == *"release"* ]]; then
+            echo "content_type=announcement" >> $GITHUB_OUTPUT
+          else
+            echo "content_type=blog" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract metadata
+        id: metadata
+        run: |
+          CONTENT_FILE="${{ steps.content-detector.outputs.content_file }}"
+          
+          # Extract title from first h1 tag
+          TITLE=$(grep -m 1 "^# " "$CONTENT_FILE" | sed 's/^# //' | head -1)
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          
+          # Extract description from first paragraph after title
+          DESCRIPTION=$(awk '/^# / {p=1; next} p && /^[^#]/ && /^[^<]/ && NF {print; exit}' "$CONTENT_FILE" | head -1)
+          if [ -z "$DESCRIPTION" ]; then
+            DESCRIPTION="Learn more about Agent-Todo, the task management platform designed for AI agents."
+          fi
+          echo "description=$DESCRIPTION" >> $GITHUB_OUTPUT
+          
+          # Determine platforms based on content type
+          case "${{ steps.content-detector.outputs.content_type }}" in
+            case_study)
+              PLATFORMS="twitter,linkedin,dev_to,github,reddit"
+              ;;
+            tutorial)
+              PLATFORMS="twitter,dev_to,reddit"
+              ;;
+            announcement)
+              PLATFORMS="twitter,linkedin,github,reddit"
+              ;;
+            *)
+              PLATFORMS="twitter,linkedin,dev_to,reddit"
+              ;;
+          esac
+          echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
+
+  publish-twitter:
+    name: Publish to Twitter/X
+    runs-on: ubuntu-latest
+    needs: validate-content
+    if: ${{ contains(needs.validate-content.outputs.platforms, 'twitter') }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract content for Twitter
+        id: twitter-content
+        run: |
+          CONTENT_FILE="${{ needs.validate-content.outputs.content_file }}"
+          TITLE="${{ needs.validate-content.outputs.title }}"
+          DESCRIPTION="${{ needs.validate-content.outputs.description }}"
+          
+          # Generate Twitter thread (280 chars max)
+          TWITTER_TEXT="${TITLE}\n\n${DESCRIPTION}\n\n#AI #TaskManagement #AgentTodo"
+          
+          # Truncate if too long
+          if [ ${#TWITTER_TEXT} -gt 280 ]; then
+            TWITTER_TEXT="${TWITTER_TEXT:0:277}..."
+          fi
+          
+          echo "text=$TWITTER_TEXT" >> $GITHUB_OUTPUT
+          echo "hashtags=#AI #TaskManagement #AgentTodo" >> $GITHUB_OUTPUT
+
+      - name: Upload content artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: twitter-content
+          path: |
+            ${{ steps.twitter-content.outputs.text }}
+            ${{ steps.twitter-content.outputs.hashtags }}
+
+      - name: Create Twitter post
+        uses: raven345/twitter-action@v1
+        with:
+          status: ${{ steps.twitter-content.outputs.text }}
+          hashtags: ${{ steps.twitter-content.outputs.hashtags }}
+        env:
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+
+  publish-linkedin:
+    name: Publish to LinkedIn
+    runs-on: ubuntu-latest
+    needs: validate-content
+    if: ${{ contains(needs.validate-content.outputs.platforms, 'linkedin') }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare LinkedIn post
+        id: linkedin-content
+        run: |
+          CONTENT_FILE="${{ needs.validate-content.outputs.content_file }}"
+          TITLE="${{ needs.validate-content.outputs.title }}"
+          DESCRIPTION="${{ needs.validate-content.outputs.description }}"
+          
+          # Generate LinkedIn post
+          LINKEDIN_TEXT="🚀 New content from the Agent-Todo team:\n\n${TITLE}\n\n${DESCRIPTION}\n\nAs the task management platform designed specifically for AI agents, we're committed to helping teams build better autonomous systems.\n\n#AI #TaskManagement #DigitalTransformation #AIOps"
+          
+          echo "text=$LINKEDIN_TEXT" >> $GITHUB_OUTPUT
+
+      - name: Upload content artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: linkedin-content
+          path: ${{ steps.linkedin-content.outputs.text }}
+
+      - name: Post to LinkedIn
+        uses: maddypost/linkedin-share-action@v1
+        with:
+          text: ${{ steps.linkedin-content.outputs.text }}
+        env:
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+
+  publish-devto:
+    name: Publish to Dev.to
+    runs-on: ubuntu-latest
+    needs: validate-content
+    if: ${{ contains(needs.validate-content.outputs.platforms, 'dev_to') }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract and prepare Dev.to content
+        id: devto-content
+        run: |
+          CONTENT_FILE="${{ needs.validate-content.outputs.content_file }}"
+          TITLE="${{ needs.validate-content.outputs.title }}"
+          DESCRIPTION="${{ needs.validate-content.outputs.description }}"
+          
+          # Convert markdown to Dev.to format
+          # Extract content (skip first header)
+          BODY=$(awk '/^# / {p=1; next} p' "$CONTENT_FILE" | head -5000)
+          
+          # Create Dev.to article format
+          DEVTO_BODY="# ${TITLE}\n\n${DESCRIPTION}\n\n${BODY}"
+          
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          echo "body=$DEVTO_BODY" >> $GITHUB_OUTPUT
+          echo "tags=ai,task-management,agent-todo" >> $GITHUB_OUTPUT
+          echo "series=agent-todo-guide" >> $GITHUB_OUTPUT
+
+      - name: Upload content artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: devto-content
+          path: |
+            ${{ steps.devto-content.outputs.title }}
+            ${{ steps.devto-content.outputs.body }}
+            ${{ steps.devto-content.outputs.tags }}
+            ${{ steps.devto-content.outputs.series }}
+
+      - name: Publish to Dev.to
+        uses: peaceiris/actions-devto@v1
+        with:
+          devto_api_key: ${{ secrets.DEVTO_API_KEY }}
+          title: ${{ steps.devto-content.outputs.title }}
+          body: ${{ steps.devto-content.outputs.body }}
+          tags: ${{ steps.devto-content.outputs.tags }}
+          series: ${{ steps.devto-content.outputs.series }}
+          publish: true
+
+  publish-github:
+    name: Publish to GitHub
+    runs-on: ubuntu-latest
+    needs: validate-content
+    if: ${{ contains(needs.validate-content.outputs.platforms, 'github') }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update README with new content
+        run: |
+          CONTENT_FILE="${{ needs.validate-content.outputs.content_file }}"
+          TITLE="${{ needs.validate-content.outputs.title }}"
+          
+          # Extract date from filename or content
+          DATE=$(basename "$CONTENT_FILE" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || date '+%Y-%m-%d')
+          
+          # Create relative path
+          REL_PATH=$(realpath --relative-to=. "$CONTENT_FILE")
+          
+          # Add to README if not already there
+          if ! grep -q "blog/" README.md; then
+            echo "# Recent Blog Posts" >> README.md
+            echo "" >> README.md
+          fi
+          
+          # Check if already in README
+          if ! grep -q "$REL_PATH" README.md; then
+            sed -i "/# Recent Blog Posts/a\\- [${TITLE}](${REL_PATH}) - ${DATE}" README.md
+          fi
+
+      - name: Create discussion post
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { title, content_file } = context.repo;
+            const fs = require('fs');
+            const path = require('path');
+            
+            const contentPath = path.join(process.cwd(), content_file);
+            const content = fs.readFileSync(contentPath, 'utf8');
+            
+            // Extract first paragraph as excerpt
+            const excerpt = content.split('\n').find(line => 
+              line.trim() && !line.startsWith('#')
+            ) || 'New blog post from Agent-Todo';
+            
+            github.rest.discussions.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: content,
+              labels: ['blog', 'content']
+            });
+
+  notify-success:
+    name: Notify Success
+    runs-on: ubuntu-latest
+    needs: [validate-content, publish-twitter, publish-linkedin, publish-devto, publish-github, publish-reddit]
+    if: always()
+    
+    steps:
+      - name: Send success notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#content-distribution'
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  publish-reddit:
+    name: Publish to Reddit
+    runs-on: ubuntu-latest
+    needs: validate-content
+    if: ${{ contains(needs.validate-content.outputs.platforms, 'reddit') }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract and prepare Reddit content
+        id: reddit-content
+        run: |
+          CONTENT_FILE="${{ needs.validate-content.outputs.content_file }}"
+          TITLE="${{ needs.validate-content.outputs.title }}"
+          DESCRIPTION="${{ needs.validate-content.outputs.description }}"
+          
+          # Extract content (skip first header)
+          BODY=$(awk '/^# / {p=1; next} p' "$CONTENT_FILE" | head -3000)
+          
+          # Create Reddit post format
+          REDDIT_TITLE="🤖 AI Task Management: ${TITLE}"
+          REDDIT_TEXT="${DESCRIPTION}\n\n${BODY}\n\n\n---\n\n🔗 Read the full article: https://todo.formatho.com/blog/$(realpath --relative-to=. "$CONTENT_FILE")"
+          
+          echo "title=$REDDIT_TITLE" >> $GITHUB_OUTPUT
+          echo "content=$REDDIT_TEXT" >> $GITHUB_OUTPUT
+          echo "subreddit=artificial" >> $GITHUB_OUTPUT
+          echo "flair_text=AI Tool" >> $GITHUB_OUTPUT
+
+      - name: Upload content artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: reddit-content
+          path: |
+            ${{ steps.reddit-content.outputs.title }}
+            ${{ steps.reddit-content.outputs.content }}
+            ${{ steps.reddit-content.outputs.subreddit }}
+            ${{ steps.reddit-content.outputs.flair_text }}
+
+      - name: Post to Reddit
+        run: |
+          # Download reddit-poster binary or compile it
+          wget -O reddit-poster https://github.com/formatho/agent-todo/releases/latest/download/reddit-poster-linux
+          chmod +x reddit-poster
+          
+          # Make reddit-poster available in path
+          sudo cp reddit-poster /usr/local/bin/
+          
+          # Post to Reddit using the compiled binary
+          reddit-poster "${{ needs.validate-content.outputs.content_file }}"
+        env:
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
+          REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
+          REDDIT_USER_AGENT: Agent-Todo/1.0
+
+  publish-summary:
+    name: Create Publication Summary
+    runs-on: ubuntu-latest
+    needs: validate-content
+    if: always()
+    
+    steps:
+      - name: Generate summary
+        id: summary
+        run: |
+          echo "## Content Distribution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Content Type: ${{ needs.validate-content.outputs.content_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "Title: ${{ needs.validate-content.outputs.title }}" >> $GITHUB_STEP_SUMMARY
+          echo "Platforms: ${{ needs.validate-content.outputs.platforms }}" >> $GITHUB_STEP_SUMMARY
+          echo "Publication Date: $(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+          "" >> $GITHUB_STEP_SUMMARY
+          echo "### Distribution Status" >> $GITHUB_STEP_SUMMARY
+          echo "- Twitter: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- LinkedIn: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Dev.to: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Reddit: ✅" >> $GITHUB_STEP_SUMMARY

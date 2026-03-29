@@ -226,6 +226,125 @@ func main() {
 		activity.GET("", activityHandler.GetActivityFeed)
 	}
 
+	// ============================================================================
+	// API-PREFIXED ROUTES (for external integrations and documentation compatibility)
+	// ============================================================================
+
+	// API Auth routes - mirrors /auth
+	apiAuth := router.Group("/api/auth")
+	{
+		apiAuth.POST("/register", authHandler.Register)
+		apiAuth.POST("/login", authHandler.Login)
+		apiAuth.GET("/me", middleware.AuthMiddleware(), authHandler.GetCurrentUser)
+		apiAuth.POST("/switch-organisation", middleware.AuthMiddleware(), authHandler.SwitchOrganisation)
+	}
+
+	// API Organisation routes - mirrors /organisations
+	apiOrganisations := router.Group("/api/organisations")
+	apiOrganisations.Use(middleware.AuthMiddleware())
+	{
+		apiOrganisations.POST("", organisationHandler.CreateOrganisation)
+		apiOrganisations.GET("", organisationHandler.ListOrganisations)
+		apiOrganisations.GET("/:id", organisationHandler.GetOrganisation)
+		apiOrganisations.PATCH("/:id", organisationHandler.UpdateOrganisation)
+		apiOrganisations.DELETE("/:id", organisationHandler.DeleteOrganisation)
+		apiOrganisations.POST("/:id/members", organisationHandler.AddOrganisationMember)
+		apiOrganisations.PATCH("/:id/members/:member_id", organisationHandler.UpdateMemberRole)
+		apiOrganisations.DELETE("/:id/members/:member_id", organisationHandler.RemoveOrganisationMember)
+		apiOrganisations.POST("/:id/leave", organisationHandler.LeaveOrganisation)
+	}
+
+	// API Project routes - mirrors /projects
+	apiProjects := router.Group("/api/projects")
+	apiProjects.Use(middleware.AuthMiddleware())
+	apiProjects.Use(middleware.OrganisationMiddleware())
+	{
+		apiProjects.POST("", projectHandler.CreateProject)
+		apiProjects.GET("", projectHandler.ListProjects)
+		apiProjects.GET("/:id", projectHandler.GetProject)
+		apiProjects.PATCH("/:id", projectHandler.UpdateProject)
+		apiProjects.DELETE("/:id", projectHandler.DeleteProject)
+		apiProjects.GET("/:id/tasks", projectHandler.GetProjectTasks)
+	}
+
+	// API Agent management routes - mirrors /agents
+	apiAgents := router.Group("/api/agents")
+	apiAgents.Use(middleware.AuthMiddleware())
+	apiAgents.Use(middleware.OrganisationMiddleware())
+	{
+		apiAgents.POST("", agentHandler.CreateAgent)
+		apiAgents.GET("", agentHandler.ListAgents)
+		apiAgents.GET("/activity", agentHandler.GetAgentsWithTasks)
+		apiAgents.GET("/:id", agentHandler.GetAgent)
+		apiAgents.GET("/:id/statistics", agentHandler.GetAgentStatistics)
+		apiAgents.PATCH("/:id", agentHandler.UpdateAgent)
+		apiAgents.DELETE("/:id", agentHandler.DeleteAgent)
+	}
+
+	// API Task routes (human) - mirrors /tasks
+	apiTasks := router.Group("/api/tasks")
+	apiTasks.Use(middleware.AuthMiddleware())
+	apiTasks.Use(middleware.OrganisationMiddleware())
+	{
+		apiTasks.POST("", taskHandler.CreateTask)
+		apiTasks.GET("", taskHandler.ListTasks)
+		apiTasks.GET("/:id", taskHandler.GetTask)
+		apiTasks.PATCH("/:id", taskHandler.UpdateTask)
+		apiTasks.DELETE("/:id", taskHandler.DeleteTask)
+		apiTasks.PATCH("/:id/assign", taskHandler.AssignAgent)
+		apiTasks.PATCH("/:id/unassign", taskHandler.UnassignAgent)
+		apiTasks.GET("/:id/comments", commentHandler.GetComments)
+		apiTasks.POST("/:id/comments", commentHandler.CreateComment)
+		// Subtask routes
+		apiTasks.GET("/:id/subtasks", subtaskHandler.ListSubtasks)
+		apiTasks.POST("/:id/subtasks", subtaskHandler.CreateSubtask)
+		apiTasks.POST("/:id/subtasks/reorder", subtaskHandler.ReorderSubtasks)
+	}
+
+	// API Subtask routes - mirrors /subtasks
+	apiSubtasks := router.Group("/api/subtasks")
+	apiSubtasks.Use(middleware.AuthMiddleware())
+	apiSubtasks.Use(middleware.OrganisationMiddleware())
+	{
+		apiSubtasks.GET("/:id", subtaskHandler.GetSubtask)
+		apiSubtasks.PATCH("/:id", subtaskHandler.UpdateSubtask)
+		apiSubtasks.DELETE("/:id", subtaskHandler.DeleteSubtask)
+	}
+
+	// API Activity feed routes - mirrors /activity
+	apiActivity := router.Group("/api/activity")
+	apiActivity.Use(middleware.AuthMiddleware())
+	apiActivity.Use(middleware.OrganisationMiddleware())
+	{
+		apiActivity.GET("", activityHandler.GetActivityFeed)
+	}
+
+	// API Agent task routes (agent only) - mirrors /agent
+	apiAgentTasks := router.Group("/api/agent")
+	apiAgentTasks.Use(middleware.AgentAuthMiddleware())
+	apiAgentTasks.Use(middleware.AgentOrganisationMiddleware())
+	{
+		apiAgentTasks.POST("/tasks", agentTaskHandler.CreateTask)
+		apiAgentTasks.GET("/tasks", agentTaskHandler.ListTasks)
+		apiAgentTasks.GET("/tasks/:id", agentTaskHandler.GetTask)
+		apiAgentTasks.PATCH("/tasks/:id/status", agentTaskHandler.UpdateStatus)
+		apiAgentTasks.GET("/tasks/:id/comments", commentHandler.AgentGetComments)
+		apiAgentTasks.POST("/tasks/:id/comments", commentHandler.AgentCreateComment)
+		apiAgentTasks.GET("/statistics", agentHandler.GetMyStatistics)
+		// Agent subtask routes
+		apiAgentTasks.GET("/tasks/:id/subtasks", subtaskHandler.AgentListSubtasks)
+		apiAgentTasks.POST("/tasks/:id/subtasks", subtaskHandler.AgentCreateSubtask)
+		apiAgentTasks.PATCH("/subtasks/:id", subtaskHandler.AgentUpdateSubtask)
+		apiAgentTasks.DELETE("/subtasks/:id", subtaskHandler.AgentDeleteSubtask)
+		// Project routes (read-only for agents)
+		apiAgentTasks.GET("/projects", projectHandler.ListProjectsForAgent)
+		apiAgentTasks.GET("/projects/:id", projectHandler.GetProjectForAgent)
+	}
+
+	// ============================================================================
+	// ORIGINAL ROUTES (non-prefixed)
+	// ============================================================================
+
 	// Agent task routes (agent only)
 	agentTasks := router.Group("/agent")
 	agentTasks.Use(middleware.AgentAuthMiddleware())

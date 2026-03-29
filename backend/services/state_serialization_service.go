@@ -14,7 +14,7 @@ import (
 
 // AgentStateSnapshot represents a persisted state of an agent for cloud sync
 type AgentStateSnapshot struct {
-	Base
+	models.Base
 	AgentID         string                 `gorm:"not null;index" json:"agent_id"`
 	StateData       []byte                 `gorm:"type:jsonb" json:"state_data"` // Serialized agent state
 	Version         int                    `gorm:"not null;default:0" json:"version"`
@@ -26,7 +26,7 @@ type AgentStateSnapshot struct {
 
 // TaskExecutionHistory tracks all task executions for analytics and cloud sync
 type TaskExecutionHistory struct {
-	Base
+	models.Base
 	TaskID          uuid.UUID  `gorm:"type:uuid;index" json:"task_id"`
 	AgentID         string     `gorm:"not null;index" json:"agent_id"`
 	Title           string     `json:"title"`
@@ -42,7 +42,7 @@ type TaskExecutionHistory struct {
 
 // AnalyticsCache pre-computed metrics for fast dashboard loading
 type AnalyticsCache struct {
-	Base
+	models.Base
 	OrganisationID  uuid.UUID  `gorm:"type:uuid;uniqueIndex;not null" json:"organisation_id"`
 	CacheType       string     `gorm:"not null;index" json:"cache_type"` // "task_trends", "performance_metrics", "agent_stats"
 	Data            []byte     `gorm:"type:jsonb;not null" json:"data"`  // Cached data as JSONB
@@ -52,10 +52,10 @@ type AnalyticsCache struct {
 
 // TeamMember represents a team member for collaboration features (alternative to OrganisationMember)
 type TeamMember struct {
-	Base
-	OrganisationID uuid.UUID              `gorm:"type:uuid;uniqueIndex;not null" json:"organisation_id"`
-	UserID         uuid.UUID              `gorm:"type:uuid;uniqueIndex;not null" json:"user_id"`
-	Role           OrganisationMemberRole `gorm:"not null;default:'member'" json:"role"`
+	models.Base
+	OrganisationID uuid.UUID                     `gorm:"type:uuid;uniqueIndex;not null" json:"organisation_id"`
+	UserID         uuid.UUID                     `gorm:"type:uuid;uniqueIndex:idx_teammember_org_user,priority:2;not null" json:"user_id"`
+	Role           models.OrganisationMemberRole `gorm:"not null;default:'member'" json:"role"`
 	Status         string                 `gorm:"not null;default:'active'" json:"status"` // "active", "invited", "pending"
 	InvitedAt      *time.Time             `json:"invited_at,omitempty"`
 	JoinedAt       *time.Time             `json:"joined_at,omitempty"`
@@ -224,7 +224,7 @@ func (s *StateSerializationService) GetTaskExecutionHistory(taskID uuid.UUID, ag
 	var histories []TaskExecutionHistory
 	query := s.db.Model(&TaskExecutionHistory{})
 
-	if !taskID.Equal(uuid.Nil) {
+	if taskID != uuid.Nil {
 		query = query.Where("task_id = ?", taskID)
 	} else if agentID != "" {
 		query = query.Where("agent_id = ?", agentID)
