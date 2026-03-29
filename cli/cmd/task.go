@@ -494,6 +494,191 @@ var blockTaskCmd = &cobra.Command{
 	},
 }
 
+var statsTaskCmd = &cobra.Command{
+	Use:   "stats",
+	Short: "Show task statistics and analytics",
+	Long:  "Display task statistics including overview, agent metrics, and timeline data",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		view, _ := cmd.Flags().GetString("view")
+		days, _ := cmd.Flags().GetInt("days")
+
+		c := client.New()
+		
+		var endpoint string
+		switch view {
+		case "overview", "":
+			endpoint = "/analytics/tasks/overview"
+		case "agents":
+			endpoint = "/analytics/tasks/agents"
+		case "timeline":
+			endpoint = fmt.Sprintf("/analytics/tasks/timeline?days=%d", days)
+		default:
+			return fmt.Errorf("invalid view: %s (use: overview, agents, or timeline)", view)
+		}
+
+		resp, err := c.Get(endpoint, true)
+		if err != nil {
+			return fmt.Errorf("error making request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("failed to get stats: %s", string(body))
+		}
+
+		var stats map[string]interface{}
+		if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
+			return fmt.Errorf("error decoding response: %w", err)
+		}
+
+		// Format output based on view type
+		switch view {
+		case "overview", "":
+			printOverviewStats(stats)
+		case "agents":
+			printAgentStats(stats)
+		case "timeline":
+			printTimelineStats(stats)
+		}
+
+		return nil
+	},
+}
+
+func printOverviewStats(stats map[string]interface{}) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	
+	fmt.Fprintln(w, "TASK OVERVIEW")
+	fmt.Fprintln(w, "=============")
+	
+	if total, ok := stats["total_tasks"].(float64); ok {
+		fmt.Fprintf(w, "Total Tasks:\t%d\n", int(total))
+	}
+	if completed, ok := stats["completed_tasks"].(float64); ok {
+		fmt.Fprintf(w, "Completed:\t%d\n", int(completed))
+	}
+	if rate, ok := stats["completion_rate"].(float64); ok {
+		fmt.Fprintf(w, "Completion Rate:\t%.1f%%\n", rate)
+	}
+	if recent, ok := stats["tasks_last_7_days"].(float64); ok {
+		fmt.Fprintf(w, "Last 7 Days:\t%d\n", int(recent))
+	}
+	if avgTime, ok := stats["avg_completion_time_hours"].(float64); ok {
+		fmt.Fprintf(w, "Avg Completion Time:\t%.1f hours\n", avgTime)
+	}
+	
+	fmt.Fprintln(w)
+	
+	// Status breakdown
+	if byStatus, ok := stats["by_status"].([]interface{}); ok && len(byStatus) > 0 {
+		fmt.Fprintln(w, "\nBY STATUS")
+		fmt.Fprintln(w, "---------")
+		for _, s := range byStatus {
+			if status, ok := s.(map[string]interface{}); ok {
+				statusStr, _ := status["status"].(string)
+				count, _ := status["count"].(float64)
+				fmt.Fprintf(w, "%s:\t%d\n", strings.Title(statusStr), int(count))
+			}
+		}
+	}
+	
+	// Priority breakdown
+	if byPriority, ok := stats["by_priority"].([]interface{}); ok && len(byPriority) > 0 {
+		fmt.Fprintln(w, "\nBY PRIORITY")
+		fmt.Fprintln(w, "-----------")
+		for _, p := range byPriority {
+			if priority, ok := p.(map[string]interface{}); ok {
+				priorityStr, _ := priority["priority"].(string)
+				count, _ := priority["count"].(float64)
+				fmt.Fprintf(w, "%s:\t%d\n", strings.Title(priorityStr), int(count))
+			}
+		}
+	}
+	
+	w.Flush()
+}
+
+func printAgentStats(stats map[string]interface{}) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	
+	fmt.Fprintln(w, "AGENT METRICS")
+	fmt.Fprintln(w, "=============")
+	
+	if totalAgents, ok := stats["total_agents"].(float64); ok {
+		fmt.Fprintf(w, "Total Agents:\t%d\n", int(totalAgents))
+	}
+	if activeAgents, ok := stats["active_agents"].(float64); ok {
+		fmt.Fprintf(w, "Active Agents:\t%d\n", int(activeAgents))
+	}
+	
+	// Agent breakdown
+	if agents, ok := stats["agents"].([]interface{}); ok && len(agents) > 0 {
+		fmt.Fprintln(w, "\nPER AGENT")
+		fmt.Fprintln(w, "---------")
+		for _, a := range agents {
+			if agent, ok := a.(map[string]interface{}); ok {
+				name, _ := agent["agent_name"].(string)
+				total, _ := agent["total_tasks"].(float64)
+				completed, _ := agent["completed_tasks"].(float64)
+				inProgress, _ := agent["in_progress_tasks"].(float64)
+				blocked, _ := agent["blocked_tasks"].(float64)
+				rate, _ := agent["completion_rate"].(float64)
+				avgTime, _ := agent["avg_completion_time_hours"].(float64)
+				
+				fmt.Fprintf(w, "\n%s:\n", name)
+				fmt.Fprintf(w, "  Total:\t%d\n", int(total))
+				fmt.Fprintf(w, "  Completed:\t%d\n", int(completed))
+				fmt.Fprintf(w, "  In Progress:\t%d\n", int(inProgress))
+				fmt.Fprintf(w, "  Blocked:\t%d\n", int(blocked))
+				fmt.Fprintf(w, "  Completion Rate:\t%.1f%%\n", rate)
+				fmt.Fprintf(w, "  Avg Time:\t%.1f hours\n", avgTime)
+			}
+		}
+	}
+	
+	w.Flush()
+}
+
+func printTimelineStats(stats map[string]interface{}) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	
+	fmt.Fprintln(w, "TIMELINE METRICS")
+	fmt.Fprintln(w, "================")
+	
+	if avgAge, ok := stats["avg_task_age_hours"].(float64); ok {
+		fmt.Fprintf(w, "Average Task Age:\t%.1f hours\n", avgAge)
+	}
+	
+	// Created daily
+	if createdDaily, ok := stats["created_daily"].([]interface{}); ok && len(createdDaily) > 0 {
+		fmt.Fprintln(w, "\nTASKS CREATED (last N days)")
+		fmt.Fprintln(w, "---------------------------")
+		for _, d := range createdDaily {
+			if day, ok := d.(map[string]interface{}); ok {
+				date, _ := day["date"].(string)
+				count, _ := day["count"].(float64)
+				fmt.Fprintf(w, "%s:\t%d\n", date, int(count))
+			}
+		}
+	}
+	
+	// Completed daily
+	if completedDaily, ok := stats["completed_daily"].([]interface{}); ok && len(completedDaily) > 0 {
+		fmt.Fprintln(w, "\nTASKS COMPLETED (last N days)")
+		fmt.Fprintln(w, "-----------------------------")
+		for _, d := range completedDaily {
+			if day, ok := d.(map[string]interface{}); ok {
+				date, _ := day["date"].(string)
+				count, _ := day["count"].(float64)
+				fmt.Fprintf(w, "%s:\t%d\n", date, int(count))
+			}
+		}
+	}
+	
+	w.Flush()
+}
+
 func init() {
 	rootCmd.AddCommand(taskCmd)
 
@@ -527,6 +712,7 @@ func init() {
 	taskCmd.AddCommand(completeTaskCmd)
 	taskCmd.AddCommand(startTaskCmd)
 	taskCmd.AddCommand(blockTaskCmd)
+	taskCmd.AddCommand(statsTaskCmd)
 
 	// Complete task flags
 	completeTaskCmd.Flags().StringP("comment", "c", "", "Optional completion comment")
@@ -536,4 +722,8 @@ func init() {
 
 	// Block task flags
 	blockTaskCmd.Flags().StringP("reason", "r", "", "Reason for blocking")
+
+	// Stats task flags
+	statsTaskCmd.Flags().StringP("view", "v", "overview", "View type (overview, agents, timeline)")
+	statsTaskCmd.Flags().IntP("days", "d", 30, "Number of days for timeline view")
 }

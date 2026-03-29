@@ -2,7 +2,9 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/formatho/agent-todo/db"
 	_ "github.com/formatho/agent-todo/docs"
@@ -68,6 +70,9 @@ func main() {
 
 	// Apply middleware
 	router.Use(middleware.CORSMiddleware())
+	router.Use(metricsMiddleware.Middleware())
+	router.Use(middleware.UptimeMiddleware())
+	router.Use(middleware.ErrorTrackingMiddleware(metricsService))
 	// router.Use(middleware.RateLimitMiddleware(100)) // 100 requests per minute per IP - TEMPORARILY DISABLED
 
 	// Initialize handlers
@@ -86,6 +91,10 @@ func main() {
 	analyticsHandler := handlers.NewAnalyticsHandler()
 	subscriptionHandler := handlers.NewSubscriptionHandler()
 	emailHandler := handlers.NewEmailHandler()
+
+	// Initialize metrics service for monitoring
+	metricsService := services.NewMetricsService()
+	metricsMiddleware := middleware.NewMetricsMiddleware(metricsService)
 
 	// Initialize state sync service and handler for cloud synchronization
 	stateService := services.NewStateSerializationService()
@@ -122,8 +131,10 @@ func main() {
 
 	// Analytics endpoints (public for tracking, auth required for viewing)
 	analytics := router.Group("/analytics")
+	analytics.Use(middleware.ProductHuntMiddleware())
 	{
 		analytics.POST("/track", analyticsHandler.TrackEvent)
+		analytics.POST("/product-hunt-event", analyticsHandler.TrackProductHuntEvent)
 	}
 	// Protected analytics endpoints
 	analyticsProtected := router.Group("/analytics")
@@ -131,7 +142,24 @@ func main() {
 	{
 		analyticsProtected.GET("/funnel", analyticsHandler.GetFunnelStats)
 		analyticsProtected.GET("/events", analyticsHandler.GetRecentEvents)
+		analyticsProtected.GET("/product-hunt-metrics", analyticsHandler.GetProductHuntMetrics)
+		// Task analytics endpoints
+		analyticsProtected.GET("/tasks/overview", analyticsHandler.GetTaskOverview)
+		analyticsProtected.GET("/tasks/agents", analyticsHandler.GetAgentMetrics)
+		analyticsProtected.GET("/tasks/timeline", analyticsHandler.GetTimelineMetrics)
 	}
+
+	// Monitoring endpoints
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "healthy",
+			"timestamp": time.Now().Format(time.RFC3339),
+			"version": "1.0.0",
+		})
+	})
+	
+	// Prometheus metrics endpoint
+	router.GET("/metrics", gin.WrapH(metricsService.GetMetricsHandler()))
 
 	// Swagger documentation
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -317,6 +345,19 @@ func main() {
 	apiActivity.Use(middleware.OrganisationMiddleware())
 	{
 		apiActivity.GET("", activityHandler.GetActivityFeed)
+	}
+
+	// API Analytics routes - mirrors /analytics
+	apiAnalytics := router.Group("/api/analytics")
+	apiAnalytics.Use(middleware.AuthMiddleware())
+	{
+		apiAnalytics.GET("/funnel", analyticsHandler.GetFunnelStats)
+		apiAnalytics.GET("/events", analyticsHandler.GetRecentEvents)
+		apiAnalytics.GET("/product-hunt-metrics", analyticsHandler.GetProductHuntMetrics)
+		// Task analytics endpoints
+		apiAnalytics.GET("/tasks/overview", analyticsHandler.GetTaskOverview)
+		apiAnalytics.GET("/tasks/agents", analyticsHandler.GetAgentMetrics)
+		apiAnalytics.GET("/tasks/timeline", analyticsHandler.GetTimelineMetrics)
 	}
 
 	// API Agent task routes (agent only) - mirrors /agent
