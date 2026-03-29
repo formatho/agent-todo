@@ -53,6 +53,23 @@ That's it. Your agents now have persistent memory.
 
 ---
 
+## 🎬 Demo
+
+**[📺 Watch 3-minute demo](https://youtube.com/placeholder)** (Coming soon)
+
+Or try it live: [todo.formatho.com](https://todo.formatho.com)
+
+**What you'll see:**
+- ✅ Agent creating tasks via API (2 lines of code)
+- ✅ Human reviewing and managing agent tasks
+- ✅ Real-time status updates
+- ✅ Persistent memory across sessions
+- ✅ Team collaboration in action
+
+**Want the demo video sooner?** ⭐ Star this repo and we'll prioritize it!
+
+---
+
 ## About
 
 A production-grade task management system designed for collaboration between humans and AI agents. Built with Go (Gin), PostgreSQL, Vue.js, and Docker.
@@ -441,10 +458,86 @@ The system uses the following tables:
 7. Set up database backups
 8. Monitor logs and metrics
 
-## License
+## 🗺️ Roadmap
 
-MIT
+**Current Status:** Production-ready v1.0
 
-## Support
+**Q2 2026 (In Progress):**
+- ✅ Core task management API
+- ✅ Agent authentication & API keys
+- ✅ Human-agent collaboration
+- ✅ Team workspaces
+- ✅ State persistence for agents
+- 🔄 Advanced analytics dashboard
+- 🔄 Webhook notifications
+- 🔄 Integration marketplace
 
-For issues and questions, please open a GitHub issue.
+**Q3 2026 (Planned):**
+- 📋 Multi-tenant enterprise features
+- 📋 Advanced permissions (RBAC)
+- 📋 Custom workflows & automation
+- 📋 Audit trail exports (SOC 2, GDPR)
+- 📋 Performance benchmarking tools
+
+**Q4 2026 (Vision):**
+- 🔮 Agent marketplace
+- 🔮 Cross-platform SDKs (Python, Node, Go)
+- 🔮 Enterprise SSO integration
+- 🔮 On-premise deployment option
+
+**Recent Wins:**
+- 🚀 Live demo launched: [todo.formatho.com](https://todo.formatho.com)
+- 🤝 Partnership discussions with leading agent frameworks
+- ⭐ Growing community (join us!)
+
+**Want to influence the roadmap?** [Open a discussion](https://github.com/formatho/agent-todo/discussions) or [vote on features](https://github.com/formatho/agent-todo/issues)!
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Agent-Todo is built by the community, for the community.
+
+**Ways to contribute:**
+- 🐛 **Report bugs** - [Open an issue](https://github.com/formatho/agent-todo/issues)
+- 💡 **Suggest features** - [Start a discussion](https://github.com/formatho/agent-todo/discussions)
+- 📖 **Improve docs** - Fix typos, add examples, clarify explanations
+- 🔧 **Submit PRs** - Check out [good first issues](https://github.com/formatho/agent-todo/labels/good%20first%20issue)
+- 🌟 **Spread the word** - Star the repo, share on social media
+
+**Development setup:**
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests (`go test ./...` for backend, `npm test` for frontend)
+5. Commit changes (`git commit -m 'Add amazing feature'`)
+6. Push to branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+**Contributors get:**
+- 📛 Credit in our README
+- 🎁 Swag (for significant contributions)
+- 🚀 Early access to new features
+- 💼 Reference letter (upon request)
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+---
+
+## 📜 License
+
+MIT License - Use it however you want!
+
+---
+
+## 💬 Support
+
+**Need help?** We're here for you:
+
+- 📖 **Documentation:** [GitHub Wiki](https://github.com/formatho/agent-todo/wiki)
+- 🐛 **Bug reports:** [Open an issue](https://github.com/formatho/agent-todo/issues)
+- 💡 **Feature requests:** [Start a discussion](https://github.com/formatho/agent-todo/discussions)
+- 📧 **Direct contact:** team@formatho.com
+- 💬 **Community:** Join our Discord (coming soon)
+
+**Enterprise support** available - contact us for SLAs, dedicated support, and custom features.
