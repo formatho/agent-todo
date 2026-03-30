@@ -1,0 +1,83 @@
+{
+  "name": "Agent-Todo Product Hunt Launch",
+  "description": "Complete social media campaign for Product Hunt launch day",
+  "launch_date": "2026-03-30T00:00:00Z",
+  "platforms": [
+    "twitter",
+    "linkedin"
+  ],
+  "posts": [
+    {
+      "platform": "twitter",
+      "content": "🚀 BIG NEWS! We're live on Product Hunt! Agent-Todo is now officially launched - the task management platform built specifically for AI agents. No more context loss, no more forgotten tasks. 🤖➡️✅ https://producthunt.com/products/agent-todo",
+      "hashtags": [
+        "ProductHunt",
+        "AI",
+        "TaskManagement",
+        "LaunchDay"
+      ],
+      "publish_time": "2026-03-30T00:00:00Z",
+      "is_published": false,
+      "engagement": 0
+    },
+    {
+      "platform": "twitter",
+      "content": "✨ What makes Agent-Todo different? We built it FOR AI agents, not just for humans. Features: • Persistent memory • Priority-based task management • Real-time agent status tracking Your AI agents deserve better tools. 🛠️",
+      "hashtags": [
+        "AIProductivity",
+        "DeveloperTools",
+        "Automation"
+      ],
+      "publish_time": "2026-03-30T01:00:00Z",
+      "is_published": false,
+      "engagement": 0
+    },
+    {
+      "platform": "twitter",
+      "content": "🔥 The problem: \"My AI agent lost track of what it was doing after a restart\" The solution: Agent-Todo gives agents persistent memory and task tracking. No more context loss, no more duplicated work. It's that simple. 💡",
+      "hashtags": [
+        "AIPainPoint",
+        "Solutions",
+        "AI"
+      ],
+      "publish_time": "2026-03-30T02:00:00Z",
+      "is_published": false,
+      "engagement": 0
+    },
+    {
+      "platform": "linkedin",
+      "content": "🚀 Exciting announcement: Agent-Todo is officially launching on Product Hunt today! As AI systems become more prevalent in enterprise environments, the need for specialized task management solutions has never been greater. Traditional task management systems weren't designed for autonomous agents. Agent-Todo fills this gap by providing persistent memory and task tracking for AI agents, real-time monitoring and analytics, enterprise-grade security and scalability, seamless integration with existing AI workflows. Learn more: https://producthunt.com/products/agent-todo",
+      "hashtags": [
+        "ProductLaunch",
+        "AIManagement",
+        "DigitalTransformation",
+        "AIOps",
+        "EnterpriseAI"
+      ],
+      "publish_time": "2026-03-30T00:00:00Z",
+      "is_published": false,
+      "engagement": 0
+    },
+    {
+      "platform": "linkedin",
+      "content": "📊 The AI workforce management challenge is real, but so are the solutions. Recent studies show that organizations using specialized AI task management systems see: • 3x improvement in agent productivity • 60% reduction in context-related errors • 40% faster task completion rates. Agent-Todo was designed from the ground up to address these specific pain points. #ArtificialIntelligence #Productivity #BusinessTechnology #Innovation",
+      "hashtags": [
+        "ArtificialIntelligence",
+        "Productivity",
+        "BusinessTechnology",
+        "Innovation"
+      ],
+      "publish_time": "2026-03-30T02:00:00Z",
+      "is_published": false,
+      "engagement": 0
+    }
+  ],
+  "metrics": {
+    "target_impressions": 1000,
+    "target_engagement": 50,
+    "target_reach": 5000,
+    "actual_impressions": 0,
+    "actual_engagement": 0,
+    "actual_reach": 0
+  }
+}
