@@ -272,7 +272,7 @@ func (s *StateSerializationService) GetAnalyticsCache(orgID uuid.UUID, cacheType
 }
 
 // AddTeamMember adds a member to an organisation for collaboration features
-func (s *StateSerializationService) AddTeamMember(ctx context.Context, orgID uuid.UUID, userID uuid.UUID, role OrganisationMemberRole, status string, metadata map[string]interface{}) (*TeamMember, error) {
+func (s *StateSerializationService) AddTeamMember(ctx context.Context, orgID uuid.UUID, userID uuid.UUID, role models.OrganisationMemberRole, status string, metadata map[string]interface{}) (*TeamMember, error) {
 	member := &TeamMember{
 		OrganisationID: orgID,
 		UserID:         userID,
@@ -352,7 +352,7 @@ func (s *StateSerializationService) EnsureDatabaseTables() error {
 
 // GetTaskCompletionMetrics retrieves task completion metrics for analytics dashboard
 func (s *StateSerializationService) GetTaskCompletionMetrics(orgID uuid.UUID, days int) (map[string]interface{}, error) {
-	cacheKey := fmt.Sprintf("task_completion_%d_days", days)
+	_ = fmt.Sprintf("task_completion_%d_days", days) // cache key pattern for future use
 
 	// Try to get from cache first
 	if cached, err := s.GetAnalyticsCache(orgID, "task_trends"); err == nil && cached.CacheType == "task_trends" {
@@ -404,7 +404,7 @@ func (s *StateSerializationService) GetTaskCompletionMetrics(orgID uuid.UUID, da
 	}
 
 	// Cache the results for 24 hours
-	cache, err := s.UpdateAnalyticsCache(context.Background(), orgID, "task_trends", metrics, 24*time.Hour)
+	_, err := s.UpdateAnalyticsCache(context.Background(), orgID, "task_trends", metrics, 24*time.Hour)
 	if err != nil {
 		fmt.Printf("Warning: Failed to cache task completion metrics: %v\n", err)
 	}

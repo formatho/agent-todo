@@ -68,10 +68,10 @@ func (e *AgentExecutor) GetAgentStatus(agentID string) (*models.AgentStatus, err
 
 // CreateAndExecuteTask creates an agent if needed and executes a task
 func (s *AgentExecutionService) CreateAndExecuteTask(agentID string, projectID string, title string, description string) (*models.AgentResponse, error) {
-	_ = context.Background()
+	ctx := context.Background()
 
 	// Get the agent from database
-	agent, err := s.db.GetAgentByID(agentID)
+	_, err := s.db.GetAgentByID(agentID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get agent: %w", err)
 	}
@@ -111,10 +111,10 @@ func (s *AgentExecutionService) storeAgentResponse(ctx context.Context, agentID 
 
 // ExecuteTaskWithLLM executes a task using specified LLM configuration
 func (s *AgentExecutionService) ExecuteTaskWithLLM(agentID string, llmConfig models.LLMConfig, title string, description string) (*models.AgentResponse, error) {
-	_ = context.Background()
+	ctx := context.Background()
 
 	// Get the agent from database
-	agent, err := s.db.GetAgentByID(agentID)
+	_, err := s.db.GetAgentByID(agentID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get agent: %w", err)
 	}
