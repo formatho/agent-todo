@@ -91,6 +91,7 @@ func main() {
 	analyticsHandler := handlers.NewAnalyticsHandler()
 	subscriptionHandler := handlers.NewSubscriptionHandler()
 	emailHandler := handlers.NewEmailHandler()
+	feedbackHandler := handlers.NewFeedbackHandler()
 
 	// Initialize metrics service for monitoring
 	metricsService := services.NewMetricsService()
@@ -113,7 +114,7 @@ func main() {
 	}
 
 	// Auto-migrate subscription models
-	if err := db.DB.AutoMigrate(&models.Subscription{}, &models.EmailTemplate{}, &models.EmailSequence{}, &models.EmailSequenceStep{}, &models.EmailQueue{}, &models.EmailLog{}); err != nil {
+	if err := db.DB.AutoMigrate(&models.Subscription{}, &models.EmailTemplate{}, &models.EmailSequence{}, &models.EmailSequenceStep{}, &models.EmailQueue{}, &models.EmailLog{}, &models.BetaFeedback{}); err != nil {
 		log.Printf("Warning: Failed to migrate email/subscription models: %v", err)
 	}
 
@@ -147,6 +148,22 @@ func main() {
 		analyticsProtected.GET("/tasks/overview", analyticsHandler.GetTaskOverview)
 		analyticsProtected.GET("/tasks/agents", analyticsHandler.GetAgentMetrics)
 		analyticsProtected.GET("/tasks/timeline", analyticsHandler.GetTimelineMetrics)
+	}
+
+	// Feedback endpoints (public for submission, auth required for viewing)
+	feedbackPublic := router.Group("/feedback")
+	{
+		feedbackPublic.POST("", feedbackHandler.SubmitFeedback)
+	}
+	// Protected feedback endpoints (admin only)
+	feedbackProtected := router.Group("/feedback")
+	feedbackProtected.Use(middleware.AuthMiddleware())
+	{
+		feedbackProtected.GET("", feedbackHandler.ListFeedback)
+		feedbackProtected.GET("/stats", feedbackHandler.GetFeedbackStats)
+		feedbackProtected.GET("/:id", feedbackHandler.GetFeedback)
+		feedbackProtected.PATCH("/:id/status", feedbackHandler.UpdateFeedbackStatus)
+		feedbackProtected.PATCH("/:id/notes", feedbackHandler.UpdateFeedbackNotes)
 	}
 
 	// Monitoring endpoints

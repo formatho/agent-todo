@@ -10,6 +10,8 @@ const Agents = () => import('../pages/Agents.vue')
 const Projects = () => import(/* webpackPrefetch: true */ '../pages/Projects.vue')
 const TaskDetails = () => import('../pages/TaskDetails.vue')
 const ProjectDetails = () => import('../pages/ProjectDetails.vue')
+const Feedback = () => import('../pages/Feedback.vue')
+const AdminFeedback = () => import('../pages/AdminFeedback.vue')
 
 const routes = [
   {
@@ -66,6 +68,17 @@ const routes = [
     path: '/projects/:id',
     name: 'ProjectDetails',
     component: ProjectDetails,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/feedback',
+    name: 'Feedback',
+    component: Feedback
+  },
+  {
+    path: '/admin/feedback',
+    name: 'AdminFeedback',
+    component: AdminFeedback,
     meta: { requiresAuth: true }
   }
 ]
