@@ -148,7 +148,7 @@ Creates a new organisation. The creator automatically becomes the owner.
   "updated_at": "2026-03-08T15:30:00Z",
   "created_by": {
     "id": "fd8ada49-6ac2-4c83-83ea-b37cfab47650",
-    "email": "admin@example.com"
+    "email": "user@example.com"
   }
 }
 ```
@@ -223,7 +223,7 @@ Get details of a specific organisation.
   "updated_at": "2026-03-08T15:30:00Z",
   "created_by": {
     "id": "fd8ada49-6ac2-4c83-83ea-b37cfab47650",
-    "email": "admin@example.com"
+    "email": "user@example.com"
   },
   "members": [
     {
@@ -233,7 +233,7 @@ Get details of a specific organisation.
       "joined_at": "2026-03-08T15:30:00Z",
       "user": {
         "id": "fd8ada49-6ac2-4c83-83ea-b37cfab47650",
-        "email": "admin@example.com"
+        "email": "user@example.com"
       }
     }
   ],
@@ -441,7 +441,7 @@ Add organisation context to JWT claims:
 ```json
 {
   "user_id": "fd8ada49-6ac2-4c83-83ea-b37cfab47650",
-  "email": "admin@example.com",
+  "email": "user@example.com",
   "current_organisation_id": "550e8400-e29b-41d4-a716-446655440000",
   "exp": 1712505600
 }

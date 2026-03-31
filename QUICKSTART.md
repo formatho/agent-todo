@@ -21,13 +21,14 @@ Once running:
 - Swagger Docs: http://localhost:8080/docs/index.html
 - Database: postgresql://agent_todo:agent_todo_pass@localhost:5432/agent_todo
 
-## 🔑 Default Credentials
+## 🔑 Getting Started
 
-**Admin User:**
-- Email: `admin@example.com`
-- Password: `admin123`
+**First-time setup:**
+1. Navigate to http://localhost:3000
+2. Click "Create a new account" 
+3. Enter your email and password
 
-**Example Agent:**
+**Example Agent (for testing):**
 - Name: `Example Agent`
 - API Key: `sk_agent_example_key_12345`
 
@@ -36,7 +37,7 @@ Once running:
 ### 1. Login as User
 
 1. Navigate to http://localhost:3000
-2. Login with `admin@example.com` / `admin123`
+2. Login with your registered account
 
 ### 2. View Tasks
 

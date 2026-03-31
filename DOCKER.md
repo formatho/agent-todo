@@ -196,12 +196,11 @@ curl http://localhost:8080/health
 docker compose ps
 ```
 
-## Default Credentials
+## Getting Started
 
-- **Email:** admin@example.com
-- **Password:** admin123
+**First-time setup:** Create your account via the web UI at http://localhost:3000
 
-⚠️ **Change these in production!**
+⚠️ **For production:** Always use strong, unique passwords!
 
 ## Architecture
 

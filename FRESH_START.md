@@ -173,7 +173,7 @@ After rebuild, you should see:
 http://localhost:3000
 ```
 
-**Login**: admin@example.com / admin123
+**Note:** Create your own account on first visit - default credentials are no longer provided for security.
 
 ---
 

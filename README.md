@@ -128,9 +128,9 @@ docker compose up
 - Swagger Docs: http://localhost:8080/docs/index.html
 - Database: postgresql://agent_todo:agent_todo_pass@localhost:5432/agent_todo
 
-4. Default credentials:
-- Email: `admin@example.com`
-- Password: `admin123`
+4. Create an account via the web UI (registration is now disabled on the live demo)
+
+**Note:** For security, default credentials are no longer provided. Create your own account on localhost.
 
 ## Development Setup
 
@@ -204,7 +204,7 @@ Login:
 ```bash
 curl -X POST http://localhost:8080/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"admin123"}'
+  -d '{"email":"your-email@example.com","password":"your-password"}'
 ```
 
 Use the returned token in the `Authorization: Bearer TOKEN` header.
